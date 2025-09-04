@@ -1,5 +1,4 @@
-import ".."
-import QtQuick
+import "../.."
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
@@ -14,8 +13,6 @@ Scope {
         model: Quickshell.screens
 
         PanelWindow {
-            id: root
-
             required property var modelData
 
             screen: modelData
@@ -36,19 +33,28 @@ Scope {
                 ColumnLayout {
                     // anchors.margins: 16
                     // spacing: 24
-
-                    anchors.fill: parent
-                    anchors.left: parent.left
-                    anchors.top: parent.top
-                    anchors.bottom: parent.bottom
+                    anchors {
+                        fill: parent
+                        top: parent.top
+                        left: parent.left
+                        bottom: parent.bottom
+                    }
 
                     BarButton {
-                        Text {
-                            color: "#fff"
-                            // anchors.centerIn: parent
-                            text: root.time
-                        }
+                    }
 
+                }
+
+                // Bottom Items
+                ColumnLayout {
+                    anchors {
+                        left: parent.left
+                        right: parent.right
+                        bottom: parent.bottom
+                    }
+
+                    BarClock {
+                        timeParts: root.time ? root.time.split("|") : ["", "", ""]
                     }
 
                 }
@@ -62,7 +68,7 @@ Scope {
     Process {
         id: dateProc
 
-        command: ["date"]
+        command: ["date", "+%I|%M|%p"]
         running: true
 
         stdout: StdioCollector {
