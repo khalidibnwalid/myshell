@@ -17,7 +17,7 @@ Scope {
         implicitWidth: 700
         implicitHeight: 50 + Math.min(filteredResults.length, maxVisibleResults) * resultHeight + 20
 
-        visible: true
+        visible: false
         focusable: true
 
 

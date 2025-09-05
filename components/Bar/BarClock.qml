@@ -5,9 +5,10 @@ import Quickshell
 import Quickshell.Io
 
 ColumnLayout {
-    property var timeParts
+    required property var timeParts
 
     spacing: -5
+    Layout.fillWidth: true
     Layout.alignment: Qt.AlignHCenter
 
     Text {
