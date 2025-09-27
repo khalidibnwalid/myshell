@@ -7,7 +7,7 @@ import Quickshell.Io
 ColumnLayout {
     required property var timeParts
 
-    spacing: -5
+    spacing: -16
     Layout.fillWidth: true
     Layout.alignment: Qt.AlignHCenter
 

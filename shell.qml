@@ -1,7 +1,7 @@
 
 import Quickshell
-import "components/Bar"
-import "components/Search"
+import "modules/Bar"
+import "modules/Search"
 import Quickshell.Hyprland
 
 Scope {
