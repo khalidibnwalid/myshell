@@ -39,7 +39,7 @@ Scope {
                 color: Appearance.bgColor
                 height: root.shouldShowBarBg ? parent.height : 0
                 y: root.shouldShowBarBg ? 0 : parent.height / 2
-                opacity: root.shouldShowBarBg ? 0.6 : 0.0
+                opacity: root.shouldShowBarBg ? 0.6 : 0
                 radius: root.shouldShowBarBg ? 0 : 25
 
                 Behavior on opacity {
@@ -47,6 +47,7 @@ Scope {
                         duration: 300
                         easing.type: Easing.OutQuart
                     }
+
                 }
 
                 Behavior on height {
@@ -54,6 +55,7 @@ Scope {
                         duration: 250
                         easing.type: Easing.OutQuart
                     }
+
                 }
 
                 Behavior on y {
@@ -61,17 +63,24 @@ Scope {
                         duration: 300
                         easing.type: Easing.OutQuart
                     }
+
                 }
 
                 Behavior on radius {
                     SequentialAnimation {
-                        PauseAnimation { duration: root.shouldShowBarBg ? 250 : 0 }
+                        PauseAnimation {
+                            duration: root.shouldShowBarBg ? 250 : 0
+                        }
+
                         NumberAnimation {
                             duration: 500
                             easing.type: Easing.OutQuart
                         }
+
                     }
+
                 }
+
             }
 
             Rectangle {
@@ -79,18 +88,9 @@ Scope {
                 height: parent ? parent.height : 400
                 color: 'transparent'
 
-                ColumnLayout {
-                    anchors.fill: parent
-
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignHCenter
-
-                        BarWS {
-                        }
-
-                    }
-
+                BarWS {
+                    Layout.alignment: Qt.AlignHCenter
+                    anchors.centerIn: parent
                 }
 
                 // Bottom Items

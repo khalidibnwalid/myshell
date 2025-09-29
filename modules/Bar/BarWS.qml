@@ -5,7 +5,6 @@ import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Wayland
 import Quickshell.Io
-// import Quickshell.Services.DesktopEntries
 
 Item {
     id: wsIndicatorBar
@@ -17,6 +16,13 @@ Item {
     property int vPadding: 10
     width: 42 // 26px + 16px padding (8px on each side)
     height: column.implicitHeight + (vPadding * 2) // Add vertical padding
+
+    Behavior on height {
+        NumberAnimation {
+            duration: 140
+            easing.type: Easing.OutQuad
+        }
+    }
 
     // background
     Rectangle {
@@ -46,7 +52,7 @@ Item {
 
         Behavior on y {
             NumberAnimation {
-                duration: 200
+                duration: 150
                 easing.type: Easing.InOutQuad
             }
         }
