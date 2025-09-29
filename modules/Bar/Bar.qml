@@ -1,4 +1,5 @@
 import "../.."
+import "../../services"
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
@@ -111,6 +112,13 @@ Scope {
                         radius: 16
                         border.color: Appearance.borderColor
                         border.width: 2
+
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: WindowManager.setQuickSettingsVisible(!WindowManager.quickSettingsVisible)
+                            cursorShape: Qt.PointingHandCursor
+                        }
+
                     }
 
                     BarClock {
