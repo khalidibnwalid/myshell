@@ -10,7 +10,7 @@ Scope {
     id: root
 
     property string time
-    property HyprlandWorkspace activeWs: Hyprland.workspaces.values.find((ws) => ws.focused)
+    property HyprlandWorkspace activeWs: Hyprland.workspaces.values.find(ws => ws.focused)
     property list<HyprlandToplevel> workspaceToplevels: activeWs?.toplevels?.values || []
     // TODO: add floating windows
     property bool shouldShowBarBg: workspaceToplevels.length > 0
@@ -48,7 +48,6 @@ Scope {
                         duration: 300
                         easing.type: Easing.OutQuart
                     }
-
                 }
 
                 Behavior on height {
@@ -56,7 +55,6 @@ Scope {
                         duration: 250
                         easing.type: Easing.OutQuart
                     }
-
                 }
 
                 Behavior on y {
@@ -64,7 +62,6 @@ Scope {
                         duration: 300
                         easing.type: Easing.OutQuart
                     }
-
                 }
 
                 Behavior on radius {
@@ -77,11 +74,8 @@ Scope {
                             duration: 500
                             easing.type: Easing.OutQuart
                         }
-
                     }
-
                 }
-
             }
 
             Rectangle {
@@ -118,19 +112,14 @@ Scope {
                             onClicked: WindowManager.setQuickSettingsVisible(!WindowManager.quickSettingsVisible)
                             cursorShape: Qt.PointingHandCursor
                         }
-
                     }
 
                     BarClock {
                         timeParts: root.time ? root.time.split("|") : ["", "", ""]
                     }
-
                 }
-
             }
-
         }
-
     }
 
     Process {
@@ -142,7 +131,6 @@ Scope {
         stdout: StdioCollector {
             onStreamFinished: root.time = this.text
         }
-
     }
 
     Timer {
@@ -151,5 +139,4 @@ Scope {
         repeat: true
         onTriggered: dateProc.running = true
     }
-
 }

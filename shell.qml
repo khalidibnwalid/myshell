@@ -2,11 +2,13 @@ import Quickshell
 import "modules/Bar"
 import "modules/Search"
 import "modules/QuickSettings"
+import "modules/OSD"
 import Quickshell.Hyprland
 
 Scope {
-  Bar {}
-  QuickSettings {}
+    Bar {}
+    QuickSettings {}
 
-  Search {}
-} 
+    Search {}
+    VolumeOsd {}
+}

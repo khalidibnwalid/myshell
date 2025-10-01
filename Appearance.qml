@@ -1,5 +1,5 @@
-import QtQuick
 pragma Singleton
+import QtQuick
 
 QtObject {
     property color bgColor: "#131317"
@@ -7,4 +7,5 @@ QtObject {
     property color accentColor: "#c2c1ff"
 
     property color highlightColor: "#54545f"
+    property color borderColor: "#000000"
 }
