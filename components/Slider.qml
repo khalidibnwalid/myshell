@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
-import ".."
+import "../config/"
 
 Rectangle {
     Layout.fillWidth: true

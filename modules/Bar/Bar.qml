@@ -1,4 +1,4 @@
-import "../.."
+import "../../config/"
 import "../../services"
 import QtQuick
 import QtQuick.Layouts

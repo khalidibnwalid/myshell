@@ -1,4 +1,4 @@
-import "../.."
+import "../../config/"
 import "../../services"
 import QtQuick
 import QtQuick.Layouts
@@ -53,13 +53,8 @@ Scope {
                     MouseArea {
                         anchors.fill: parent
                     }
-
                 }
-
             }
-
         }
-
     }
-
 }

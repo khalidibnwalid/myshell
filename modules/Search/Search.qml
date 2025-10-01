@@ -1,4 +1,4 @@
-import "../.."
+import "../../config/"
 import "../../components"
 import QtQuick
 import QtQuick.Controls

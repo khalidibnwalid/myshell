@@ -1,4 +1,4 @@
-import "../.."
+import "../../config/"
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
@@ -15,6 +15,7 @@ ColumnLayout {
         Layout.alignment: Qt.AlignHCenter
         color: Appearance.fgColor
         font.pixelSize: 28
+        font.family: "Roboto Mono"
         font.weight: Font.Bold
         text: parent.timeParts[0]
     }
@@ -34,5 +35,4 @@ ColumnLayout {
         font.weight: Font.Bold
         text: parent.timeParts[2]
     }
-
 }

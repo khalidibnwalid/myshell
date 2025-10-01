@@ -1,4 +1,4 @@
-import "../.."
+import "../../config/"
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
@@ -9,7 +9,7 @@ import Quickshell.Io
 Item {
     id: wsIndicatorBar
 
-    property HyprlandWorkspace activeWs: Hyprland.workspaces.values.find((ws) => ws.focused)
+    property HyprlandWorkspace activeWs: Hyprland.workspaces.values.find(ws => ws.focused)
     // get the total number of workspaces, by getting the highest ID
     property int _numberOfWS: Hyprland.workspaces.values.length > 0 ? Hyprland.workspaces.values[Hyprland.workspaces.values.length - 1].id : 0
 
@@ -42,12 +42,13 @@ Item {
         color: Appearance.accentColor
         anchors.horizontalCenter: parent.horizontalCenter
         opacity: 0.3
-        
+
         // Position based on active workspace
         y: {
-            if (!activeWs) return 0
-            let activeIndex = activeWs.id - 1
-            return 10 + activeIndex * (26 + 8) - 5
+            if (!activeWs)
+                return 0;
+            let activeIndex = activeWs.id - 1;
+            return 10 + activeIndex * (26 + 8) - 5;
         }
 
         Behavior on y {
@@ -75,7 +76,7 @@ Item {
         spacing: 8
 
         Repeater {
-            model: _numberOfWS + 1 
+            model: _numberOfWS + 1
 
             delegate: Rectangle {
                 id: wsRect

@@ -4,7 +4,7 @@ import Quickshell
 import Quickshell.Services.Pipewire
 import Quickshell.Widgets
 import "../../components/"
-import "../../"
+import "../../config/"
 
 // credits to the official example
 Scope {
