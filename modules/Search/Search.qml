@@ -25,17 +25,59 @@ Scope {
             PanelWindow {
                 id: panelWindow
 
-                property var listResults: ["Calculator", "Calculators", "Cal", "Cal 2", "Terminal", "Browser", "Settings", "Files", "Music", "Notes"]
+                property var listResults: []
                 property var filteredResults: []
-                property int maxVisibleResults: 5
+                property int maxVisibleResults: 7
                 property int resultHeight: 40
-                property int baseHeight: 70 // field + margins
-                property int dynamicHeight: baseHeight + (filteredResults.length > 0 ? Math.min(filteredResults.length, maxVisibleResults) * (resultHeight + 10) + 16 : 0)
+                property int baseHeight: 70
+                property int listHeight: filteredResults.length > 0 ? Math.min(filteredResults.length, maxVisibleResults) * (resultHeight + 24) + 32 : 0
+                property int dynamicHeight: baseHeight + listHeight
 
                 color: "transparent"
                 implicitWidth: 700
                 implicitHeight: dynamicHeight
                 focusable: true
+
+                Component.onCompleted: {
+                    listResults = DesktopEntries.applications.values.map(entry => ({
+                                "name": entry.name,
+                                "description": entry.comment,
+                                "icon": entry.icon,
+                                "entry": entry
+                            }));
+                }
+
+                function filterResults() {
+                    const query = searchField.text.toLowerCase();
+                    if (query.trim() === "") {
+                        panelWindow.filteredResults = [];
+                    } else {
+                        let scoredResults = panelWindow.listResults.map(item => {
+                            const name = item.name.toLowerCase();
+                            const description = item.description ? item.description.toLowerCase() : "";
+                            // higher is better
+                            let priority = 0;
+                            if (name.startsWith(query)) {
+                                priority = 2;
+                            } else if (name.includes(query)) {
+                                priority = 1;
+                            } else if (description.includes(query)) {
+                                priority = 0.5;
+                            }
+                            item.priority = priority;
+                            return item;
+                        });
+
+                        const filtered = scoredResults.filter(item => item.priority > 0);
+                        const sorted = filtered.sort((a, b) => b.priority - a.priority);
+                        panelWindow.filteredResults = sorted;
+                    }
+
+                    if (panelWindow.filteredResults.length > 0)
+                        resultsView.currentIndex = 0;
+                    else
+                        resultsView.currentIndex = -1;
+                }
 
                 Item {
                     width: parent.width
@@ -53,13 +95,19 @@ Scope {
                     Rectangle {
                         anchors.centerIn: parent
                         width: parent.width
-                        implicitHeight: parent.height
+                        height: parent.height
                         color: Appearance.bgColor
                         radius: 30
                         opacity: 0.32
                         z: 1
-                        border.color: Appearance.accentColor
+                        border.color: Appearance.borderColor
                         border.width: 1
+
+                        Behavior on height {
+                            NumberAnimation {
+                                duration: 150
+                            }
+                        }
                     }
 
                     ColumnLayout {
@@ -88,8 +136,8 @@ Scope {
                                 // leftPadding: 16
                                 rightPadding: 8
                             }
-                            // Search input
 
+                            // Search input
                             TextField {
                                 id: searchField
 
@@ -101,28 +149,20 @@ Scope {
                                 height: 50
                                 font.pixelSize: 22
                                 selectByMouse: true
-                                Keys.onReleased: (event) => {
+                                Keys.onReleased: event => {
                                     if (event.key === Qt.Key_Down) {
                                         resultsView.currentIndex = Math.min(resultsView.count - 1, resultsView.currentIndex + 1);
                                     } else if (event.key === Qt.Key_Up) {
                                         resultsView.currentIndex = Math.max(0, resultsView.currentIndex - 1);
                                     } else if (event.key === Qt.Key_Enter || event.key === Qt.Key_Return) {
-                                        if (resultsView.currentIndex >= 0)
-                                            console.log("Selected:", resultsView.model[resultsView.currentIndex]);
-
+                                        if (resultsView.currentIndex >= 0) {
+                                            resultsView.model[resultsView.currentIndex].entry.execute();
+                                            lazyloader.active = false;
+                                        }
                                     } else if (event.key === Qt.Key_Escape) {
-                                        panelWindow.visible = false;
+                                        lazyloader.active = false;
                                     } else {
-                                        const query = searchField.text.toLowerCase();
-                                        let newResults = query.trim() === "" ? [] : panelWindow.listResults.filter((item) => {
-                                            return item.toLowerCase().startsWith(query);
-                                        });
-                                        panelWindow.filteredResults = newResults;
-                                        // Auto-select first result when search updates
-                                        if (newResults.length > 0)
-                                            resultsView.currentIndex = 0;
-                                        else
-                                            resultsView.currentIndex = -1;
+                                        panelWindow.filterResults();
                                     }
                                 }
                                 Component.onCompleted: {
@@ -132,21 +172,20 @@ Scope {
                                 background: Rectangle {
                                     color: 'transparent'
                                 }
-
                             }
-
                         }
 
                         // Results list
                         Item {
                             Layout.fillWidth: true
-                            Layout.preferredHeight: filteredResults.length > 0 ? Math.min(filteredResults.length, maxVisibleResults) * (resultHeight + 4) + 16 : 0
+                            //Layout.preferredHeight: filteredResults.length > 0 ? Math.min(filteredResults.length, maxVisibleResults) * (resultHeight + 4) + 16 : 0
+                            Layout.fillHeight: true
 
                             ListView {
                                 id: resultsView
 
                                 anchors.fill: parent
-                                spacing: 4
+                                spacing: 12
                                 model: panelWindow.filteredResults
                                 currentIndex: -1
                                 clip: true
@@ -165,7 +204,6 @@ Scope {
                                         to: 0
                                         duration: 200
                                     }
-
                                 }
 
                                 remove: Transition {
@@ -182,27 +220,48 @@ Scope {
                                         to: 20
                                         duration: 200
                                     }
-
                                 }
 
                                 delegate: Rectangle {
                                     width: parent.width - 60
-                                    height: resultsView.currentIndex === index ? panelWindow.resultHeight + 12 : panelWindow.resultHeight
+                                    height: resultsView.currentIndex === index ? panelWindow.resultHeight + 24 : panelWindow.resultHeight + 12
                                     color: 'transparent'
                                     radius: 20
 
                                     RowLayout {
+                                        spacing: 16
                                         Layout.alignment: Qt.AlignVCenter
                                         anchors.fill: parent
-                                        anchors.leftMargin: 40
+                                        anchors.leftMargin: 30
 
-                                        Text {
-                                            text: modelData
-                                            color: Appearance.fgColor
-                                            font.pixelSize: resultsView.currentIndex === index ? 24 : 18
-                                            font.weight: resultsView.currentIndex === index ? Font.DemiBold : Font.Normal
+                                        Image {
+                                            source: "image://icon/" + modelData.icon
+                                            Layout.preferredHeight: 46
+                                            Layout.preferredWidth: 46
+                                            fillMode: Image.PreserveAspectFit
                                         }
 
+                                        ColumnLayout {
+                                            spacing: -4
+                                            Layout.fillWidth: true
+                                            Text {
+                                                Layout.fillWidth: true
+                                                text: modelData.name
+                                                color: Appearance.fgColor
+                                                font.pixelSize: 24
+                                                font.weight: resultsView.currentIndex === index ? Font.Normal : Font.Light
+                                            }
+                                            Text {
+                                                text: modelData.description
+                                                font.pixelSize: 14
+                                                font.weight: Font.Light
+                                                visible: modelData.description && modelData.description.length > 0
+                                                color: Appearance.fgColor
+                                                opacity: 0.8
+                                                elide: Text.ElideRight
+                                                width: parent.width - 100
+                                            }
+                                        }
                                     }
 
                                     Behavior on height {
@@ -210,7 +269,6 @@ Scope {
                                             duration: 150
                                             easing.type: Easing.InQuad
                                         }
-
                                     }
 
                                     Behavior on color {
@@ -218,25 +276,22 @@ Scope {
                                             duration: 150
                                             easing.type: Easing.InOutQuad
                                         }
-
                                     }
-
                                 }
-
                             }
 
                             // active result indicator
                             Rectangle {
                                 id: activeIndicator
 
-                                width: parent.width - 30
-                                height: panelWindow.resultHeight + 20
+                                width: parent.width - 20
+                                height: panelWindow.resultHeight + 30
                                 radius: 20
                                 color: Appearance.accentColor
                                 anchors.horizontalCenter: parent.horizontalCenter
-                                opacity: 0.1
+                                opacity: 0.2
                                 visible: resultsView.currentIndex >= 0 && panelWindow.filteredResults.length > 0
-                                y: resultsView.currentIndex < 0 ? 0 : resultsView.currentIndex * (panelWindow.resultHeight + resultsView.spacing) - 5
+                                y: resultsView.currentItem ? resultsView.currentItem.y - resultsView.contentY : 0
                                 z: 4
 
                                 Rectangle {
@@ -249,19 +304,16 @@ Scope {
 
                                 Behavior on y {
                                     NumberAnimation {
-                                        duration: 100
-                                        easing.type: Easing.InOutQuad
+                                        duration: 25
+                                        easing.type: Easing.InQuad
                                     }
-
                                 }
 
                                 Behavior on opacity {
                                     NumberAnimation {
                                         duration: 150
                                     }
-
                                 }
-
                             }
 
                             Behavior on Layout.preferredHeight {
@@ -269,11 +321,8 @@ Scope {
                                     duration: 200
                                     easing.type: Easing.OutQuad
                                 }
-
                             }
-
                         }
-
                     }
 
                     Behavior on implicitHeight {
@@ -281,15 +330,9 @@ Scope {
                             duration: 25
                             easing.type: Easing.InCubic
                         }
-
                     }
-
                 }
-
             }
-
         }
-
     }
-
 }
