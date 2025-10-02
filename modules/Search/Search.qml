@@ -5,6 +5,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Shapes
 import Quickshell
+import Quickshell.Io
 import Quickshell.Hyprland
 
 Scope {
@@ -25,12 +26,12 @@ Scope {
             PanelWindow {
                 id: panelWindow
 
-                property var listResults: []
-                property var filteredResults: []
+                property var allApps: []
+                property var results: []
                 property int maxVisibleResults: 7
                 property int resultHeight: 40
                 property int baseHeight: 70
-                property int listHeight: filteredResults.length > 0 ? Math.min(filteredResults.length, maxVisibleResults) * (resultHeight + 24) + 32 : 0
+                property int listHeight: results.length > 0 ? Math.min(results.length, maxVisibleResults) * (resultHeight + 24) + 32 : 0
                 property int dynamicHeight: baseHeight + listHeight
 
                 color: "transparent"
@@ -39,23 +40,108 @@ Scope {
                 focusable: true
 
                 Component.onCompleted: {
-                    listResults = DesktopEntries.applications.values.map(entry => ({
+                    allApps = DesktopEntries.applications.values.map(entry => ({
                                 "name": entry.name,
                                 "description": entry.comment,
-                                "icon": entry.icon,
-                                "entry": entry
+                                "image": entry.icon,
+                                // if set will use a material icon
+                                "icon": undefined,
+                                "execute": entry.execute // shoudle be a function, optional
                             }));
+                }
+
+                // TODO: turn this into a service
+                // created this to capture stdout from process and await them,
+                // since I didn't find a way to run a command and await its result,
+                // qml js doesn't support async/await, and I didn't find a way to run commands inside js
+                property var stdCollectFn
+                Process {
+                    id: proc
+
+                    running: false
+                    stdout: StdioCollector {
+                        onStreamFinished: panelWindow.stdCollectFn(this.text)
+                    }
+
+                    // will execute a command and put its output in results array
+                    // @param {string[]}
+                    //
+                    function execSingle(cmd, desc, icon) {
+                        proc.command = cmd;
+                        proc.running = true;
+                        panelWindow.stdCollectFn = text => {
+                            results = [
+                                {
+                                    name: text.trim(),
+                                    description: desc,
+                                    icon: icon || "terminal"
+                                }
+                            ];
+                        };
+                    }
                 }
 
                 function filterResults() {
                     const query = searchField.text.toLowerCase();
                     if (query.trim() === "") {
-                        panelWindow.filteredResults = [];
+                        panelWindow.results = [];
+                    } else if (query.includes(":")) {
+                        // direct launch
+                        const regex = /:(?<flag>\w+)/g;
+                        const flags = [];
+
+                        let match;
+                        while ((match = regex.exec(query)) !== null) {
+                            flags.push(match.groups && match.groups.flag ? match.groups.flag : match[1]);
+                        }
+
+                        const data = query.replace(regex, "").trim();
+
+                        const queryCommand = query.split(":")[0].trim();
+                        if (flags.length > 0) {
+                            switch (flags[0]) {
+                            // not all flags support multiple flags
+                            // TODO: a way to add this in configs
+                            case "?":
+                            case "h":
+                            case "help":
+                                panelWindow.results = [
+                                    {
+                                        name: "Available commands",
+                                        description: "List of available commands",
+                                        icon: "help"
+                                    },
+                                    {
+                                        name: ":app or :a",
+                                        description: "List all applications",
+                                        icon: "apps"
+                                    },
+                                    {
+                                        name: ":calc or :c or :calculator",
+                                        description: "Simple calculator using bc",
+                                        icon: "calculate"
+                                    }
+                                ];
+                                break;
+                            case "a":
+                            case "app":
+                                panelWindow.results = panelWindow.allApps;
+                                break;
+                            case "c":
+                            case "calc":
+                            case "calculator":
+                                const cmd = ["sh", "-c", "echo " + data + " | bc"];
+                                proc.execSingle(cmd, "Calculator", "calculate");
+                                break;
+                            }
+                        } else {
+                            panelWindow.results = [];
+                        }
                     } else {
-                        let scoredResults = panelWindow.listResults.map(item => {
+                        let scoredResults = panelWindow.allApps.map(item => {
                             const name = item.name.toLowerCase();
                             const description = item.description ? item.description.toLowerCase() : "";
-                            // higher is better
+                            // higher is better, if zero then exclude
                             let priority = 0;
                             if (name.startsWith(query)) {
                                 priority = 2;
@@ -70,10 +156,10 @@ Scope {
 
                         const filtered = scoredResults.filter(item => item.priority > 0);
                         const sorted = filtered.sort((a, b) => b.priority - a.priority);
-                        panelWindow.filteredResults = sorted;
+                        panelWindow.results = sorted;
                     }
 
-                    if (panelWindow.filteredResults.length > 0)
+                    if (panelWindow.results.length > 0)
                         resultsView.currentIndex = 0;
                     else
                         resultsView.currentIndex = -1;
@@ -124,7 +210,7 @@ Scope {
                             Layout.topMargin: 16
                             Layout.leftMargin: 24
                             Layout.rightMargin: 24
-                            Layout.bottomMargin: panelWindow.filteredResults.length > 0 ? 0 : 16
+                            Layout.bottomMargin: panelWindow.results.length > 0 ? 0 : 16
 
                             MaterialSymbol {
                                 icon: "search"
@@ -145,7 +231,7 @@ Scope {
                                 placeholderTextColor: Appearance.fgColor
                                 Layout.alignment: Qt.AlignHCenter
                                 Layout.fillWidth: true
-                                placeholderText: "Search..."
+                                placeholderText: "`:h` for help"
                                 height: 50
                                 font.pixelSize: 22
                                 selectByMouse: true
@@ -156,7 +242,7 @@ Scope {
                                         resultsView.currentIndex = Math.max(0, resultsView.currentIndex - 1);
                                     } else if (event.key === Qt.Key_Enter || event.key === Qt.Key_Return) {
                                         if (resultsView.currentIndex >= 0) {
-                                            resultsView.model[resultsView.currentIndex].entry.execute();
+                                            resultsView.model[resultsView.currentIndex]?.execute();
                                             lazyloader.active = false;
                                         }
                                     } else if (event.key === Qt.Key_Escape) {
@@ -186,7 +272,7 @@ Scope {
 
                                 anchors.fill: parent
                                 spacing: 12
-                                model: panelWindow.filteredResults
+                                model: panelWindow.results
                                 currentIndex: -1
                                 clip: true
 
@@ -234,8 +320,16 @@ Scope {
                                         anchors.fill: parent
                                         anchors.leftMargin: 30
 
+                                        MaterialSymbol {
+                                            visible: !(modelData?.image?.length > 0) && modelData?.icon?.length > 0
+                                            icon: modelData.icon
+                                            color: Appearance.fgColor
+                                            font.pixelSize: 46
+                                            opacity: 0.8
+                                        }
                                         Image {
-                                            source: "image://icon/" + modelData.icon
+                                            visible: modelData?.image?.length > 0 && !modelData?.icon?.length > 0
+                                            source: "image://icon/" + modelData.image
                                             Layout.preferredHeight: 46
                                             Layout.preferredWidth: 46
                                             fillMode: Image.PreserveAspectFit
@@ -290,9 +384,9 @@ Scope {
                                 color: Appearance.accentColor
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 opacity: 0.2
-                                visible: resultsView.currentIndex >= 0 && panelWindow.filteredResults.length > 0
+                                visible: resultsView.currentIndex >= 0 && panelWindow.results.length > 0
                                 y: resultsView.currentItem ? resultsView.currentItem.y - resultsView.contentY : 0
-                                z: 4
+                                z: -1
 
                                 Rectangle {
                                     anchors.fill: parent
