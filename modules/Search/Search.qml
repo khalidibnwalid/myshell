@@ -1,5 +1,6 @@
 import "../../config/"
 import "../../components"
+import "../../services" as Services
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -26,7 +27,6 @@ Scope {
             PanelWindow {
                 id: panelWindow
 
-                property var allApps: []
                 property var results: []
                 property int maxVisibleResults: 7
                 property int resultHeight: 40
@@ -40,125 +40,13 @@ Scope {
                 focusable: true
 
                 Component.onCompleted: {
-                    allApps = DesktopEntries.applications.values.map(entry => ({
-                                "name": entry.name,
-                                "description": entry.comment,
-                                "image": entry.icon,
-                                // if set will use a material icon
-                                "icon": undefined,
-                                "execute": entry.execute // shoudle be a function, optional
-                            }));
+                    Services.Search.searchFinished.connect(updateResults);
+                    // initial search for empty query to clear results
+                    Services.Search.performSearch(searchField.text);
                 }
 
-                // TODO: turn this into a service
-                // created this to capture stdout from process and await them,
-                // since I didn't find a way to run a command and await its result,
-                // qml js doesn't support async/await, and I didn't find a way to run commands inside js
-                property var stdCollectFn
-                Process {
-                    id: proc
-
-                    running: false
-                    stdout: StdioCollector {
-                        onStreamFinished: panelWindow.stdCollectFn(this.text)
-                    }
-
-                    // will execute a command and put its output in results array
-                    // @param {string[]}
-                    //
-                    function execSingle(cmd, desc, icon) {
-                        proc.command = cmd;
-                        proc.running = true;
-                        panelWindow.stdCollectFn = text => {
-                            results = [
-                                {
-                                    name: text.trim(),
-                                    description: desc,
-                                    icon: icon || "terminal"
-                                }
-                            ];
-                        };
-                    }
-                }
-
-                function filterResults() {
-                    const query = searchField.text.toLowerCase();
-                    if (query.trim() === "") {
-                        panelWindow.results = [];
-                    } else if (query.includes(":")) {
-                        // direct launch
-                        const regex = /:(?<flag>\w+)/g;
-                        const flags = [];
-
-                        let match;
-                        while ((match = regex.exec(query)) !== null) {
-                            flags.push(match.groups && match.groups.flag ? match.groups.flag : match[1]);
-                        }
-
-                        const data = query.replace(regex, "").trim();
-
-                        const queryCommand = query.split(":")[0].trim();
-                        if (flags.length > 0) {
-                            switch (flags[0]) {
-                            // not all flags support multiple flags
-                            // TODO: a way to add this in configs
-                            case "?":
-                            case "h":
-                            case "help":
-                                panelWindow.results = [
-                                    {
-                                        name: "Available commands",
-                                        description: "List of available commands",
-                                        icon: "help"
-                                    },
-                                    {
-                                        name: ":app or :a",
-                                        description: "List all applications",
-                                        icon: "apps"
-                                    },
-                                    {
-                                        name: ":calc or :c or :calculator",
-                                        description: "Simple calculator using bc",
-                                        icon: "calculate"
-                                    }
-                                ];
-                                break;
-                            case "a":
-                            case "app":
-                                panelWindow.results = panelWindow.allApps;
-                                break;
-                            case "c":
-                            case "calc":
-                            case "calculator":
-                                const cmd = ["sh", "-c", "echo " + data + " | bc"];
-                                proc.execSingle(cmd, "Calculator", "calculate");
-                                break;
-                            }
-                        } else {
-                            panelWindow.results = [];
-                        }
-                    } else {
-                        let scoredResults = panelWindow.allApps.map(item => {
-                            const name = item.name.toLowerCase();
-                            const description = item.description ? item.description.toLowerCase() : "";
-                            // higher is better, if zero then exclude
-                            let priority = 0;
-                            if (name.startsWith(query)) {
-                                priority = 2;
-                            } else if (name.includes(query)) {
-                                priority = 1;
-                            } else if (description.includes(query)) {
-                                priority = 0.5;
-                            }
-                            item.priority = priority;
-                            return item;
-                        });
-
-                        const filtered = scoredResults.filter(item => item.priority > 0);
-                        const sorted = filtered.sort((a, b) => b.priority - a.priority);
-                        panelWindow.results = sorted;
-                    }
-
+                function updateResults(newResults) {
+                    panelWindow.results = newResults;
                     if (panelWindow.results.length > 0)
                         resultsView.currentIndex = 0;
                     else
@@ -247,9 +135,10 @@ Scope {
                                         }
                                     } else if (event.key === Qt.Key_Escape) {
                                         lazyloader.active = false;
-                                    } else {
-                                        panelWindow.filterResults();
                                     }
+                                }
+                                onTextChanged: {
+                                    Services.Search.performSearch(text);
                                 }
                                 Component.onCompleted: {
                                     searchField.forceActiveFocus();
@@ -385,7 +274,7 @@ Scope {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 opacity: 0.2
                                 visible: resultsView.currentIndex >= 0 && panelWindow.results.length > 0
-                                y: resultsView.currentItem ? resultsView.currentItem.y - resultsView.contentY : 0
+                                y: resultsView.currentItem ? resultsView.currentItem.y - resultsView.contentY - 2 : 0
                                 z: -1
 
                                 Rectangle {
