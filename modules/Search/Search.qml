@@ -72,9 +72,9 @@ Scope {
                         height: parent.height
                         color: Appearance.bgColor
                         radius: 30
-                        opacity: 0.32
+                        opacity: 0.50
                         z: 1
-                        border.color: Appearance.borderColor
+                        border.color: Appearance.accentColor
                         border.width: 1
 
                         Behavior on height {
@@ -138,7 +138,7 @@ Scope {
                                     }
                                 }
                                 onTextChanged: {
-                                    Services.Search.performSearch(text);
+                                    debounceTimer.restart();
                                 }
                                 Component.onCompleted: {
                                     searchField.forceActiveFocus();
@@ -147,6 +147,12 @@ Scope {
                                 background: Rectangle {
                                     color: 'transparent'
                                 }
+                            }
+                            Timer {
+                                id: debounceTimer
+                                interval: 100
+                                repeat: false
+                                onTriggered: Services.Search.performSearch(searchField.text)
                             }
                         }
 

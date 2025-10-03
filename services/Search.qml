@@ -28,25 +28,41 @@ Singleton {
             onStreamFinished: searchService.stdCollectFn(this.text)
         }
 
-        function execSingle(cmd, desc, icon) {
+        function execSingle(cmd, desc, icon, exec) {
             proc.command = cmd;
             proc.running = true;
             searchService.stdCollectFn = text => {
                 const singleResult = [
                     {
                         name: text.trim(),
-                        description: desc,
+                        description: desc || "",
                         icon: icon || "terminal",
-                        execute: () => {}
+                        execute: exec || null
                     }
                 ];
                 searchService.searchFinished(singleResult);
+            };
+        }
+
+        function execMultiple(cmd, desc, icon, exec) {
+            proc.command = cmd;
+            proc.running = true;
+            searchService.stdCollectFn = text => {
+                const lines = text.trim().split("\n");
+                const results = lines.map(line => ({
+                            name: line,
+                            description: desc || "",
+                            icon: icon ? typeof icon === "function" ? icon(line) : icon : "terminal",
+                            execute: exec(line) || null
+                        }));
+                searchService.searchFinished(results);
             };
         }
     }
 
     function performSearch(query) {
         query = query.toLowerCase();
+
         if (query.trim() === "") {
             searchService.searchFinished([]);
             return;
@@ -64,6 +80,7 @@ Singleton {
             const data = query.replace(regex, "").trim();
 
             if (flags.length > 0) {
+                let cmd;
                 switch (flags[0]) {
                 case "?":
                 case "h":
@@ -80,9 +97,14 @@ Singleton {
                             icon: "apps"
                         },
                         {
-                            name: ":calc or :c or :calculator",
+                            name: ":calc or :c or :calculator <expression>",
                             description: "Simple calculator using bc",
                             icon: "calculate"
+                        },
+                        {
+                            name: ":find or :f or :file <pattern>",
+                            description: "Find a file in your home directory using fd",
+                            icon: "folder"
                         }
                     ]);
                     break;
@@ -90,15 +112,25 @@ Singleton {
                 case "app":
                     searchService.searchFinished(allApps);
                     break;
+                case "f":
+                case "find":
+                case "file":
+                    if (!data)
+                        break;
+                    cmd = ["sh", "-c", "fd -H -I --glob '*" + data + "*' ~"];
+                    proc.execMultiple(cmd, "Find file", "search_check", name => () => {
+                            const cmd = ["xdg-open", name.trim()];
+                            console.log("Executing: " + cmd.join(" "));
+                            Quickshell.execDetached(cmd);
+                        });
+                    break;
                 case "c":
                 case "calc":
                 case "calculator":
-                    if (data) {
-                        const cmd = ["sh", "-c", "echo " + data + " | bc"];
-                        proc.execSingle(cmd, "Calculator", "calculate");
-                    } else {
-                        searchService.searchFinished([]);
-                    }
+                    if (!data)
+                        break;
+                    cmd = ["sh", "-c", "echo " + data + " | bc"];
+                    proc.execSingle(cmd, "Calculator", "calculate");
                     break;
                 default:
                     searchService.searchFinished([]);
