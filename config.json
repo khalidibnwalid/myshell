@@ -3,6 +3,7 @@
     "bgColor": "#131319",
     "fgColor": "#e5e1e7",
     "accentColor": "#c2c1ff",
+    "accentColorLight": "#C9C8FA",
     "highlightColor": "#54545f",
     "borderColor": "#000000"
   }

@@ -3,7 +3,6 @@ import QtQuick.Layouts
 import "../config/"
 
 Rectangle {
-    Layout.fillWidth: true
     required property real value
     // required property real value
     // required property real value

@@ -80,6 +80,7 @@ Scope {
                         rightPadding: 8
                     }
                     Slider {
+                        Layout.fillWidth: true
                         value: Pipewire.defaultAudioSink?.audio.volume ?? 0
                         //value: Pipewire.defaultAudioSink?.audio.volume ?? 0
                     }

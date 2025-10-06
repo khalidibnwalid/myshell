@@ -21,6 +21,7 @@ Singleton {
                 property string bgColor: "#131317"
                 property string fgColor: "#e5e1e7"
                 property string accentColor: "#c2c1ff"
+                property string accentColorLight: "#E3E3FA"
                 property string highlightColor: "#54545f"
                 property string borderColor: "#000000"
             }
