@@ -9,7 +9,6 @@ import Quickshell.Io
 Scope {
     id: root
 
-    property string time
     property HyprlandWorkspace activeWs: Hyprland.workspaces.values.find(ws => ws.focused)
     property list<HyprlandToplevel> workspaceToplevels: activeWs?.toplevels?.values || []
     // TODO: add floating windows
@@ -90,17 +89,17 @@ Scope {
 
                 // Bottom Items
                 ColumnLayout {
-                    implicitHeight: 30
 
                     anchors {
                         left: parent.left
                         right: parent.right
                         bottom: parent.bottom
+                        margins: 5
+                        bottomMargin: 10
                     }
 
                     // background
                     Rectangle {
-                        anchors.margins: 3
                         anchors.fill: parent
                         color: Appearance.bgColor
                         radius: 16
@@ -114,29 +113,9 @@ Scope {
                         }
                     }
 
-                    BarClock {
-                        timeParts: root.time ? root.time.split("|") : ["", "", ""]
-                    }
+                    BarClock {}
                 }
             }
         }
-    }
-
-    Process {
-        id: dateProc
-
-        command: ["date", "+%I|%M|%p"]
-        running: true
-
-        stdout: StdioCollector {
-            onStreamFinished: root.time = this.text
-        }
-    }
-
-    Timer {
-        interval: 1000
-        running: true
-        repeat: true
-        onTriggered: dateProc.running = true
     }
 }
