@@ -1,11 +1,8 @@
 import "../../config/"
 import "../../services"
-import "../../components/"
 import QtQuick
-import QtQuick.Layouts
+import QtQuick.Controls
 import Quickshell
-import Quickshell.Hyprland
-import Quickshell.Io
 
 Scope {
     id: root
@@ -51,57 +48,41 @@ Scope {
                     opacity: 0.5
                 }
 
-                ColumnLayout {
+                // `Component` will prevent the component from loading immediately,
+                // basically lazy loading with a reference
+                Component {
+                    id: wifiPageComponent
+                    WifiPage {}
+                }
+
+                Component {
+                    id: bluetoothPageComponent
+                    BluetoothPage {}
+                }
+
+                Component {
+                    id: batteryPageComponent
+                    BatteryPage {}
+                }
+
+                Component {
+                    id: mainPageComponent
+                    MainPage {}
+                }
+
+                StackView {
+                    id: stackView
                     anchors.fill: parent
-                    anchors.margins: 6
-                    spacing: 3
+                }
 
-                    GridLayout {
-                        id: contentGrid
-                        columns: 2
-                        rowSpacing: 14
-                        columnSpacing: 14
-                        Layout.alignment: Qt.AlignHCenter
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-
-                        Button {
-                            text: "Wi-Fi"
-                            icon: "wifi"
-                            endIcon: "arrow_forward_ios"
-                        }
-                        Button {
-                            text: "Bluetooth"
-                            icon: "bluetooth"
-                            endIcon: "arrow_forward_ios"
-                        }
-                        Button {
-                            text: "Battery"
-                            icon: "energy_savings_leaf"
-                            endIcon: "arrow_forward_ios"
-                        }
-                        Button {
-                            text: "settings"
-                            icon: "settings"
-                        }
-                    }
-
-                    RowLayout {
-                        Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignHCenter
-                        spacing: 30
-                        anchors.margins: 20
-
-                        MaterialSymbol {
-                            icon: "volume_up"
-                            color: Appearance.fgColor
-                            font.pixelSize: 32
-                        }
-                        Slider {
-                            value: 0
-                            width: 330
-                            //value: Pipewire.defaultAudioSink?.audio.volume ?? 0
-                        }
+                Component.onCompleted: {
+                    if (stackView.depth === 0) {
+                        stackView.push(mainPageComponent, {
+                            "stackView": stackView,
+                            "wifiPageComponent": wifiPageComponent,
+                            "bluetoothPageComponent": bluetoothPageComponent,
+                            "batteryPageComponent": batteryPageComponent
+                        });
                     }
                 }
             }
