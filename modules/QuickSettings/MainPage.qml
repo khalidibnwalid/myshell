@@ -1,5 +1,5 @@
 import "../../config/"
-import "../../services"
+import "../../services/"
 import "../../components/"
 import QtQuick
 import QtQuick.Layouts
@@ -9,6 +9,10 @@ Item {
     property var wifiPageComponent
     property var bluetoothPageComponent
     property var batteryPageComponent
+
+    Audio {
+        id: audio
+    }
 
     ColumnLayout {
         anchors.top: parent.top
@@ -61,18 +65,19 @@ Item {
         RowLayout {
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignHCenter
-            spacing: 30
+            spacing: 16
             anchors.margins: 20
 
             MaterialSymbol {
-                icon: "volume_up"
+                icon: audio.volume === 0 ? "volume_mute" : (audio.volume < 0.5 ? "volume_down" : "volume_up")
                 color: Appearance.fgColor
                 font.pixelSize: 32
             }
+
             Slider {
-                value: 0
+                value: audio.volume
                 width: 330
-                //value: Pipewire.defaultAudioSink?.audio.volume ?? 0
+                onDragged: audio.setVolume(value)
             }
         }
     }

@@ -1,23 +1,21 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Services.Pipewire
 import Quickshell.Widgets
 import "../../components/"
 import "../../config/"
+import "../../services/"
 
 // credits to the official example
 Scope {
     id: root
 
-    // Bind the pipewire node so its volume will be tracked
-    PwObjectTracker {
-        objects: [Pipewire.defaultAudioSink]
+    Audio {
+        id: audio
     }
 
     Connections {
-        target: Pipewire.defaultAudioSink?.audio
-
+        target: audio
         function onVolumeChanged() {
             root.shouldShowOsd = true;
             hideTimer.restart();
@@ -39,8 +37,6 @@ Scope {
         active: root.shouldShowOsd
 
         PanelWindow {
-            // Since the panel's screen is unset, it will be picked by the compositor
-            // when the window is created. Most compositors pick the current active monitor.
             anchors.bottom: true
             margins.bottom: screen.height / 5
             exclusiveZone: 0
@@ -74,15 +70,16 @@ Scope {
                     }
 
                     MaterialSymbol {
-                        icon: Pipewire.defaultAudioSink.audio.volume === 0 ? "volume_mute" : (Pipewire.defaultAudioSink.audio.volume < 0.5 ? "volume_down" : "volume_up")
+                        icon: audio.volume === 0 ? "volume_mute" : (audio.volume < 0.5 ? "volume_down" : "volume_up")
                         color: Appearance.fgColor
                         font.pixelSize: 32
                         rightPadding: 8
                     }
+
                     Slider {
                         Layout.fillWidth: true
-                        value: Pipewire.defaultAudioSink?.audio.volume ?? 0
-                        //value: Pipewire.defaultAudioSink?.audio.volume ?? 0
+                        value: audio.volume
+                        onDragged: audio.setVolume(value)
                     }
                 }
             }
