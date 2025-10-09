@@ -10,17 +10,20 @@ Item {
     property var bluetoothPageComponent
     property var batteryPageComponent
 
+    implicitHeight: layout.implicitHeight + 24
+
     Audio {
         id: audio
     }
 
     ColumnLayout {
+        id: layout
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.margins: 12
-        spacing: 3
-
+        spacing: 12
+        // TODO: maybe make this customizable?
         GridLayout {
             id: contentGrid
             columns: 2
@@ -47,9 +50,10 @@ Item {
                 })
             }
 
+            // TODO: disable on isLaptopBattery = false, but I don't know what to swap it with
             Button {
-                text: "Battery"
-                icon: "energy_savings_leaf"
+                text: "Battery " + Math.round(Battery.percentage * 100) + "%"
+                icon: Battery.activeProfileIcon
                 endIcon: "arrow_forward_ios"
                 onClicked: stackView.push(batteryPageComponent, {
                     "stackView": stackView

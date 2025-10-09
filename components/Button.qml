@@ -19,6 +19,11 @@ Rectangle {
 
     property int borderMargin: 6
 
+    property string fillColor: Appearance.accentColor
+    property string highlightColor: Appearance.accentColorLight
+    property string textColor: Appearance.bgColor
+    property string highlightTextColor: Appearance.bgColor
+
     signal clicked(var event)
     signal hovered(var event)
     signal unhovered(var event)
@@ -34,7 +39,7 @@ Rectangle {
         anchors.centerIn: parent
         width: parent.width - borderMargin * 2
         height: parent.height - borderMargin * 2
-        color: Appearance.accentColor
+        color: root.fillColor
         radius: 16
         z: 0
 
@@ -74,7 +79,7 @@ Rectangle {
         width: parent.width
         height: parent.height
         color: "transparent"
-        border.color: Appearance.accentColor
+        border.color: root.fillColor
         border.width: 3
         radius: 16 + borderMargin
         opacity: 0.5
@@ -100,9 +105,10 @@ Rectangle {
         z: 2
 
         MaterialSymbol {
+            id: icon
             icon: root.icon
             font.pixelSize: root.iconSize
-            color: Appearance.bgColor
+            color: root.textColor
             Layout.alignment: Qt.AlignVCenter
             visible: root.icon !== ""
         }
@@ -112,16 +118,17 @@ Rectangle {
             text: root.text
             Layout.alignment: Qt.AlignVCenter
             Layout.fillWidth: true
-            color: Appearance.bgColor
+            color: root.textColor
             font.pixelSize: root.textSize
             font.weight: Font.DemiBold
             z: 2
         }
 
         MaterialSymbol {
+            id: endIcon
             icon: root.endIcon
             font.pixelSize: root.endIconSize
-            color: Appearance.bgColor
+            color: root.textColor
             Layout.alignment: Qt.AlignVCenter
             visible: root.endIcon !== ""
         }
@@ -134,15 +141,23 @@ Rectangle {
         hoverEnabled: true
         onEntered: m => {
             root.hovered(m);
-            bg.color = Appearance.accentColorLight;
+            bg.color = root.highlightColor;
             borderArea.opacity = 0.4;
             root.borderMargin = 8;
+
+            textArea.color = root.highlightTextColor;
+            icon.color = root.highlightTextColor;
+            endIcon.color = root.highlightTextColor;
         }
         onExited: m => {
             root.unhovered(m);
             root.borderMargin = 6;
             borderArea.opacity = 0.5;
-            bg.color = Appearance.accentColor;
+            bg.color = root.fillColor;
+
+            textArea.color = root.textColor;
+            icon.color = root.textColor;
+            endIcon.color = root.textColor;
         }
         onClicked: m => root.clicked(m)
     }

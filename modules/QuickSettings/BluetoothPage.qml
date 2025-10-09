@@ -6,7 +6,10 @@ import QtQuick.Layouts
 Item {
     property var stackView
 
+    implicitHeight: layout.implicitHeight + 12
+
     ColumnLayout {
+        id: layout
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right

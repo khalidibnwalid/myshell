@@ -16,17 +16,21 @@ Scope {
             model: Quickshell.screens
 
             PanelWindow {
-                // focus: false
-
                 id: bottomPanel
-
                 required property var modelData
 
                 screen: modelData
                 visible: true
                 implicitWidth: 440
-                implicitHeight: 250
+                implicitHeight: stackView?.currentItem?.implicitHeight + 24 < 250 ? 250 : stackView?.currentItem?.implicitHeight + 24
                 color: "transparent"
+
+                Behavior on implicitHeight {
+                    NumberAnimation {
+                        duration: 40
+                        easing.type: Easing.OutQuad
+                    }
+                }
 
                 anchors {
                     right: true

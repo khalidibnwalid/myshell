@@ -12,7 +12,6 @@ ColumnLayout {
     Layout.fillWidth: true
     Layout.alignment: Qt.AlignHCenter
 
-    Layout.topMargin: 12
     Layout.bottomMargin: 12
 
     property int fontSize: 20

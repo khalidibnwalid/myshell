@@ -1,5 +1,6 @@
 import "../../config/"
-import "../../services"
+import "../../components/"
+import "../../services/"
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
@@ -111,6 +112,15 @@ Scope {
                             onClicked: WindowManager.setQuickSettingsVisible(!WindowManager.quickSettingsVisible)
                             cursorShape: Qt.PointingHandCursor
                         }
+                    }
+
+                    MaterialSymbol {
+                        visible: Battery.device.isLaptopBattery
+                        icon: Battery.iconName
+                        font.pixelSize: 24
+                        fill: Battery.percentage
+                        color: Appearance.fgColor
+                        Layout.alignment: Qt.AlignHCenter
                     }
 
                     BarClock {}
