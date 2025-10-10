@@ -10,9 +10,14 @@ Rectangle {
 
     property string icon
     property int iconSize: 24
+    property real iconFill
+
+    property string image
+    property int imageSize: 24
 
     property string endIcon
     property int endIconSize: 24
+    property real endIconFill
 
     property int vMargin: 4
     property int hMargin: 18
@@ -23,6 +28,9 @@ Rectangle {
     property string highlightColor: Appearance.accentColorLight
     property string textColor: Appearance.bgColor
     property string highlightTextColor: Appearance.bgColor
+
+    property alias elide: textArea.elide
+    property alias wrapMode: textArea.wrapMode
 
     signal clicked(var event)
     signal hovered(var event)
@@ -111,6 +119,17 @@ Rectangle {
             color: root.textColor
             Layout.alignment: Qt.AlignVCenter
             visible: root.icon !== ""
+            fill: root.iconFill
+        }
+
+        Image {
+            id: imageIcon
+            visible: root.image !== ""
+            source: root.image
+            fillMode: Image.PreserveAspectFit
+            Layout.alignment: Qt.AlignVCenter
+            Layout.preferredWidth: root.imageSize
+            Layout.preferredHeight: root.imageSize
         }
 
         Text {
@@ -131,6 +150,7 @@ Rectangle {
             color: root.textColor
             Layout.alignment: Qt.AlignVCenter
             visible: root.endIcon !== ""
+            fill: root.endIconFill
         }
     }
 

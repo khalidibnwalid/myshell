@@ -18,10 +18,6 @@ Scope {
         function onVolumeChanged() {
             root.volume = defaultSink.audio.volume;
         }
-
-        function onMuteChanged() {
-            root.mute = defaultSink.audio.mute;
-        }
     }
 
     function setVolume(newVolume) {

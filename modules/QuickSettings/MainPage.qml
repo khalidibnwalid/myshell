@@ -39,15 +39,20 @@ Item {
                 onClicked: stackView.push(wifiPageComponent, {
                     "stackView": stackView
                 })
+                elide: Text.ElideRight
+                wrapMode: Text.NoWrap
             }
 
-            Button {
-                text: "Bluetooth"
-                icon: "bluetooth"
+            ToggleButton {
+                toggled: Bluetooth.enabled
+                text: Bluetooth.connectedDevices.length ? Bluetooth.connectedDevices[0].name : "Bluetooth"
+                icon: Bluetooth.statusIcon
                 endIcon: "arrow_forward_ios"
                 onClicked: stackView.push(bluetoothPageComponent, {
                     "stackView": stackView
                 })
+                elide: Text.ElideRight
+                wrapMode: Text.NoWrap
             }
 
             // TODO: disable on isLaptopBattery = false, but I don't know what to swap it with

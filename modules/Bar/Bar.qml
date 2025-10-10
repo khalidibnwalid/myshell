@@ -115,6 +115,14 @@ Scope {
                     }
 
                     MaterialSymbol {
+                        visible: bluetooth.enabled
+                        icon: Bluetooth.statusIcon
+                        font.pixelSize: 24
+                        color: Appearance.fgColor
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+
+                    MaterialSymbol {
                         visible: Battery.device.isLaptopBattery
                         icon: Battery.iconName
                         font.pixelSize: 24

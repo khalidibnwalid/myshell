@@ -74,11 +74,4 @@ Scope {
             root.state = device.state;
         }
     }
-
-    Connections {
-        target: powerProfiles
-        function onActiveProfileChanged() {
-            root.activeProfile = powerProfiles.activeProfile;
-        }
-    }
 }
