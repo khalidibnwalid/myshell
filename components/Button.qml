@@ -71,13 +71,6 @@ Rectangle {
                 easing.type: Easing.OutQuad
             }
         }
-
-        Behavior on color {
-            ColorAnimation {
-                duration: 100
-                easing.type: Easing.OutQuad
-            }
-        }
     }
 
     // border
@@ -92,13 +85,6 @@ Rectangle {
         radius: 16 + borderMargin
         opacity: 0.5
         z: 1
-
-        Behavior on opacity {
-            NumberAnimation {
-                duration: 100
-                easing.type: Easing.OutQuad
-            }
-        }
     }
 
     // content
@@ -159,26 +145,54 @@ Rectangle {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
         hoverEnabled: true
-        onEntered: m => {
-            root.hovered(m);
-            bg.color = root.highlightColor;
-            borderArea.opacity = 0.4;
-            root.borderMargin = 8;
-
-            textArea.color = root.highlightTextColor;
-            icon.color = root.highlightTextColor;
-            endIcon.color = root.highlightTextColor;
-        }
-        onExited: m => {
-            root.unhovered(m);
-            root.borderMargin = 6;
-            borderArea.opacity = 0.5;
-            bg.color = root.fillColor;
-
-            textArea.color = root.textColor;
-            icon.color = root.textColor;
-            endIcon.color = root.textColor;
-        }
+        onEntered: m => root.hovered(m)
+        onExited: m => root.unhovered(m)
         onClicked: m => root.clicked(m)
     }
+
+    states: [
+        State {
+            name: "hovered"
+            when: mouseArea.containsMouse
+            PropertyChanges {
+                target: bg
+                color: root.highlightColor
+            }
+            PropertyChanges {
+                target: borderArea
+                opacity: 0.4
+            }
+            PropertyChanges {
+                target: root
+                borderMargin: 8
+            }
+            PropertyChanges {
+                target: textArea
+                color: root.highlightTextColor
+            }
+            PropertyChanges {
+                target: icon
+                color: root.highlightTextColor
+            }
+            PropertyChanges {
+                target: endIcon
+                color: root.highlightTextColor
+            }
+        }
+    ]
+
+    transitions: [
+        Transition {
+            ParallelAnimation {
+                ColorAnimation {
+                    duration: 100
+                    easing.type: Easing.OutQuad
+                }
+                NumberAnimation {
+                    duration: 100
+                    easing.type: Easing.OutQuad
+                }
+            }
+        }
+    ]
 }

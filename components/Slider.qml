@@ -57,36 +57,13 @@ Rectangle {
             radius: 7
             color: Appearance.accentColor
             anchors.centerIn: parent
-
-            Behavior on color {
-                ColorAnimation {
-                    duration: 100
-                }
-            }
-        }
-
-        Behavior on scale {
-            NumberAnimation {
-                duration: 100
-            }
         }
     }
 
     MouseArea {
+        id: mouseArea
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
-
-        onPressed: {
-            handler.scale = 1.2;
-            innerPart.color = Appearance.accentColorLight;
-            outerPart.opacity = 0.15;
-        }
-
-        onReleased: {
-            handler.scale = 1;
-            innerPart.color = Appearance.accentColor;
-            outerPart.opacity = 0.3;
-        }
 
         onPositionChanged: {
             if (pressed)
@@ -101,4 +78,36 @@ Rectangle {
             root.dragged(newValue);
         }
     }
+
+    states: [
+        State {
+            name: "pressed"
+            when: mouseArea.pressed
+            PropertyChanges {
+                target: handler
+                scale: 1.2
+            }
+            PropertyChanges {
+                target: innerPart
+                color: Appearance.accentColorLight
+            }
+            PropertyChanges {
+                target: outerPart
+                opacity: 0.15
+            }
+        }
+    ]
+
+    transitions: [
+        Transition {
+            ParallelAnimation {
+                ColorAnimation {
+                    duration: 100
+                }
+                NumberAnimation {
+                    duration: 100
+                }
+            }
+        }
+    ]
 }
