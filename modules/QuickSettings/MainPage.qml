@@ -6,7 +6,7 @@ import QtQuick.Layouts
 
 Item {
     property var stackView
-    property var wifiPageComponent
+    property var networkPageComponent
     property var bluetoothPageComponent
     property var batteryPageComponent
 
@@ -32,11 +32,12 @@ Item {
             Layout.alignment: Qt.AlignHCenter
             Layout.fillWidth: true
 
-            Button {
-                text: "Wi-Fi"
-                icon: "wifi"
+            ToggleButton {
+                toggled: Network.enabled
+                text: Network.connected ? Network.active.ssid : Network.enabled ? "Available" : "Disabled"
+                icon: Network.statusIcon
                 endIcon: "arrow_forward_ios"
-                onClicked: stackView.push(wifiPageComponent, {
+                onClicked: stackView.push(networkPageComponent, {
                     "stackView": stackView
                 })
                 elide: Text.ElideRight
@@ -65,7 +66,9 @@ Item {
                 })
             }
 
-            Button {
+            // TODO
+            ToggleButton {
+                toggled: false
                 text: "settings"
                 icon: "settings"
             }

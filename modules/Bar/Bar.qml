@@ -115,7 +115,14 @@ Scope {
                     }
 
                     MaterialSymbol {
-                        visible: bluetooth.enabled
+                        icon: Network.statusIcon
+                        font.pixelSize: 24
+                        color: Appearance.fgColor
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+
+                    MaterialSymbol {
+                        visible: Bluetooth.enabled
                         icon: Bluetooth.statusIcon
                         font.pixelSize: 24
                         color: Appearance.fgColor

@@ -55,8 +55,8 @@ Scope {
                 // `Component` will prevent the component from loading immediately,
                 // basically lazy loading with a reference
                 Component {
-                    id: wifiPageComponent
-                    WifiPage {}
+                    id: networkPageComponent
+                    NetworkPage {}
                 }
 
                 Component {
@@ -83,7 +83,7 @@ Scope {
                     if (stackView.depth === 0) {
                         stackView.push(mainPageComponent, {
                             "stackView": stackView,
-                            "wifiPageComponent": wifiPageComponent,
+                            "networkPageComponent": networkPageComponent,
                             "bluetoothPageComponent": bluetoothPageComponent,
                             "batteryPageComponent": batteryPageComponent
                         });
