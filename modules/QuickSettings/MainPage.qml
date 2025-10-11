@@ -71,6 +71,7 @@ Item {
                 toggled: false
                 text: "settings"
                 icon: "settings"
+                onClicked: WindowManager.toggleSettingsVisible()
             }
         }
 
