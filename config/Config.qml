@@ -6,6 +6,7 @@ import Quickshell
 Singleton {
 
     readonly property alias appearance: jsonAdapter.appearance
+    readonly property alias layout: jsonAdapter.layout
     FileView {
         // path: "../config.json"
 
@@ -24,6 +25,9 @@ Singleton {
                 property string accentColorLight: "#E3E3FA"
                 property string highlightColor: "#54545f"
                 property string borderColor: "#000000"
+            }
+            property JsonObject layout: JsonObject {
+                property string barPosition: "right"
             }
         }
     }

@@ -4,7 +4,7 @@ import "../../../config"
 import "../../../components"
 
 Item {
-    property list<color> accentColors: ["#c2c1ff", "#ffc1c1", "#c1ffc1", "#c1c1ff", "#ffc1ff", "#c1ffff"]
+    property list<color> accentColors: ["#c2c1ff", "#ffc1c1", "#c1ffc1", "#fff0c2", "#ffc1ff", "#c1ffff"]
 
     ColumnLayout {
         anchors.top: parent.top
@@ -94,6 +94,34 @@ Item {
                 width: 200
                 value: 0.5
                 onDragged: console.log("Font size:", value)
+            }
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 12
+
+            Text {
+                text: "Bar Position"
+                font.pixelSize: 18
+                color: Appearance.fgColor
+                Layout.alignment: Qt.AlignVCenter
+            }
+
+            RowLayout {
+                spacing: 8
+                Repeater {
+                    model: ["left", "right"]
+                    delegate: ToggleButton {
+                        toggled: Config.layout.barPosition === modelData
+                        Layout.preferredWidth: 120
+                        text: modelData.charAt(0).toUpperCase() + modelData.slice(1)
+
+                        onClicked: {
+                            Config.layout.barPosition = modelData;
+                        }
+                    }
+                }
             }
         }
     }

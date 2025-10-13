@@ -30,7 +30,8 @@ Scope {
 
             anchors {
                 top: true
-                right: true
+                right: Config.layout.barPosition === "right"
+                left: Config.layout.barPosition === "left"
                 bottom: true
             }
 

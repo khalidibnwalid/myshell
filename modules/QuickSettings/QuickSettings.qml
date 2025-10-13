@@ -33,12 +33,14 @@ Scope {
                 }
 
                 anchors {
-                    right: true
+                    right: Config.layout.barPosition === "right"
+                    left: Config.layout.barPosition === "left"
                     bottom: true
                 }
 
                 margins {
-                    right: 10
+                    right: Config.layout.barPosition === "right" ? 10 : 0
+                    left: Config.layout.barPosition === "left" ? 10 : 0
                     bottom: 10
                 }
 
