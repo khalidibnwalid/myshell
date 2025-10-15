@@ -10,7 +10,7 @@ Item {
     property var bluetoothPageComponent
     property var batteryPageComponent
 
-    implicitHeight: layout.implicitHeight + 24
+    implicitHeight: layout.implicitHeight
 
     Audio {
         id: audio
@@ -91,6 +91,32 @@ Item {
                 value: audio.volume
                 width: 330
                 onDragged: audio.setVolume(value)
+            }
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.alignment: Qt.AlignRight
+            spacing: 6
+
+            Button {
+                icon: "restart_alt"
+                iconSize: 26
+                vMargin: 8
+                hMargin: 11
+                onClicked: WindowManager.restartComputer()
+                Layout.preferredWidth: 48
+                Layout.preferredHeight: 48
+            }
+
+            Button {
+                icon: "power_settings_new"
+                iconSize: 22
+                vMargin: 11
+                hMargin: 13
+                onClicked: WindowManager.shutdownComputer()
+                Layout.preferredWidth: 48
+                Layout.preferredHeight: 48
             }
         }
     }
