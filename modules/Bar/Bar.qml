@@ -1,6 +1,8 @@
 import "../../config/"
 import "../../components/"
 import "../../services/"
+import "./BarTrays.qml"
+import "./BarBottomItems.qml"
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
@@ -89,9 +91,8 @@ Scope {
                     anchors.centerIn: parent
                 }
 
-                // Bottom Items
+                // bottom islands
                 ColumnLayout {
-
                     anchors {
                         left: parent.left
                         right: parent.right
@@ -100,46 +101,15 @@ Scope {
                         bottomMargin: 10
                     }
 
-                    // background
-                    Rectangle {
-                        anchors.fill: parent
-                        color: Appearance.bgColor
-                        radius: 16
-                        border.color: Appearance.borderColor
-                        border.width: 2
+                    spacing: 10
 
-                        MouseArea {
-                            anchors.fill: parent
-                            onClicked: WindowManager.setQuickSettingsVisible(!WindowManager.quickSettingsVisible)
-                            cursorShape: Qt.PointingHandCursor
-                        }
-                    }
-
-                    MaterialSymbol {
-                        icon: Network.statusIcon
-                        font.pixelSize: 24
-                        color: Appearance.fgColor
+                    BarTrays {
                         Layout.alignment: Qt.AlignHCenter
                     }
 
-                    MaterialSymbol {
-                        visible: Bluetooth.enabled
-                        icon: Bluetooth.statusIcon
-                        font.pixelSize: 24
-                        color: Appearance.fgColor
+                    BarBottomItems {
                         Layout.alignment: Qt.AlignHCenter
                     }
-
-                    MaterialSymbol {
-                        visible: Battery.device.isLaptopBattery
-                        icon: Battery.iconName
-                        font.pixelSize: 24
-                        fill: Battery.percentage
-                        color: Appearance.fgColor
-                        Layout.alignment: Qt.AlignHCenter
-                    }
-
-                    BarClock {}
                 }
             }
         }
