@@ -49,9 +49,9 @@ Scope {
                     anchors.fill: parent
                     color: Appearance.bgColor
                     radius: 24
-                    border.color: Appearance.borderColor
-                    border.width: 2
-                    opacity: 0.5
+                    border.color: Appearance.accentColor
+                    border.width: 0.5
+                    opacity: 0.8
                 }
 
                 // `Component` will prevent the component from loading immediately,

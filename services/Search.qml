@@ -144,6 +144,8 @@ Singleton {
                 const description = item.description ? item.description.toLowerCase() : "";
                 let priority = 0;
                 if (name.startsWith(query)) {
+                    priority = 3;
+                } else if (name.split(" ").map(w => w[0]).join("").toLowerCase().includes(query)) {
                     priority = 2;
                 } else if (name.includes(query)) {
                     priority = 1;

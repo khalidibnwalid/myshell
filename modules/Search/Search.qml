@@ -72,7 +72,7 @@ Scope {
                         height: parent.height
                         color: Appearance.bgColor
                         radius: 30
-                        opacity: 0.50
+                        opacity: 0.80
                         z: 1
                         border.color: Appearance.accentColor
                         border.width: 1

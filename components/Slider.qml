@@ -2,12 +2,14 @@ import QtQuick
 import QtQuick.Layouts
 import "../config/"
 
+
+// make slider the same style, size, and width as toggle button, like IPhone's UISlider
 Rectangle {
     id: root
     required property real value
     signal dragged(real value)
 
-    implicitHeight: 10
+    implicitHeight: 20
     radius: 10
     color: Appearance.highlightColor // slider background
 
