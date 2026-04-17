@@ -11,6 +11,7 @@ Item {
 
     ColumnLayout {
         id: layout
+
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
@@ -42,6 +43,7 @@ Item {
                 Layout.alignment: Qt.AlignHCenter
                 fill: Battery.percentage
             }
+
         }
 
         ColumnLayout {
@@ -58,15 +60,19 @@ Item {
 
             Repeater {
                 model: Battery.powerProfilesList
+
                 delegate: ToggleButton {
                     text: modelData.name
                     icon: modelData.icon
                     Layout.fillWidth: true
-
                     toggled: Battery.activeProfile === modelData.key
                     onClicked: Battery.setProfile(modelData.key)
                 }
+
             }
+
         }
+
     }
+
 }

@@ -8,13 +8,13 @@ Item {
     property var stackView
 
     implicitHeight: layout.implicitHeight + 12
-
     Component.onCompleted: {
         console.log("NetworkPage loaded", Network.networks);
     }
 
     ColumnLayout {
         id: layout
+
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
@@ -60,6 +60,7 @@ Item {
                 Layout.preferredWidth: 60
                 onClicked: Network.toggleWifi()
             }
+
         }
 
         ListView {
@@ -79,19 +80,21 @@ Item {
                     Layout.fillWidth: true
                     toggled: modelData.active
                     onClicked: {
-                        if (!modelData.active) {
+                        if (!modelData.active)
                             Network.connectToNetwork(modelData.ssid, ""); //TODO: password prompt
-                        } else {
+                        else
                             Network.disconnectFromNetwork();
-                        }
                     }
                     wrapMode: Text.NoWrap
                     elide: Text.ElideRight
                     icon: Network.getStatusIcon(modelData.strength)
-
                     endIcon: modelData.secure ? "key" : ""
                 }
+
             }
+
         }
+
     }
+
 }

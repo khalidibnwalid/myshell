@@ -1,18 +1,33 @@
 import Quickshell
-import "modules/Bar"
-import "modules/Search"
-import "modules/QuickSettings"
-import "modules/Workspaces"
-import "modules/OSD"
-import "modules/Settings"
 import Quickshell.Hyprland
+import "modules/Bar"
+import "modules/Dock"
+import "modules/OSD"
+import "modules/QuickSettings"
+import "modules/Search"
+import "modules/Settings"
+import "modules/Workspaces"
 
 Scope {
-    Bar {}
-    QuickSettings {}
-    Settings {}
+    Bar {
+    }
 
-    Search {}
-    VolumeOsd {}
-    Workspaces {}
+    QuickSettings {
+    }
+
+    Settings {
+    }
+
+    Search {
+    }
+
+    VolumeOsd {
+    }
+
+    Workspaces {
+    }
+
+    // Dock {
+    // }
+
 }

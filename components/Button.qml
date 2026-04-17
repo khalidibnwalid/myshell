@@ -22,7 +22,7 @@ Rectangle {
     property int vMargin: 4
     property int hMargin: 18
 
-    property int borderMargin: 6
+    property int borderMargin: 4
 
     property string fillColor: Appearance.accentColor
     property string highlightColor: Appearance.accentColorLight
@@ -81,7 +81,7 @@ Rectangle {
         height: parent.height
         color: "transparent"
         border.color: root.fillColor
-        border.width: 3
+        border.width: 1
         radius: 16 + borderMargin
         opacity: 0.5
         z: 1
@@ -164,7 +164,7 @@ Rectangle {
             }
             PropertyChanges {
                 target: root
-                borderMargin: 8
+                borderMargin: 6
             }
             PropertyChanges {
                 target: textArea

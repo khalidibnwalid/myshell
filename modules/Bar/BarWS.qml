@@ -103,6 +103,16 @@ Item {
                     border.color: Appearance.fgColor
                 }
 
+                Text {
+                    anchors.centerIn: parent
+                    text: workspaceId
+                    font.pixelSize: 16
+                    font.family: "Monospace"
+                    font.bold: true
+                    opacity: currentWs?.focused ? 1 : (workspaceToplevels.length > 0 ? 0.6 : 0.3)
+                    color: (currentWs?.focused || workspaceToplevels.length > 0) ? Appearance.bgColor : Appearance.fgColor
+                }
+
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor

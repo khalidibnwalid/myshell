@@ -1,31 +1,33 @@
+import "../../components/"
+import "../../config/"
+import "../../services/"
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Widgets
-import "../../components/"
-import "../../config/"
-import "../../services/"
 
 // credits to the official example
 Scope {
     id: root
+
+    property bool shouldShowOsd: false
 
     Audio {
         id: audio
     }
 
     Connections {
-        target: audio
         function onVolumeChanged() {
             root.shouldShowOsd = true;
             hideTimer.restart();
         }
-    }
 
-    property bool shouldShowOsd: false
+        target: audio
+    }
 
     Timer {
         id: hideTimer
+
         interval: 1000
         onTriggered: root.shouldShowOsd = false
     }
@@ -37,16 +39,12 @@ Scope {
         active: root.shouldShowOsd
 
         PanelWindow {
-            anchors.bottom: true
-            margins.bottom: screen.height / 5
+            anchors.right: true
+            margins.right: 32
             exclusiveZone: 0
-
-            implicitWidth: 400
-            implicitHeight: 50
+            implicitWidth: 64
+            implicitHeight: 240
             color: "transparent"
-
-            // An empty click mask prevents the window from blocking mouse events.
-            mask: Region {}
 
             Rectangle {
                 anchors.fill: parent
@@ -56,33 +54,37 @@ Scope {
                 Rectangle {
                     anchors.fill: parent
                     color: Appearance.bgColor
-                    radius: 17
-                    opacity: 0.6
+                    radius: 20
+                    opacity: 0.7
                     border.color: Appearance.borderColor
                     border.width: 1
                 }
 
-                RowLayout {
+                ColumnLayout {
                     anchors {
                         fill: parent
-                        leftMargin: 10
-                        rightMargin: 15
+                        margins: 4
                     }
 
-                    MaterialSymbol {
-                        icon: audio.volume === 0 ? "volume_mute" : (audio.volume < 0.5 ? "volume_down" : "volume_up")
-                        color: Appearance.fgColor
-                        font.pixelSize: 32
-                        rightPadding: 8
-                    }
-
-                    Slider {
+                    VolumeSlider {
                         Layout.fillWidth: true
+                        Layout.fillHeight: true
                         value: audio.volume
                         onDragged: audio.setVolume(value)
+                        icon: audio.volume === 0 ? "volume_mute" : (audio.volume < 0.5 ? "volume_down" : "volume_up")
+                        borderMargin: 4
                     }
+
                 }
+
             }
+
+            // An empty click mask prevents the window from blocking mouse events.
+            mask: Region {
+            }
+
         }
+
     }
+
 }

@@ -11,6 +11,7 @@ Item {
 
     ColumnLayout {
         id: layout
+
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
@@ -56,6 +57,7 @@ Item {
                 toggled: Bluetooth.enabled
                 onClicked: Bluetooth.toggle()
             }
+
         }
 
         ListView {
@@ -82,14 +84,19 @@ Item {
                         // ref: /usr/share/icons/Adwaita/scalable/devices
                         if (icon.includes("headphone") || icon.includes("headset"))
                             return "headphones";
+
                         if (icon.includes("microphone"))
                             return "mic";
+
                         if (icon.includes("keyboard"))
                             return "keyboard";
+
                         if (icon.includes("mouse"))
                             return "mouse";
+
                         if (icon.includes("printer"))
                             return "print";
+
                         return "general_device";
                     }
                 }
@@ -104,7 +111,11 @@ Item {
                     toggled: false
                     enabled: false
                 }
+
             }
+
         }
+
     }
+
 }

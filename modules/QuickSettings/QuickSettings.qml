@@ -49,9 +49,19 @@ Scope {
                     anchors.fill: parent
                     color: Appearance.bgColor
                     radius: 24
-                    border.color: Appearance.accentColor
-                    border.width: 0.5
-                    opacity: 0.8
+                    border.width: 0
+                    opacity: 0.98
+
+                    // Subtle edge highlight (very faint)
+                    Rectangle {
+                        anchors.fill: parent
+                        anchors.margins: 1
+                        color: "transparent"
+                        radius: parent.radius - 1
+                        border.color: "white"
+                        border.width: 1
+                        opacity: 0.04
+                    }
                 }
 
                 // `Component` will prevent the component from loading immediately,
