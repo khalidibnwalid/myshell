@@ -31,6 +31,9 @@ Scope {
     VolumeOsd {
     }
 
+    BrightnessOsd {
+    }
+
     Workspaces {
     }
 

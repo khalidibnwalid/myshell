@@ -18,6 +18,10 @@ Item {
         id: audio
     }
 
+    Backlight {
+        id: backlight
+    }
+
     ColumnLayout {
         id: layout
 
@@ -116,8 +120,11 @@ Item {
                     "stackView": stackView
                 })
                 Layout.fillWidth: true
-                fillColor: Appearance.highlightColor
-                textColor: Appearance.fgColor
+                fillColor: "black"
+                borderColor: Appearance.accentColor
+                progressColor: Appearance.accentColor
+                progress: Battery.percentage
+                textColor: progress > 0.4 ? Appearance.bgColor : Appearance.fgColor
             }
 
             ToggleButton {
@@ -131,44 +138,23 @@ Item {
         }
 
         // --- Volume Section ---
-        ColumnLayout {
+        VolumeSlider {
+            vertical: false
+            value: audio.volume
+            onDragged: audio.setVolume(value)
             Layout.fillWidth: true
-            spacing: 4
+            Layout.preferredHeight: 52
+            icon: audio.volume === 0 ? "volume_mute" : (audio.volume < 0.5 ? "volume_down" : "volume_up")
+        }
 
-            RowLayout {
-                Layout.fillWidth: true
-                Layout.leftMargin: 4
-
-                Text {
-                    text: "Volume"
-                    color: Appearance.fgColor
-                    font.pixelSize: 13
-                    font.bold: true
-                    opacity: 0.5
-                }
-
-                Item {
-                    Layout.fillWidth: true
-                }
-
-                Text {
-                    text: Math.round(Math.min(audio.volume, 1) * 100) + "%"
-                    color: Appearance.accentColor
-                    font.pixelSize: 13
-                    font.bold: true
-                }
-
-            }
-
-            VolumeSlider {
-                vertical: false
-                value: audio.volume
-                onDragged: audio.setVolume(value)
-                Layout.fillWidth: true
-                Layout.preferredHeight: 52
-                icon: audio.volume === 0 ? "volume_mute" : (audio.volume < 0.5 ? "volume_down" : "volume_up")
-            }
-
+        // --- Brightness Section ---
+        VolumeSlider {
+            vertical: false
+            value: backlight.percentage
+            onDragged: backlight.setBrightness(value)
+            Layout.fillWidth: true
+            Layout.preferredHeight: 52
+            icon: "light_mode"
         }
 
         // --- Calendar Section ---

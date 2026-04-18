@@ -14,6 +14,9 @@ Item {
     property string borderColor: Appearance.accentColor
     property string iconColor: Appearance.bgColor
     property bool vertical: true
+    readonly property bool dragging: mouseArea.pressed
+    property real dragValue: 0
+    readonly property real displayValue: dragging ? dragValue : value
 
     signal dragged(real value)
 
@@ -50,8 +53,8 @@ Item {
             anchors.bottom: root.vertical ? parent.bottom : parent.bottom
             anchors.left: parent.left
             anchors.top: root.vertical ? undefined : parent.top
-            width: root.vertical ? parent.width : parent.width * Math.min(root.value, 1)
-            height: root.vertical ? parent.height * Math.min(root.value, 1) : parent.height
+            width: root.vertical ? parent.width : parent.width * Math.min(root.displayValue, 1)
+            height: root.vertical ? parent.height * Math.min(root.displayValue, 1) : parent.height
             color: root.fillColor
             radius: bg.radius
         }
@@ -64,8 +67,8 @@ Item {
             anchors.leftMargin: root.vertical ? 0 : 45
             anchors.bottomMargin: root.vertical ? 40 : 0
             anchors.bottom: root.vertical ? parent.bottom : undefined
-            text: Math.round(Math.min(root.value, 1) * 100)
-            color: root.value > (root.vertical ? 0.3 : 0.15) ? root.iconColor : Appearance.fgColor
+            text: Math.round(Math.min(root.displayValue, 1) * 100)
+            color: root.displayValue > (root.vertical ? 0.3 : 0.15) ? root.iconColor : Appearance.fgColor
             font.pixelSize: root.vertical ? 20 : 16
             font.bold: true
             opacity: 0.8
@@ -81,7 +84,7 @@ Item {
             anchors.bottomMargin: root.vertical ? 8 : 0
             icon: root.icon
             font.pixelSize: root.vertical ? 26 : 22
-            color: root.value > (root.vertical ? 0.15 : 0.05) ? root.iconColor : Appearance.fgColor
+            color: root.displayValue > (root.vertical ? 0.15 : 0.05) ? root.iconColor : Appearance.fgColor
         }
 
     }
@@ -95,11 +98,16 @@ Item {
                 newValue = Math.max(0, Math.min(1, 1 - mouseY / height));
             else
                 newValue = Math.max(0, Math.min(1, mouseX / width));
+            root.dragValue = newValue;
             root.dragged(newValue);
         }
 
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
+        onPressed: {
+            root.dragValue = root.value;
+            updateValue();
+        }
         onPositionChanged: {
             if (pressed)
                 updateValue();

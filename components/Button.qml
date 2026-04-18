@@ -23,6 +23,8 @@ Rectangle {
     property color textColor: Appearance.fgColor
     property color highlightTextColor: Appearance.fgColor
     property color borderColor: fillColor
+    property real progress: -1
+    property color progressColor: Appearance.accentColor
     property real backgroundOpacity: 1
     property alias elide: textArea.elide
     property alias wrapMode: textArea.wrapMode
@@ -102,6 +104,29 @@ Rectangle {
         opacity: root.backgroundOpacity
         radius: root.radius - root.borderMargin
         z: 0
+        clip: true
+
+        Rectangle {
+            id: progressFill
+
+            anchors.left: parent.left
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            width: parent.width * Math.min(Math.max(root.progress, 0), 1)
+            color: root.progressColor
+            radius: parent.radius
+            visible: root.progress >= 0
+
+            Behavior on width {
+                NumberAnimation {
+                    duration: 250
+                    easing.type: Easing.OutCubic
+                }
+
+            }
+
+        }
+
     }
 
     // border (The "Thin Blue Border" from the volume bar)
