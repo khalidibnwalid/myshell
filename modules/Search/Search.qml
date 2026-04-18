@@ -58,13 +58,6 @@ Scope {
                     height: parent.height
                     transformOrigin: Item.Center
 
-                    // Behavior on width {
-                    //     NumberAnimation {
-                    //         duration: 150
-                    //         easing.type: Easing.InOutQuad
-                    //     }
-                    // }
-
                     // Background
                     Rectangle {
                         anchors.centerIn: parent
@@ -102,12 +95,9 @@ Scope {
 
                             MaterialSymbol {
                                 icon: "search"
-                                // fill: 1
-                                // grad: 0
                                 color: Appearance.fgColor
                                 font.pixelSize: 32
                                 opacity: 0.8
-                                // leftPadding: 16
                                 rightPadding: 8
                             }
 
@@ -159,7 +149,6 @@ Scope {
                         // Results list
                         Item {
                             Layout.fillWidth: true
-                            //Layout.preferredHeight: filteredResults.length > 0 ? Math.min(filteredResults.length, maxVisibleResults) * (resultHeight + 4) + 16 : 0
                             Layout.fillHeight: true
 
                             ListView {
@@ -187,22 +176,6 @@ Scope {
                                     }
                                 }
 
-                                remove: Transition {
-                                    NumberAnimation {
-                                        properties: "opacity, y"
-                                        from: 1
-                                        to: 0
-                                        duration: 200
-                                    }
-
-                                    NumberAnimation {
-                                        properties: "y"
-                                        from: 0
-                                        to: 20
-                                        duration: 200
-                                    }
-                                }
-
                                 delegate: Rectangle {
                                     width: parent.width - 60
                                     height: resultsView.currentIndex === index ? panelWindow.resultHeight + 24 : panelWindow.resultHeight + 12
@@ -215,19 +188,37 @@ Scope {
                                         anchors.fill: parent
                                         anchors.leftMargin: 30
 
-                                        MaterialSymbol {
-                                            visible: !(modelData?.image?.length > 0) && modelData?.icon?.length > 0
-                                            icon: modelData.icon
-                                            color: Appearance.fgColor
-                                            font.pixelSize: 46
-                                            opacity: 0.8
-                                        }
-                                        Image {
-                                            visible: modelData?.image?.length > 0 && !modelData?.icon?.length > 0
-                                            source: "image://icon/" + modelData.image
+                                        // Icons and Images
+                                        Item {
                                             Layout.preferredHeight: 46
                                             Layout.preferredWidth: 46
-                                            fillMode: Image.PreserveAspectFit
+
+                                            // 1. Precise Image (Apps or System Icons - Priority)
+                                            Image {
+                                                id: mainImg
+                                                anchors.fill: parent
+                                                visible: modelData?.image?.length > 0
+                                                source: {
+                                                    if (!modelData?.image) return "";
+                                                    if (modelData.image.startsWith("/") || modelData.image.startsWith("file://")) {
+                                                        return modelData.image.startsWith("file://") ? modelData.image : "file://" + modelData.image;
+                                                    }
+                                                    return "image://icon/" + modelData.image;
+                                                }
+                                                fillMode: Image.PreserveAspectFit
+                                            }
+
+                                            // 2. Symbolic fallback (Only if no image exists)
+                                            MaterialSymbol {
+                                                anchors.fill: parent
+                                                visible: !mainImg.visible || mainImg.status === Image.Error
+                                                icon: modelData?.icon || (modelData?.type === "file" ? "description" : "article")
+                                                color: Appearance.fgColor
+                                                font.pixelSize: 40
+                                                opacity: 0.6
+                                                verticalAlignment: Text.AlignVCenter
+                                                horizontalAlignment: Text.AlignHCenter
+                                            }
                                         }
 
                                         ColumnLayout {
@@ -241,7 +232,7 @@ Scope {
                                                 font.weight: resultsView.currentIndex === index ? Font.Normal : Font.Light
                                             }
                                             Text {
-                                                text: modelData.description
+                                                text: modelData.description || ""
                                                 font.pixelSize: 14
                                                 font.weight: Font.Light
                                                 visible: modelData.description && modelData.description.length > 0
@@ -250,20 +241,6 @@ Scope {
                                                 elide: Text.ElideRight
                                                 width: parent.width - 100
                                             }
-                                        }
-                                    }
-
-                                    Behavior on height {
-                                        NumberAnimation {
-                                            duration: 150
-                                            easing.type: Easing.InQuad
-                                        }
-                                    }
-
-                                    Behavior on color {
-                                        ColorAnimation {
-                                            duration: 150
-                                            easing.type: Easing.InOutQuad
                                         }
                                     }
                                 }
@@ -304,20 +281,6 @@ Scope {
                                     }
                                 }
                             }
-
-                            Behavior on Layout.preferredHeight {
-                                NumberAnimation {
-                                    duration: 200
-                                    easing.type: Easing.OutQuad
-                                }
-                            }
-                        }
-                    }
-
-                    Behavior on implicitHeight {
-                        NumberAnimation {
-                            duration: 25
-                            easing.type: Easing.InCubic
                         }
                     }
                 }
