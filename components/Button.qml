@@ -32,7 +32,7 @@ Rectangle {
     signal unhovered(var event)
 
     color: "transparent"
-    radius: 12
+    radius: 18
     Layout.preferredWidth: 200
     Layout.preferredHeight: 52
     states: [
