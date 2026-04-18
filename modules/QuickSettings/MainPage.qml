@@ -24,7 +24,7 @@ Item {
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.margins: 14
+        anchors.margins: 12
         spacing: 12
 
         // --- Header Section ---
@@ -58,70 +58,15 @@ Item {
             RowLayout {
                 spacing: 4
 
-                // Restart Ghost Button
-                Rectangle {
-                    width: 36
-                    height: 36
-                    radius: 18
-                    color: "transparent"
-
-                    MaterialSymbol {
-                        anchors.centerIn: parent
-                        icon: "restart_alt"
-                        font.pixelSize: 22
-                        color: Appearance.fgColor
-                        opacity: restartMA.containsMouse ? 1 : 0.4
-                    }
-
-                    MouseArea {
-                        id: restartMA
-
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: WindowManager.restartComputer()
-                    }
-
-                    Rectangle {
-                        anchors.fill: parent
-                        radius: parent.radius
-                        color: Appearance.fgColor
-                        opacity: restartMA.containsMouse ? 0.1 : 0
-                    }
-
+                IconButton {
+                    icon: "restart_alt"
+                    onClicked: WindowManager.restartComputer()
                 }
 
-                // Shutdown Ghost Button
-                Rectangle {
-                    width: 36
-                    height: 36
-                    radius: 18
-                    color: "transparent"
-
-                    MaterialSymbol {
-                        anchors.centerIn: parent
-                        icon: "power_settings_new"
-                        font.pixelSize: 22
-                        color: Appearance.accentColor
-                        opacity: shutdownMA.containsMouse ? 1 : 0.6
-                    }
-
-                    MouseArea {
-                        id: shutdownMA
-
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: WindowManager.shutdownComputer()
-                    }
-
-                    Rectangle {
-                        anchors.fill: parent
-                        radius: parent.radius
-                        color: Appearance.accentColor
-                        opacity: shutdownMA.containsMouse ? 0.1 : 0
-                    }
-
+                IconButton {
+                    icon: "power_settings_new"
+                    color: Appearance.accentColor
+                    onClicked: WindowManager.shutdownComputer()
                 }
 
             }

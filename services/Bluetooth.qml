@@ -9,7 +9,14 @@ Scope {
     readonly property bool enabled: available ? adapter.state === BluetoothAdapterState.Enabled : false
 
     readonly property var connectedDevices: adapter?.devices?.values.filter(d => d.connected) || []
-    readonly property var devices: adapter?.devices?.values
+    readonly property var devices: {
+        if (!adapter) return [];
+        const devList = Array.from(adapter.devices.values);
+        return devList.sort((a, b) => {
+            if (a.connected !== b.connected) return (b.connected ? 1 : 0) - (a.connected ? 1 : 0);
+            return (b.rssi || -100) - (a.rssi || -100);
+        });
+    }
     readonly property bool connected: connectedDevices.length > 0
 
     readonly property bool isScanning: available ? adapter.discovering : false

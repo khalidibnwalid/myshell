@@ -7,101 +7,227 @@ import Quickshell
 Scope {
     id: root
 
-    LazyLoader {
-        id: lazyloader
+    // Tracking for opening/closing animation
+    property bool isActuallyOpen: WindowManager.quickSettingsVisible || closeTimer.running
 
-        active: WindowManager.quickSettingsVisible
+    Connections {
+        function onQuickSettingsVisibleChanged() {
+            if (!WindowManager.quickSettingsVisible)
+                closeTimer.restart();
 
-        Variants {
-            model: Quickshell.screens
+        }
 
-            PanelWindow {
-                id: bottomPanel
-                required property var modelData
+        target: WindowManager
+    }
 
-                screen: modelData
-                visible: true
-                implicitWidth: 440
-                implicitHeight: stackView?.currentItem?.implicitHeight + 24 < 250 ? 250 : stackView?.currentItem?.implicitHeight + 24
-                color: "transparent"
+    Timer {
+        id: closeTimer
 
-                Behavior on implicitHeight {
-                    NumberAnimation {
-                        duration: 40
-                        easing.type: Easing.OutQuad
-                    }
+        interval: 350
+    }
+
+    Variants {
+        model: Quickshell.screens
+
+        PanelWindow {
+            id: bottomPanel
+
+            required property var modelData
+
+            screen: modelData
+            visible: isActuallyOpen
+            implicitWidth: 460
+            implicitHeight: Math.max(400, (stackView.currentItem ? stackView.currentItem.implicitHeight : 0) + 24)
+            color: "transparent"
+
+            anchors {
+                right: Config.layout.barPosition === "right"
+                left: Config.layout.barPosition === "left"
+                bottom: true
+            }
+
+            margins {
+                right: Config.layout.barPosition === "right" ? 10 : 0
+                left: Config.layout.barPosition === "left" ? 10 : 0
+                bottom: 15
+            }
+
+            // Visual Content and Animation Wrapper
+            Item {
+                id: animationWrapper
+
+                anchors.fill: parent
+                // Animation properties
+                opacity: WindowManager.quickSettingsVisible ? 1 : 0
+                scale: WindowManager.quickSettingsVisible ? 1 : 0.94
+                y: WindowManager.quickSettingsVisible ? 0 : 30
+                Component.onCompleted: {
+                    if (stackView.depth === 0)
+                        stackView.push(mainPageComponent, {
+                        "stackView": stackView,
+                        "networkPageComponent": networkPageComponent,
+                        "bluetoothPageComponent": bluetoothPageComponent,
+                        "batteryPageComponent": batteryPageComponent
+                    });
+
                 }
 
-                anchors {
-                    right: Config.layout.barPosition === "right"
-                    left: Config.layout.barPosition === "left"
-                    bottom: true
-                }
-
-                margins {
-                    right: Config.layout.barPosition === "right" ? 10 : 0
-                    left: Config.layout.barPosition === "left" ? 10 : 0
-                    bottom: 10
-                }
-
-                // background
+                // The actual background/panel
                 Rectangle {
                     anchors.fill: parent
                     color: Appearance.bgColor
-                    radius: 24
-                    border.width: 0
-                    opacity: 0.98
+                    radius: 16
+                    border.color: Appearance.borderColor
+                    border.width: 1
 
-                    // Subtle edge highlight (very faint)
+                    // Premium Inner Highlight (Creates the "top-lit" glass effect)
                     Rectangle {
                         anchors.fill: parent
                         anchors.margins: 1
                         color: "transparent"
-                        radius: parent.radius - 1
+                        radius: 15
                         border.color: "white"
                         border.width: 1
                         opacity: 0.04
                     }
-                }
 
-                // `Component` will prevent the component from loading immediately,
-                // basically lazy loading with a reference
-                Component {
-                    id: networkPageComponent
-                    NetworkPage {}
-                }
+                    // Soft light gradient for subtle depth
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: 24
+                        opacity: 0.03
 
-                Component {
-                    id: bluetoothPageComponent
-                    BluetoothPage {}
-                }
+                        gradient: Gradient {
+                            GradientStop {
+                                position: 0
+                                color: "white"
+                            }
 
-                Component {
-                    id: batteryPageComponent
-                    BatteryPage {}
-                }
+                            GradientStop {
+                                position: 0.4
+                                color: "transparent"
+                            }
 
-                Component {
-                    id: mainPageComponent
-                    MainPage {}
+                        }
+
+                    }
+
                 }
 
                 StackView {
                     id: stackView
+
+                    clip: true
                     anchors.fill: parent
+
+                    // Add a nice transition for page switching too
+                    replaceEnter: Transition {
+                        NumberAnimation {
+                            property: "opacity"
+                            from: 0
+                            to: 1
+                            duration: 200
+                        }
+
+                        NumberAnimation {
+                            property: "x"
+                            from: 30
+                            to: 0
+                            duration: 250
+                            easing.type: Easing.OutCubic
+                        }
+
+                    }
+
+                    replaceExit: Transition {
+                        NumberAnimation {
+                            property: "opacity"
+                            from: 1
+                            to: 0
+                            duration: 150
+                        }
+
+                        NumberAnimation {
+                            property: "x"
+                            from: 0
+                            to: -30
+                            duration: 200
+                            easing.type: Easing.InCubic
+                        }
+
+                    }
+
                 }
 
-                Component.onCompleted: {
-                    if (stackView.depth === 0) {
-                        stackView.push(mainPageComponent, {
-                            "stackView": stackView,
-                            "networkPageComponent": networkPageComponent,
-                            "bluetoothPageComponent": bluetoothPageComponent,
-                            "batteryPageComponent": batteryPageComponent
-                        });
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: 250
+                        easing.type: Easing.OutCubic
                     }
+
                 }
+
+                Behavior on scale {
+                    NumberAnimation {
+                        duration: 350
+                        easing.type: Easing.OutBack
+                    }
+
+                }
+
+                Behavior on y {
+                    NumberAnimation {
+                        duration: 350
+                        easing.type: Easing.OutQuint
+                    }
+
+                }
+
             }
+
+            // --- Navigation Components ---
+            Component {
+                id: networkPageComponent
+
+                NetworkPage {
+                }
+
+            }
+
+            Component {
+                id: bluetoothPageComponent
+
+                BluetoothPage {
+                }
+
+            }
+
+            Component {
+                id: batteryPageComponent
+
+                BatteryPage {
+                }
+
+            }
+
+            Component {
+                id: mainPageComponent
+
+                MainPage {
+                }
+
+            }
+
+            Behavior on implicitHeight {
+                NumberAnimation {
+                    duration: 250
+                    easing.type: Easing.InOutQuad
+                }
+
+            }
+
         }
+
     }
+
 }

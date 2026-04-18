@@ -37,7 +37,7 @@ Scope {
     }
 
     // too lazy to Implement this, just copy-paste from caelestia-dots
-    readonly property list<AccessPoint> networks: []
+    property var networks: []
     readonly property AccessPoint active: networks.find(n => n.active) ?? null
     property bool wifiEnabled: true
     readonly property bool scanning: rescanProc.running
@@ -179,24 +179,34 @@ Scope {
                     }
                 }
 
-                const networks = Array.from(networkMap.values());
+                const networks = Array.from(networkMap.values()).sort((a, b) => {
+                    if (a.active !== b.active) return (b.active ? 1 : 0) - (a.active ? 1 : 0);
+                    return b.strength - a.strength;
+                });
 
                 const rNetworks = root.networks;
-
-                const destroyed = rNetworks.filter(rn => !networks.find(n => n.frequency === rn.frequency && n.ssid === rn.ssid && n.bssid === rn.bssid));
-                for (const network of destroyed)
-                    rNetworks.splice(rNetworks.indexOf(network), 1).forEach(n => n.destroy());
+                const newRNetworks = [];
 
                 for (const network of networks) {
-                    const match = rNetworks.find(n => n.frequency === network.frequency && n.ssid === network.ssid && n.bssid === network.bssid);
+                    const match = rNetworks.find(n => n.ssid === network.ssid && n.bssid === network.bssid);
                     if (match) {
                         match.lastIpcObject = network;
+                        newRNetworks.push(match);
                     } else {
-                        rNetworks.push(apComp.createObject(root, {
+                        newRNetworks.push(apComp.createObject(root, {
                             lastIpcObject: network
                         }));
                     }
                 }
+
+                // Destroy orphans
+                for (const rn of rNetworks) {
+                    if (!newRNetworks.includes(rn)) {
+                        rn.destroy();
+                    }
+                }
+
+                root.networks = newRNetworks;
             }
         }
     }

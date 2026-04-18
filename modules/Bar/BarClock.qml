@@ -1,23 +1,20 @@
+import "../../config"
+import "../../services"
 import QtQuick
 import QtQuick.Layouts
-
 import Quickshell
 import Quickshell.Io
 
-import "../../config"
-import "../../services"
-
 ColumnLayout {
+    property int fontSize: 20
+    property string fontFamily: "Monospace"
+    property string fontColor: Appearance.accentColor
+    property string fontWeight: Font.Bold
+
     spacing: -8
     Layout.fillWidth: true
     Layout.alignment: Qt.AlignHCenter
-
     Layout.bottomMargin: 12
-
-    property int fontSize: 20
-    property string fontFamily: "Monospace"
-    property string fontColor: Appearance.accentColorLight
-    property string fontWeight: Font.Bold
 
     Text {
         Layout.alignment: Qt.AlignHCenter
@@ -46,4 +43,5 @@ ColumnLayout {
         font.weight: fontWeight
         text: Time.format("AP")
     }
+
 }

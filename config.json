@@ -1,10 +1,11 @@
 {
+  "$schema": "./config.schema.json",
   "appearance": {
-    "bgColor": "#131319",
+    "bgColor": "#0B0B0D",
     "fgColor": "#e5e1e7",
-    "accentColor": "#c2c1ff",
-    "accentColorLight": "#C9C8FA",
-    "highlightColor": "#54545f",
-    "borderColor": "#000000"
+    "accentColor": "#5ea1f9",
+    "accentColorLight": "#6facfc",
+    "highlightColor": "#000000",
+    "borderColor": "#5483c1"
   }
 }

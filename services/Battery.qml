@@ -6,11 +6,16 @@ import Quickshell.Services.UPower
 Scope {
     id: root
 
-    property var device: UPower.displayDevice
-    property real percentage: device.percentage
-    property var state: device.state
-    property string stateString: UPowerDeviceState.toString(device.state)
+    readonly property var device: UPower.displayDevice
+    
+    // Robust properties with safe defaults to prevent NaN or binding errors
+    property real percentage: device ? device.percentage : 0
+    property var state: device ? device.state : UPowerDeviceState.Unknown
+    property string stateString: device ? UPowerDeviceState.toString(device.state) : "Unknown"
+
     property string iconName: {
+        if (!device) return "battery_unknown";
+
         if (root.state === UPowerDeviceState.Charging || root.state === UPowerDeviceState.FullyCharged || root.state === UPowerDeviceState.PendingCharge) {
             return "battery_android_bolt";
         }
@@ -63,15 +68,5 @@ Scope {
 
     function setProfile(profile) {
         powerProfiles.profile = profile;
-    }
-
-    Connections {
-        target: device
-        function onPercentageChanged() {
-            root.percentage = device.percentage;
-        }
-        function onStateChanged() {
-            root.state = device.state;
-        }
     }
 }

@@ -8,6 +8,23 @@ Item {
     property var stackView
 
     implicitHeight: layout.implicitHeight + 12
+    Component.onCompleted: {
+        if (Bluetooth.enabled && !Bluetooth.isScanning) {
+            Bluetooth.toggleScan();
+            scanTimer.start();
+        }
+    }
+
+    Timer {
+        id: scanTimer
+
+        interval: 10000 // Scan for 10 seconds
+        onTriggered: {
+            if (Bluetooth.isScanning) {
+                Bluetooth.toggleScan();
+            }
+        }
+    }
 
     ColumnLayout {
         id: layout
@@ -20,42 +37,52 @@ Item {
 
         RowLayout {
             Layout.fillWidth: true
-            spacing: 5
+            spacing: 8
 
-            Button {
+            IconButton {
                 icon: "arrow_back"
                 onClicked: stackView.pop()
-                Layout.preferredWidth: 60
             }
 
-            MaterialSymbol {
-                icon: Bluetooth.statusIcon
-                font.pixelSize: 24
-                color: Appearance.fgColor
-                Layout.alignment: Qt.AlignHCenter
+            ColumnLayout {
+                spacing: 0
+
+                Text {
+                    text: "Bluetooth"
+                    font.pixelSize: 18
+                    font.weight: Font.Bold
+                    color: Appearance.fgColor
+                }
+
+                Text {
+                    text: Bluetooth.enabled ? (Bluetooth.connectedDevices.length ? Bluetooth.connectedDevices[0].name : "Discovery On") : "Off"
+                    font.pixelSize: 12
+                    color: Appearance.fgColor
+                    opacity: 0.5
+                }
+
             }
 
-            Text {
-                text: "Bluetooth"
-                font.pixelSize: 24
-                font.weight: Font.DemiBold
-                color: Appearance.fgColor
-                Layout.alignment: Qt.AlignHCenter
+            Item {
                 Layout.fillWidth: true
             }
 
-            ToggleButton {
-                icon: "sensors"
-                Layout.preferredWidth: 60
-                toggled: Bluetooth.isScanning
-                onClicked: Bluetooth.toggleScan()
-            }
+            RowLayout {
+                spacing: 4
 
-            ToggleButton {
-                icon: "bluetooth"
-                Layout.preferredWidth: 60
-                toggled: Bluetooth.enabled
-                onClicked: Bluetooth.toggle()
+                IconButton {
+                    icon: "sensors"
+                    toggled: Bluetooth.isScanning
+                    onClicked: Bluetooth.toggleScan()
+                }
+
+                IconButton {
+                    icon: "bluetooth"
+                    toggled: Bluetooth.enabled
+                    onClicked: Bluetooth.toggle()
+                    accentColor: Appearance.accentColor
+                }
+
             }
 
         }

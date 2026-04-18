@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ThemeConfiguration",
+  "type": "object",
+  "properties": {
+    "appearance": {
+      "type": "object",
+      "properties": {
+        "bgColor": { "type": "string", "format": "color" },
+        "fgColor": { "type": "string", "format": "color" },
+        "accentColor": { "type": "string", "format": "color" },
+        "accentColorLight": { "type": "string", "format": "color" },
+        "highlightColor": { "type": "string", "format": "color" },
+        "borderColor": { "type": "string", "format": "color" }
+      }
+    },
+    "layout": {
+      "type": "object",
+      "properties": {
+        "barPosition": {
+          "type": "string",
+          "enum": ["left", "right", "top", "bottom"]
+        }
+      }
+    }
+  }
+}

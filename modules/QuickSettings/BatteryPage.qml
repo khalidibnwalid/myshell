@@ -20,27 +20,41 @@ Item {
 
         RowLayout {
             Layout.fillWidth: true
-            spacing: 5
+            spacing: 8
 
-            Button {
+            IconButton {
                 icon: "arrow_back"
                 onClicked: stackView.pop()
-                Layout.preferredWidth: 60
             }
 
-            Text {
-                text: "Battery - " + Math.round(Battery.percentage * 100) + "%"
-                font.pixelSize: 24
-                font.weight: Font.DemiBold
-                color: Appearance.fgColor
-                Layout.alignment: Qt.AlignHCenter
+            ColumnLayout {
+                spacing: 0
+
+                Text {
+                    text: "Battery"
+                    font.pixelSize: 18
+                    font.weight: Font.Bold
+                    color: Appearance.fgColor
+                }
+
+                Text {
+                    text: Math.round(Battery.percentage * 100) + "% - " + Battery.stateString
+                    font.pixelSize: 12
+                    color: Appearance.fgColor
+                    opacity: 0.5
+                }
+
+            }
+
+            Item {
+                Layout.fillWidth: true
             }
 
             MaterialSymbol {
                 icon: Battery.iconName
-                font.pixelSize: 36
+                font.pixelSize: 24
                 color: Appearance.fgColor
-                Layout.alignment: Qt.AlignHCenter
+                opacity: 0.8
                 fill: Battery.percentage
             }
 

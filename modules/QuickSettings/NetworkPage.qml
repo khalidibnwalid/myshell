@@ -9,7 +9,7 @@ Item {
 
     implicitHeight: layout.implicitHeight + 12
     Component.onCompleted: {
-        console.log("NetworkPage loaded", Network.networks);
+        Network.rescanWifi();
     }
 
     ColumnLayout {
@@ -23,42 +23,52 @@ Item {
 
         RowLayout {
             Layout.fillWidth: true
-            spacing: 5
+            spacing: 8
 
-            Button {
+            IconButton {
                 icon: "arrow_back"
                 onClicked: stackView.pop()
-                Layout.preferredWidth: 60
             }
 
-            MaterialSymbol {
-                icon: Network.statusIcon
-                font.pixelSize: 24
-                color: Appearance.fgColor
-                Layout.alignment: Qt.AlignHCenter
+            ColumnLayout {
+                spacing: 0
+
+                Text {
+                    text: "Wi-Fi"
+                    font.pixelSize: 18
+                    font.weight: Font.Bold
+                    color: Appearance.fgColor
+                }
+
+                Text {
+                    text: Network.connected ? Network.active.ssid : "Not connected"
+                    font.pixelSize: 12
+                    color: Appearance.fgColor
+                    opacity: 0.5
+                }
+
             }
 
-            Text {
-                text: "Wi-Fi"
-                font.pixelSize: 24
-                font.weight: Font.DemiBold
-                color: Appearance.fgColor
-                Layout.alignment: Qt.AlignHCenter
+            Item {
                 Layout.fillWidth: true
             }
 
-            ToggleButton {
-                toggled: Network.scanning
-                icon: "sensors"
-                onClicked: Network.rescanWifi()
-                Layout.preferredWidth: 60
-            }
+            RowLayout {
+                spacing: 4
 
-            ToggleButton {
-                toggled: Network.enabled
-                icon: "wifi"
-                Layout.preferredWidth: 60
-                onClicked: Network.toggleWifi()
+                IconButton {
+                    toggled: Network.scanning
+                    icon: "sensors"
+                    onClicked: Network.rescanWifi()
+                }
+
+                IconButton {
+                    toggled: Network.enabled
+                    icon: "wifi"
+                    onClicked: Network.toggleWifi()
+                    accentColor: Appearance.accentColor
+                }
+
             }
 
         }
@@ -76,12 +86,14 @@ Item {
                 spacing: 3
 
                 ToggleButton {
+                    //TODO: password prompt
+
                     text: modelData.ssid
                     Layout.fillWidth: true
                     toggled: modelData.active
                     onClicked: {
                         if (!modelData.active)
-                            Network.connectToNetwork(modelData.ssid, ""); //TODO: password prompt
+                            Network.connectToNetwork(modelData.ssid, "");
                         else
                             Network.disconnectFromNetwork();
                     }

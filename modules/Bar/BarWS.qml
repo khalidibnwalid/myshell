@@ -39,7 +39,7 @@ Item {
         width: 26 + vPadding
         height: 46 + vPadding
         radius: 14
-        color: Appearance.accentColor
+        color: Appearance.accentColorLight
         anchors.horizontalCenter: parent.horizontalCenter
         opacity: 0.3
 
@@ -95,12 +95,12 @@ Item {
                 Rectangle {
                     visible: workspaceToplevels.length > 0 && !currentWs?.focused
                     anchors.fill: parent
-                    anchors.margins: 4
+                    anchors.margins: 2
                     color: Appearance.accentColor
-                    opacity: 0.7
-                    radius: 6
+                    opacity: 0.8
+                    radius: 8
                     border.width: 1
-                    border.color: Appearance.fgColor
+                    border.color: Appearance.accentColor
                 }
 
                 Text {
@@ -109,7 +109,7 @@ Item {
                     font.pixelSize: 16
                     font.family: "Monospace"
                     font.bold: true
-                    opacity: currentWs?.focused ? 1 : (workspaceToplevels.length > 0 ? 0.6 : 0.3)
+                    opacity: currentWs?.focused ? 1 : (workspaceToplevels.length > 0 ? 0.8 : 0.4)
                     color: (currentWs?.focused || workspaceToplevels.length > 0) ? Appearance.bgColor : Appearance.fgColor
                 }
 

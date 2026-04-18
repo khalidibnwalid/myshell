@@ -3,63 +3,69 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-Item {
+Rectangle {
     id: root
 
-    clip: true
+    // Obsidian Entity Style - Compact version
+    color: Appearance.highlightColor
+    radius: 12
+    border.color: Appearance.borderColor
+    border.width: 1
 
     ColumnLayout {
         anchors.fill: parent
+        anchors.margins: 10
         spacing: 8
 
-        // Month Header
+        // Header Section
         RowLayout {
             Layout.fillWidth: true
-            Layout.leftMargin: 8
 
             Text {
                 text: Qt.formatDateTime(new Date(), "MMMM yyyy")
-                color: Appearance.fgColor
-                font.pixelSize: 16
+                color: Appearance.accentColor
+                font.pixelSize: 15
                 font.bold: true
                 Layout.fillWidth: true
-                opacity: 0.9
             }
 
             MaterialSymbol {
-                icon: "today"
-                color: Appearance.accentColor
-                font.pixelSize: 20
-                opacity: 0.6
-                Layout.rightMargin: 4
+                icon: "event"
+                color: Appearance.fgColor
+                font.pixelSize: 16
+                opacity: 0.4
             }
 
         }
 
-        // Days Header (Standardized English letters for clean look)
+        // Days of Week Header
         RowLayout {
             Layout.fillWidth: true
-            Layout.topMargin: 4
             spacing: 0
 
             Repeater {
                 model: ["S", "M", "T", "W", "T", "F", "S"]
 
-                delegate: Text {
-                    text: modelData
+                delegate: Item {
                     Layout.fillWidth: true
-                    horizontalAlignment: Text.AlignHCenter
-                    color: Appearance.fgColor
-                    font.pixelSize: 11
-                    font.bold: true
-                    opacity: 0.3
+                    height: 14
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: modelData
+                        color: Appearance.fgColor
+                        font.pixelSize: 9
+                        font.bold: true
+                        opacity: index === 0 || index === 6 ? 0.3 : 0.5
+                    }
+
                 }
 
             }
 
         }
 
-        // The Grid
+        // The Month Grid
         MonthGrid {
             id: grid
 
@@ -69,34 +75,25 @@ Item {
             year: new Date().getFullYear()
 
             delegate: Item {
-                implicitWidth: 32
+                implicitWidth: 34
                 implicitHeight: 32
 
                 Rectangle {
                     anchors.centerIn: parent
-                    width: 30
-                    height: 30
-                    radius: 15
-                    color: model.today ? Appearance.accentColor : "transparent"
-
-                    // Interaction Ring
-                    Rectangle {
-                        anchors.fill: parent
-                        radius: parent.radius
-                        color: "transparent"
-                        border.color: Appearance.accentColor
-                        border.width: 1
-                        visible: ma.containsMouse && !model.today
-                        opacity: 0.5
-                    }
+                    width: 28
+                    height: 28
+                    radius: 8
+                    color: model.today ? Appearance.accentColor : (ma.containsMouse ? Qt.alpha(Appearance.accentColor, 0.1) : "transparent")
+                    border.color: model.today ? Appearance.accentColor : (ma.containsMouse ? Appearance.borderColor : "transparent")
+                    border.width: 1
+                    opacity: model.month === grid.month ? 1 : 0.2
 
                     Text {
                         anchors.centerIn: parent
                         text: model.day
-                        font.pixelSize: 13
+                        font.pixelSize: 12
                         font.weight: model.today ? Font.Bold : Font.Normal
                         color: model.today ? Appearance.bgColor : Appearance.fgColor
-                        opacity: model.month === grid.month ? 1 : 0.25
                     }
 
                     MouseArea {
@@ -104,6 +101,13 @@ Item {
 
                         anchors.fill: parent
                         hoverEnabled: true
+                    }
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: 200
+                        }
+
                     }
 
                 }
