@@ -6,6 +6,17 @@
     "accentColor": "#5ea1f9",
     "accentColorLight": "#6facfc",
     "highlightColor": "#000000",
-    "borderColor": "#5483c1"
+    "borderColor": "#000000"
+  },
+  "keyboard": {
+    "layouts": {
+      "English": "EN",
+      "Arabic": "عربي",
+      "Russian": "RU",
+      "French": "FR",
+      "German": "DE",
+      "Spanish": "ES",
+      "Italian": "IT"
+    }
   }
 }

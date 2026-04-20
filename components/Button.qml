@@ -59,18 +59,8 @@ Rectangle {
             }
 
             PropertyChanges {
-                target: textArea
-                color: root.highlightTextColor
-            }
-
-            PropertyChanges {
-                target: icon
-                color: root.highlightTextColor
-            }
-
-            PropertyChanges {
-                target: endIcon
-                color: root.highlightTextColor
+                target: root
+                progressColor: Appearance.accentColorLight
             }
 
         }

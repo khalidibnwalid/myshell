@@ -1,24 +1,23 @@
+import Quickshell
+import Quickshell.Io
 pragma Singleton
 
-import Quickshell.Io
-import Quickshell
-
 Singleton {
-
     readonly property alias appearance: jsonAdapter.appearance
     readonly property alias layout: jsonAdapter.layout
-    FileView {
-        // path: "../config.json"
+    readonly property alias keyboard: jsonAdapter.keyboard
 
+    FileView {
         watchChanges: true
         onFileChanged: reload()
-
-        // onAdapterUpdated: writeAdapter()
         path: Qt.resolvedUrl("../config.json")
 
         JsonAdapter {
             id: jsonAdapter
-            property JsonObject appearance: JsonObject {
+
+            property JsonObject appearance
+
+            appearance: JsonObject {
                 property string bgColor: "#131317"
                 property string fgColor: "#e5e1e7"
                 property string accentColor: "#c2c1ff"
@@ -26,9 +25,19 @@ Singleton {
                 property string highlightColor: "#54545f"
                 property string borderColor: "#000000"
             }
-            property JsonObject layout: JsonObject {
+
+            property JsonObject layout
+
+            layout: JsonObject {
                 property string barPosition: "right"
             }
+
+            property var keyboard: ({
+                "layouts": {
+                }
+            })
         }
+
     }
+
 }

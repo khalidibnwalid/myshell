@@ -22,6 +22,15 @@
           "enum": ["left", "right", "top", "bottom"]
         }
       }
+    },
+    "keyboard": {
+      "type": "object",
+      "properties": {
+        "layouts": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      }
     }
   }
 }

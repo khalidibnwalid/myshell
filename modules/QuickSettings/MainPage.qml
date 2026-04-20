@@ -3,6 +3,7 @@ import "../../config/"
 import "../../services/"
 import QtQuick
 import QtQuick.Layouts
+import Quickshell.Io
 
 Item {
     id: root
@@ -11,6 +12,7 @@ Item {
     property var networkPageComponent
     property var bluetoothPageComponent
     property var batteryPageComponent
+    property string username: ""
 
     implicitHeight: layout.implicitHeight
 
@@ -20,6 +22,16 @@ Item {
 
     Backlight {
         id: backlight
+    }
+
+    Process {
+        running: true
+        command: ["whoami"]
+
+        stdout: StdioCollector {
+            onStreamFinished: root.username = text.trim()
+        }
+
     }
 
     ColumnLayout {
@@ -36,21 +48,41 @@ Item {
             Layout.fillWidth: true
             Layout.bottomMargin: 0
 
-            ColumnLayout {
-                spacing: 0
+            RowLayout {
+                spacing: 12
 
-                Text {
-                    text: "Quick Settings"
-                    color: Appearance.fgColor
-                    font.pixelSize: 20
-                    font.bold: true
+                Rectangle {
+                    width: 38
+                    height: 38
+                    radius: 19
+                    color: Appearance.accentColor
+
+                    MaterialSymbol {
+                        icon: "person"
+                        color: Appearance.bgColor
+                        font.pixelSize: 22
+                        anchors.centerIn: parent
+                    }
+
                 }
 
-                Text {
-                    text: Qt.formatDateTime(new Date(), "dddd, MMMM dd")
-                    color: Appearance.fgColor
-                    font.pixelSize: 12
-                    opacity: 0.5
+                ColumnLayout {
+                    spacing: 0
+
+                    Text {
+                        text: root.username || "User"
+                        color: Appearance.fgColor
+                        font.pixelSize: 18
+                        font.bold: true
+                    }
+
+                    Text {
+                        text: Qt.formatDateTime(new Date(), "dddd, MMMM dd")
+                        color: Appearance.fgColor
+                        font.pixelSize: 12
+                        opacity: 0.5
+                    }
+
                 }
 
             }
@@ -135,6 +167,16 @@ Item {
                 Layout.fillWidth: true
             }
 
+        }
+
+        Text {
+            text: "Controls"
+            color: Appearance.fgColor
+            font.pixelSize: 14
+            font.weight: Font.DemiBold
+            opacity: 0.6
+            Layout.topMargin: 4
+            Layout.leftMargin: 4
         }
 
         // --- Volume Section ---

@@ -46,8 +46,8 @@ Scope {
                 anchors.fill: parent
                 color: Appearance.bgColor
                 radius: 20
-                opacity: 0.8
-                border.color: Appearance.accentColor
+                opacity: 0.7
+                border.color: Appearance.borderColor
                 border.width: 1
             }
 

@@ -1,16 +1,14 @@
-import QtQuick
-import QtQuick.Layouts
-import Quickshell.Io
 import "../../components/"
 import "../../config/"
 import "../../services/"
 import "./BarClock.qml"
+import QtQuick
+import QtQuick.Layouts
+import Quickshell.Io
 
 ColumnLayout {
-    anchors {
-        left: parent.left
-        right: parent.right
-    }
+    Layout.fillWidth: true
+    width: parent.width
 
     // background
     Rectangle {
@@ -25,14 +23,18 @@ ColumnLayout {
             onClicked: WindowManager.setQuickSettingsVisible(!WindowManager.quickSettingsVisible)
             cursorShape: Qt.PointingHandCursor
         }
+
     }
 
     ColumnLayout {
-        anchors.horizontalCenter: parent.horizontalCenter
+        Layout.fillWidth: true
+        Layout.alignment: Qt.AlignHCenter
         Layout.topMargin: 8
         Layout.bottomMargin: 8
 
         MaterialSymbol {
+            Layout.fillWidth: true
+            horizontalAlignment: Text.AlignHCenter
             icon: Network.statusIcon
             font.pixelSize: 24
             color: Appearance.fgColor
@@ -40,6 +42,8 @@ ColumnLayout {
 
         MaterialSymbol {
             visible: Bluetooth.enabled
+            Layout.fillWidth: true
+            horizontalAlignment: Text.AlignHCenter
             icon: Bluetooth.statusIcon
             font.pixelSize: 24
             color: Appearance.fgColor
@@ -47,12 +51,30 @@ ColumnLayout {
 
         MaterialSymbol {
             visible: Battery.device.isLaptopBattery
+            Layout.fillWidth: true
+            horizontalAlignment: Text.AlignHCenter
             icon: Battery.iconName
             font.pixelSize: 24
             fill: Battery.percentage
             color: Appearance.fgColor
         }
 
-        BarClock {}
+        Text {
+            Layout.fillWidth: true
+            horizontalAlignment: Text.AlignHCenter
+            color: Appearance.fgColor
+            font.pixelSize: 14
+            font.family: "Monospace"
+            font.weight: Font.DemiBold
+            text: Keyboard.layout
+            opacity: 0.8
+            Layout.bottomMargin: 4
+        }
+
+        BarClock {
+            Layout.fillWidth: true
+        }
+
     }
+
 }

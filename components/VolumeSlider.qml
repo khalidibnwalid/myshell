@@ -22,6 +22,65 @@ Item {
 
     implicitWidth: vertical ? 50 : 380
     implicitHeight: vertical ? 200 : 50
+    states: [
+        State {
+            name: "hovered"
+            when: mouseArea.containsMouse
+
+            PropertyChanges {
+                target: borderArea
+                opacity: 0.8
+                border.width: 2
+            }
+
+            PropertyChanges {
+                target: root
+                borderMargin: 6
+            }
+
+            PropertyChanges {
+                target: fillRect
+                color: Appearance.accentColorLight
+            }
+
+        }
+    ]
+    transitions: [
+        Transition {
+            from: "*"
+            to: "hovered"
+
+            ParallelAnimation {
+                NumberAnimation {
+                    properties: "opacity,border.width"
+                    duration: 200
+                }
+
+                ColorAnimation {
+                    duration: 200
+                }
+
+            }
+
+        },
+        Transition {
+            from: "hovered"
+            to: "*"
+
+            ParallelAnimation {
+                NumberAnimation {
+                    properties: "opacity,border.width"
+                    duration: 200
+                }
+
+                ColorAnimation {
+                    duration: 200
+                }
+
+            }
+
+        }
+    ]
 
     // outer border area
     Rectangle {
@@ -33,6 +92,21 @@ Item {
         border.width: 1
         radius: bg.radius + (root.width - bg.width) / 2
         opacity: 0.3
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: 200
+            }
+
+        }
+
+        Behavior on border.width {
+            NumberAnimation {
+                duration: 200
+            }
+
+        }
+
     }
 
     // background (pill shape)
@@ -43,7 +117,7 @@ Item {
         width: parent.width - root.borderMargin * 2
         height: parent.height - root.borderMargin * 2
         color: root.backgroundFillColor
-        radius: root.vertical ? 12 : 16
+        radius: (root.vertical ? 16 : 20) - root.borderMargin
         clip: true
 
         // value fill
@@ -104,6 +178,7 @@ Item {
 
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
+        hoverEnabled: true
         onPressed: {
             root.dragValue = root.value;
             updateValue();

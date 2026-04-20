@@ -1,7 +1,6 @@
-pragma Singleton
-
 import QtQuick
 import Quickshell.Io
+pragma Singleton
 
 JsonObject {
     property color bgColor: Config.appearance.bgColor
@@ -9,5 +8,5 @@ JsonObject {
     property color accentColor: Config.appearance.accentColor
     property color accentColorLight: Config.appearance.accentColorLight
     property color highlightColor: Config.appearance.highlightColor
-    property color borderColor: Config.appearance.bordercolor
+    property color borderColor: Config.appearance.borderColor
 }

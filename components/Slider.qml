@@ -1,34 +1,96 @@
+import "../config/"
 import QtQuick
 import QtQuick.Layouts
-import "../config/"
-
 
 // make slider the same style, size, and width as toggle button, like IPhone's UISlider
 Rectangle {
     id: root
+
     required property real value
+
     signal dragged(real value)
 
     implicitHeight: 20
     radius: 10
     color: Appearance.highlightColor // slider background
+    states: [
+        State {
+            name: "pressed"
+            when: mouseArea.pressed
+
+            PropertyChanges {
+                target: handler
+                scale: 1.2
+            }
+
+            PropertyChanges {
+                target: innerPart
+                color: Appearance.accentColorLight
+            }
+
+            PropertyChanges {
+                target: outerPart
+                opacity: 0.45
+            }
+
+        },
+        State {
+            name: "hovered"
+            when: mouseArea.containsMouse && !mouseArea.pressed
+
+            PropertyChanges {
+                target: outerPart
+                opacity: 0.5
+            }
+
+            PropertyChanges {
+                target: root
+                color: Qt.alpha(Appearance.accentColor, 0.2)
+            }
+
+            PropertyChanges {
+                target: fillRect
+                color: Appearance.accentColorLight
+            }
+
+        }
+    ]
+    transitions: [
+        Transition {
+            ParallelAnimation {
+                ColorAnimation {
+                    duration: 100
+                }
+
+                NumberAnimation {
+                    duration: 100
+                }
+
+            }
+
+        }
+    ]
 
     // slider fill
     Rectangle {
+        id: fillRect
+
+        implicitWidth: parent.width * value
+        radius: parent.radius
+        color: Appearance.accentColor
+
         anchors {
             left: parent.left
             top: parent.top
             bottom: parent.bottom
         }
 
-        implicitWidth: parent.width * value
-        radius: parent.radius
-        color: Appearance.accentColor
     }
 
     // hanlder
     Item {
         id: handler
+
         width: 43
         height: 28
         y: parent.height / 2 - height / 2
@@ -36,6 +98,7 @@ Rectangle {
 
         Rectangle {
             id: outerPart
+
             width: 43
             height: 28
             radius: 10
@@ -50,66 +113,39 @@ Rectangle {
                 border.color: Appearance.accentColor
                 border.width: 2
             }
+
         }
 
         Rectangle {
             id: innerPart
+
             width: 35
             height: 20
             radius: 7
             color: Appearance.accentColor
             anchors.centerIn: parent
         }
+
     }
 
     MouseArea {
         id: mouseArea
-        anchors.fill: parent
-        cursorShape: Qt.PointingHandCursor
-
-        onPositionChanged: {
-            if (pressed)
-                updateValue();
-        }
-
-        onClicked: updateValue()
 
         function updateValue() {
             var newValue = Math.max(0, Math.min(1, mouseX / width));
             root.value = newValue;
             root.dragged(newValue);
         }
+
+        anchors.fill: parent
+        cursorShape: Qt.PointingHandCursor
+        hoverEnabled: true
+        onPositionChanged: {
+            if (pressed)
+                updateValue();
+
+        }
+        onClicked: updateValue()
     }
 
-    states: [
-        State {
-            name: "pressed"
-            when: mouseArea.pressed
-            PropertyChanges {
-                target: handler
-                scale: 1.2
-            }
-            PropertyChanges {
-                target: innerPart
-                color: Appearance.accentColorLight
-            }
-            PropertyChanges {
-                target: outerPart
-                opacity: 0.15
-            }
-        }
-    ]
-
-    transitions: [
-        Transition {
-            ParallelAnimation {
-                ColorAnimation {
-                    duration: 100
-                }
-                NumberAnimation {
-                    duration: 100
-                }
-            }
-        }
-    ]
 }
