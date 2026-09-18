@@ -3,8 +3,8 @@
   "appearance": {
     "bgColor": "#0B0B0D",
     "fgColor": "#e5e1e7",
-    "accentColor": "#5ea1f9",
-    "accentColorLight": "#6facfc",
+    "accentColor": "#EBCB8B",
+    "accentColorLight": "#d7c196",
     "highlightColor": "#000000",
     "borderColor": "#000000"
   },
