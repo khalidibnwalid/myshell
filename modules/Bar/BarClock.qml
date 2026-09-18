@@ -8,7 +8,7 @@ import Quickshell.Io
 ColumnLayout {
     property int fontSize: 20
     property string fontFamily: "Monospace"
-    property string fontColor: Appearance.accentColor
+    property string fontColor: "#f2f3f1"
     property string fontWeight: Font.Bold
 
     spacing: -8
