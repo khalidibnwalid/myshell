@@ -14,7 +14,23 @@ Rectangle {
     implicitWidth: horizontal ? grid.implicitWidth + 28 : 40
     implicitHeight: horizontal ? 36 : grid.implicitHeight + 32
     radius: horizontal ? 18 : 20
-    color: Appearance.surfaceColor
+    color: clockArea.containsMouse ? Appearance.surfaceHighColor : Appearance.surfaceColor
+
+    // click: quick settings, like the status icons
+    MouseArea {
+        id: clockArea
+
+        anchors.fill: parent
+        hoverEnabled: true
+        cursorShape: Qt.PointingHandCursor
+        onClicked: WindowManager.toggleQuickSettingsVisible()
+    }
+
+    Behavior on color {
+        ColorAnimation {
+            duration: Appearance.animFast
+        }
+    }
 
     GridLayout {
         id: grid

@@ -19,8 +19,8 @@ GridLayout {
 
     // a column on a side bar, a row on a top or bottom bar
     columns: horizontal ? -1 : 1
-    rowSpacing: 12
-    columnSpacing: 12
+    rowSpacing: 6
+    columnSpacing: 6
 
     // overflow arrow
     Item {

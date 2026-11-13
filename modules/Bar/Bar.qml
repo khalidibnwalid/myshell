@@ -109,8 +109,8 @@ Scope {
                 x: panelWindow.horizontal ? parent.width - width - 16 : Math.round((parent.width - width) / 2)
                 y: panelWindow.horizontal ? Math.round((parent.height - height) / 2) : parent.height - height - 16
                 columns: panelWindow.horizontal ? -1 : 1
-                rowSpacing: 16
-                columnSpacing: 16
+                rowSpacing: 10
+                columnSpacing: 10
 
                 BarTrays {
                     Layout.alignment: Qt.AlignCenter

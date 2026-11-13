@@ -12,8 +12,8 @@ GridLayout {
 
     // a column on a side bar, a row on a top or bottom bar
     columns: horizontal ? -1 : 1
-    rowSpacing: 14
-    columnSpacing: 14
+    rowSpacing: 8
+    columnSpacing: 8
 
     Audio {
         id: audio
@@ -52,8 +52,8 @@ GridLayout {
         GridLayout {
             id: statusColumn
             columns: root.horizontal ? -1 : 1
-            rowSpacing: 14
-            columnSpacing: 14
+            rowSpacing: 8
+            columnSpacing: 8
 
         MaterialSymbol {
             Layout.alignment: Qt.AlignCenter
@@ -88,13 +88,28 @@ GridLayout {
             }
         }
 
+        // keyboard layout: hover for the switcher, click for quick settings like the other status icons
         StyledText {
+            id: layoutLabel
+
             Layout.alignment: Qt.AlignCenter
             text: Keyboard.layout
             color: Appearance.fgColor
             font.pixelSize: 12
             font.weight: Font.DemiBold
-            opacity: 0.8
+            opacity: layoutArea.containsMouse ? 1 : 0.8
+
+            MouseArea {
+                id: layoutArea
+
+                anchors.fill: parent
+                anchors.margins: -4
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onEntered: layoutPopup.show(layoutLabel.mapToItem(null, layoutLabel.width / 2, layoutLabel.height / 2))
+                onExited: layoutPopup.hideLater()
+                onClicked: WindowManager.toggleQuickSettingsVisible()
+            }
         }
 
         ColumnLayout {
@@ -137,6 +152,11 @@ GridLayout {
 
     VolumePopup {
         id: volumePopup
+        barWindow: root.barWindow
+    }
+
+    LayoutPopup {
+        id: layoutPopup
         barWindow: root.barWindow
     }
 }
