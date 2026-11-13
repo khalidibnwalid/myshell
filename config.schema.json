@@ -48,6 +48,12 @@
         }
       }
     },
+    "dock": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean", "description": "Show the bottom dock on empty workspaces and at the bottom screen edge" }
+      }
+    },
     "capture": {
       "type": "object",
       "properties": {

@@ -93,6 +93,7 @@ Scope {
 
                 BarWS {
                     Layout.alignment: Qt.AlignHCenter
+                    barWindow: panelWindow
                 }
             }
 

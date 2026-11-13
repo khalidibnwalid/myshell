@@ -12,8 +12,8 @@ import "modules/Settings"
 import "modules/Workspaces"
 
 Scope {
-    // Dock {
-    // }
+    Dock {
+    }
 
     Bar {
     }

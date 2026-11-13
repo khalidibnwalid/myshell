@@ -1,11 +1,14 @@
 import "../../components/"
 import "../../config/"
+import "."
 import QtQuick
 import QtQuick.Layouts
 import Quickshell.Hyprland
 
 Item {
     id: root
+
+    property var barWindow
 
     // total number of workspaces = highest id (+1 spare)
     property int _numberOfWS: Hyprland.workspaces.values.length > 0 ? Hyprland.workspaces.values[Hyprland.workspaces.values.length - 1].id : 0
@@ -100,8 +103,22 @@ Item {
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: Hyprland.dispatch(`workspace ${ws.workspaceId}`)
+                    // hovering a workspace with windows lists them next to the bar
+                    onEntered: {
+                        if (ws.occupied)
+                            popup.show(ws.currentWs, ws.mapToItem(null, 0, ws.height / 2).y);
+                        else
+                            popup.hideLater();
+                    }
+                    onExited: popup.hideLater()
                 }
             }
         }
+    }
+
+    WorkspacePopup {
+        id: popup
+
+        barWindow: root.barWindow
     }
 }

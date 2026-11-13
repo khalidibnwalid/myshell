@@ -9,6 +9,7 @@ Singleton {
     readonly property alias search: jsonAdapter.search
     readonly property alias clipboard: jsonAdapter.clipboard
     readonly property alias capture: jsonAdapter.capture
+    readonly property alias dock: jsonAdapter.dock
 
     FileView {
         watchChanges: true
@@ -46,6 +47,12 @@ Singleton {
                 property string screenshotDir: "~/Pictures/Screenshots"
                 property string recordingDir: "~/Videos"
                 property bool recordAudio: false
+            }
+
+            property JsonObject dock
+
+            dock: JsonObject {
+                property bool enabled: false
             }
 
             property var keyboard: ({

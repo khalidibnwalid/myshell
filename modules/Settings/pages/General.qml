@@ -21,6 +21,18 @@ SettingsPage {
 
     SettingRow {
         Layout.fillWidth: true
+        title: "Dock"
+        description: "Bottom dock on empty workspaces and at the bottom edge of the screen"
+
+        PillButton {
+            text: Config.dock.enabled ? "On" : "Off"
+            toggled: Config.dock.enabled
+            onClicked: Config.dock.enabled = !Config.dock.enabled
+        }
+    }
+
+    SettingRow {
+        Layout.fillWidth: true
         title: "Save screenshots"
         description: "Also keep a file in " + Config.capture.screenshotDir + "; screenshots are always copied"
 
