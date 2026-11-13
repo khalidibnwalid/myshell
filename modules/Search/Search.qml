@@ -4,282 +4,460 @@ import "../../services" as Services
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Shapes
 import Quickshell
-import Quickshell.Io
 import Quickshell.Hyprland
 
 Scope {
     // bind = $mainMod, SPACE, global, quickshell:search
     GlobalShortcut {
         name: "search"
-        onPressed: lazyloader.active = !lazyloader.active
+        onPressed: Services.WindowManager.toggleSearchVisible()
     }
 
-    LazyLoader {
-        id: lazyloader
+    Variants {
+        model: Quickshell.screens
 
-        active: false
+        PanelWindow {
+            id: panelWindow
 
-        Variants {
-            model: Quickshell.screens
+            // flat result list: apps first (shown as tiles), the rest as rows
+            property var results: []
+            readonly property var tileResults: results.filter(r => r && r.type === "app").slice(0, 4)
+            readonly property var rowResults: results.filter(r => r && tileResults.indexOf(r) < 0).slice(0, 6)
+            readonly property var ordered: tileResults.concat(rowResults)
+            property int currentIndex: -1
 
-            PanelWindow {
-                id: panelWindow
+            function typeLabel(r) {
+                switch (r.type) {
+                case "app":
+                    return "App";
+                case "folder":
+                    return "Folder";
+                case "file":
+                    return "File";
+                default:
+                    return r.description || "";
+                }
+            }
 
-                property var results: []
-                property int maxVisibleResults: 7
-                property int resultHeight: 40
-                property int baseHeight: 70
-                property int listHeight: results.length > 0 ? Math.min(results.length, maxVisibleResults) * (resultHeight + 24) + 32 : 0
-                property int dynamicHeight: baseHeight + listHeight
+            function initials(name) {
+                return (name || "?").substring(0, 2);
+            }
 
-                color: "transparent"
-                implicitWidth: 700
-                implicitHeight: dynamicHeight
-                focusable: true
+            function iconSource(img) {
+                if (!img)
+                    return "";
+                if (img.startsWith("file://"))
+                    return img;
+                if (img.startsWith("/"))
+                    return "file://" + img;
+                return Quickshell.iconPath(img, true);
+            }
 
-                Component.onCompleted: {
-                    Services.Search.searchFinished.connect(updateResults);
-                    // initial search for empty query to clear results
-                    Services.Search.performSearch(searchField.text);
+            function updateResults(newResults) {
+                panelWindow.results = newResults || [];
+                panelWindow.currentIndex = panelWindow.ordered.length > 0 ? 0 : -1;
+            }
+
+            function close() {
+                Services.WindowManager.searchVisible = false;
+            }
+
+            function activate(i) {
+                const r = ordered[i];
+                if (!r)
+                    return;
+                if (r.execute) {
+                    r.execute();
+                    close();
+                } else if (r.complete) {
+                    // e.g. picking a bang from the list fills it in
+                    searchField.text = r.complete;
+                }
+            }
+
+            // The window keeps one fixed size; only the card inside animates,
+            // so typing never resizes the surface.
+            readonly property bool open: Services.WindowManager.searchVisible
+            property real cardHeight: content.implicitHeight + 24
+            // animate only once the surface is on screen
+            readonly property bool shown: open && backingWindowVisible
+
+            color: "transparent"
+            implicitWidth: 664
+            implicitHeight: 580
+            focusable: true
+            visible: open || closeTimer.running
+            onOpenChanged: {
+                if (open) {
+                    searchField.text = "";
+                    panelWindow.updateResults([]);
+                    searchField.forceActiveFocus();
+                } else {
+                    closeTimer.restart();
+                }
+            }
+
+            mask: Region {
+                item: card
+            }
+
+            Timer {
+                id: closeTimer
+
+                interval: 90
+            }
+
+            Behavior on cardHeight {
+                NumberAnimation {
+                    duration: 110
+                    easing.type: Easing.OutCubic
+                }
+            }
+
+            Connections {
+                function onSearchFinished(newResults) {
+                    panelWindow.updateResults(newResults);
                 }
 
-                function updateResults(newResults) {
-                    panelWindow.results = newResults;
-                    if (panelWindow.results.length > 0)
-                        resultsView.currentIndex = 0;
-                    else
-                        resultsView.currentIndex = -1;
+                target: Services.Search
+            }
+
+            // card
+            Rectangle {
+                id: card
+
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                height: panelWindow.cardHeight
+                // outer radius = inner radius (29) + padding (12)
+                radius: 41
+                color: Appearance.panelColor
+                border.width: 1
+                border.color: Appearance.hairlineColor
+                opacity: panelWindow.shown ? 1 : 0
+                clip: true
+
+                // drops in a few pixels while fading
+                transform: Translate {
+                    y: panelWindow.shown ? 0 : -10
+
+                    Behavior on y {
+                        NumberAnimation {
+                            duration: 150
+                            easing.type: Easing.OutCubic
+                        }
+                    }
                 }
 
-                Item {
-                    width: parent.width
-                    height: parent.height
-                    transformOrigin: Item.Center
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: 80
+                    }
+                }
+            }
 
-                    // Background
-                    Rectangle {
-                        anchors.centerIn: parent
-                        width: parent.width
-                        height: parent.height
-                        color: Appearance.bgColor
-                        radius: 30
-                        opacity: 0.80
-                        z: 1
-                        border.color: Appearance.accentColor
-                        border.width: 1
+            ColumnLayout {
+                id: content
 
-                        Behavior on height {
-                            NumberAnimation {
-                                duration: 150
+                parent: card
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.margins: 12
+                spacing: 12
+
+                // --- search field ---
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 58
+                    radius: 29
+                    color: Appearance.surfaceColor
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: 22
+                        anchors.rightMargin: 9
+                        spacing: 12
+
+                        MaterialSymbol {
+                            // thin, slightly larger and muted so it sits quietly next to the text
+                            icon: "search"
+                            color: Appearance.mutedColor
+                            font.pixelSize: 26
+                            font.weight: Font.Light
+                            renderType: Text.QtRendering
+                        }
+
+                        TextField {
+                            id: searchField
+
+                            // inline bang completion: "!y" shows a ghost "t", Tab accepts it
+                            readonly property string completion: cursorPosition === length ? Services.Search.bangCompletion(text) : ""
+
+                            StyledText {
+                                x: searchField.leftPadding + searchField.contentWidth
+                                anchors.verticalCenter: parent.verticalCenter
+                                visible: searchField.completion !== ""
+                                text: searchField.completion
+                                color: Appearance.mutedColor
+                                font: searchField.font
+                                opacity: 0.7
+                            }
+
+                            StyledText {
+                                anchors.right: parent.right
+                                anchors.verticalCenter: parent.verticalCenter
+                                visible: searchField.completion !== ""
+                                text: "Tab"
+                                color: Appearance.mutedColor
+                                font.pixelSize: 12
+                            }
+
+                            Layout.fillWidth: true
+                            color: Appearance.fgColor
+                            placeholderText: "Search apps, files, web  ·  !yt  ·  !yt! private"
+                            placeholderTextColor: Appearance.mutedColor
+                            font.family: Appearance.fontFamily
+                            font.pixelSize: 19
+                            font.weight: Font.Medium
+                            selectionColor: Appearance.accentColor
+                            selectedTextColor: Appearance.onAccentColor
+                            selectByMouse: true
+                            background: null
+                            Keys.onPressed: event => {
+                                const n = panelWindow.ordered.length;
+                                if (event.key === Qt.Key_Tab && searchField.completion !== "") {
+                                // accept the suggested bang
+                                searchField.text = searchField.text + searchField.completion + " ";
+                                event.accepted = true;
+                            } else if (event.key === Qt.Key_Down || event.key === Qt.Key_Tab) {
+                                    panelWindow.currentIndex = Math.min(n - 1, panelWindow.currentIndex + 1);
+                                    event.accepted = true;
+                                } else if (event.key === Qt.Key_Up || event.key === Qt.Key_Backtab) {
+                                    panelWindow.currentIndex = Math.max(0, panelWindow.currentIndex - 1);
+                                    event.accepted = true;
+                                } else if (event.key === Qt.Key_Escape) {
+                                    panelWindow.close();
+                                    event.accepted = true;
+                                } else if (event.key === Qt.Key_Enter || event.key === Qt.Key_Return) {
+                                    panelWindow.activate(panelWindow.currentIndex);
+                                    event.accepted = true;
+                                }
+                            }
+                            onTextChanged: Services.Search.performSearch(text)
+                        }
+
+                        Rectangle {
+                            Layout.alignment: Qt.AlignVCenter
+                            implicitWidth: hint.implicitWidth + 32
+                            implicitHeight: 40
+                            radius: 20
+                            color: Appearance.surfaceHighColor
+
+                            StyledText {
+                                id: hint
+
+                                anchors.centerIn: parent
+                                text: "Super + Space"
+                                color: Appearance.mutedColor
+                                font.pixelSize: 13
                             }
                         }
                     }
+                }
 
-                    ColumnLayout {
-                        anchors.fill: parent
-                        Layout.alignment: Qt.AlignCenter
-                        spacing: 16
-                        clip: true
-                        z: 2
+                // --- app tiles ---
+                RowLayout {
+                    Layout.fillWidth: true
+                    visible: panelWindow.tileResults.length > 0
+                    spacing: 6
 
-                        RowLayout {
+                    Repeater {
+                        model: panelWindow.tileResults
+
+                        delegate: Rectangle {
+                            id: tile
+
+                            required property var modelData
+                            required property int index
+                            readonly property bool selected: panelWindow.currentIndex === index
+
                             Layout.fillWidth: true
-                            Layout.alignment: Qt.AlignVCenter
-                            spacing: 0
-                            Layout.topMargin: 16
-                            Layout.leftMargin: 24
-                            Layout.rightMargin: 24
-                            Layout.bottomMargin: panelWindow.results.length > 0 ? 0 : 16
+                            Layout.preferredWidth: 1
+                            Layout.preferredHeight: 108
+                            radius: 29
+                            color: selected ? Appearance.accentColor : (tileMouse.containsMouse ? Appearance.surfaceHighColor : Appearance.surfaceColor)
 
-                            MaterialSymbol {
-                                icon: "search"
-                                color: Appearance.fgColor
-                                font.pixelSize: 32
-                                opacity: 0.8
-                                rightPadding: 8
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: Appearance.animFast
+                                }
                             }
 
-                            // Search input
-                            TextField {
-                                id: searchField
+                            ColumnLayout {
+                                anchors.centerIn: parent
+                                width: parent.width - 16
+                                spacing: 9
 
-                                color: Appearance.fgColor
-                                placeholderTextColor: Appearance.fgColor
-                                Layout.alignment: Qt.AlignHCenter
-                                Layout.fillWidth: true
-                                placeholderText: "`:h` for help"
-                                height: 50
-                                font.pixelSize: 22
-                                selectByMouse: true
-                                Keys.onReleased: event => {
-                                    if (event.key === Qt.Key_Down) {
-                                        resultsView.currentIndex = Math.min(resultsView.count - 1, resultsView.currentIndex + 1);
-                                    } else if (event.key === Qt.Key_Up) {
-                                        resultsView.currentIndex = Math.max(0, resultsView.currentIndex - 1);
-                                    } else if (event.key === Qt.Key_Enter || event.key === Qt.Key_Return) {
-                                        if (resultsView.currentIndex >= 0) {
-                                            resultsView.model[resultsView.currentIndex]?.execute();
-                                            lazyloader.active = false;
+                                // icon: real app icon, initials circle as fallback
+                                Item {
+                                    Layout.alignment: Qt.AlignHCenter
+                                    Layout.preferredWidth: 44
+                                    Layout.preferredHeight: 44
+
+                                    Rectangle {
+                                        anchors.fill: parent
+                                        radius: 22
+                                        visible: tileImg.status !== Image.Ready
+                                        color: tile.selected ? Appearance.bgColor : Appearance.surfaceHighColor
+
+                                        StyledText {
+                                            anchors.centerIn: parent
+                                            text: panelWindow.initials(tile.modelData?.name)
+                                            color: tile.selected ? Appearance.accentColor : Appearance.fgColor
+                                            font.pixelSize: 15
+                                            font.weight: Font.Bold
                                         }
-                                    } else if (event.key === Qt.Key_Escape) {
-                                        lazyloader.active = false;
+                                    }
+
+                                    Image {
+                                        id: tileImg
+
+                                        anchors.fill: parent
+                                        source: panelWindow.iconSource(tile.modelData?.image)
+                                        sourceSize: Qt.size(112, 112)
+                                        fillMode: Image.PreserveAspectFit
                                     }
                                 }
-                                onTextChanged: {
-                                    debounceTimer.restart();
-                                }
-                                Component.onCompleted: {
-                                    searchField.forceActiveFocus();
-                                }
 
-                                background: Rectangle {
-                                    color: 'transparent'
+                                StyledText {
+                                    Layout.fillWidth: true
+                                    horizontalAlignment: Text.AlignHCenter
+                                    text: tile.modelData?.name
+                                    elide: Text.ElideRight
+                                    color: tile.selected ? Appearance.onAccentColor : Appearance.fgColor
+                                    font.pixelSize: 13
+                                    font.weight: Font.Medium
                                 }
                             }
-                            Timer {
-                                id: debounceTimer
-                                interval: 100
-                                repeat: false
-                                onTriggered: Services.Search.performSearch(searchField.text)
-                            }
-                        }
 
-                        // Results list
-                        Item {
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-
-                            ListView {
-                                id: resultsView
+                            MouseArea {
+                                id: tileMouse
 
                                 anchors.fill: parent
-                                spacing: 12
-                                model: panelWindow.results
-                                currentIndex: -1
-                                clip: true
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onEntered: panelWindow.currentIndex = tile.index
+                                onClicked: panelWindow.activate(tile.index)
+                            }
+                        }
+                    }
+                }
 
-                                add: Transition {
-                                    NumberAnimation {
-                                        properties: "opacity, y"
-                                        from: 0
-                                        to: 1
-                                        duration: 200
-                                    }
+                // --- result rows ---
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    visible: panelWindow.rowResults.length > 0
+                    spacing: 3
 
-                                    NumberAnimation {
-                                        properties: "y"
-                                        from: 20
-                                        to: 0
-                                        duration: 200
-                                    }
-                                }
+                    Repeater {
+                        model: panelWindow.rowResults
 
-                                delegate: Rectangle {
-                                    width: parent.width - 60
-                                    height: resultsView.currentIndex === index ? panelWindow.resultHeight + 24 : panelWindow.resultHeight + 12
-                                    color: 'transparent'
-                                    radius: 20
+                        delegate: Rectangle {
+                            id: row
 
-                                    RowLayout {
-                                        spacing: 16
-                                        Layout.alignment: Qt.AlignVCenter
-                                        anchors.fill: parent
-                                        anchors.leftMargin: 30
+                            required property var modelData
+                            required property int index
+                            readonly property int flatIndex: panelWindow.tileResults.length + index
+                            readonly property bool selected: panelWindow.currentIndex === flatIndex
+                            // apps and web results carry a real icon
+                            readonly property bool hasImage: (modelData?.type === "app" || modelData?.type === "web") && !!modelData?.image
 
-                                        // Icons and Images
-                                        Item {
-                                            Layout.preferredHeight: 46
-                                            Layout.preferredWidth: 46
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 58
+                            topLeftRadius: index === 0 ? 29 : 6
+                            topRightRadius: index === 0 ? 29 : 6
+                            bottomLeftRadius: index === panelWindow.rowResults.length - 1 ? 29 : 6
+                            bottomRightRadius: index === panelWindow.rowResults.length - 1 ? 29 : 6
+                            color: selected ? Appearance.surfaceHighColor : Appearance.surfaceColor
 
-                                            // 1. Precise Image (Apps or System Icons - Priority)
-                                            Image {
-                                                id: mainImg
-                                                anchors.fill: parent
-                                                visible: modelData?.image?.length > 0
-                                                source: {
-                                                    if (!modelData?.image) return "";
-                                                    if (modelData.image.startsWith("/") || modelData.image.startsWith("file://")) {
-                                                        return modelData.image.startsWith("file://") ? modelData.image : "file://" + modelData.image;
-                                                    }
-                                                    return "image://icon/" + modelData.image;
-                                                }
-                                                fillMode: Image.PreserveAspectFit
-                                            }
-
-                                            // 2. Symbolic fallback (Only if no image exists)
-                                            MaterialSymbol {
-                                                anchors.fill: parent
-                                                visible: !mainImg.visible || mainImg.status === Image.Error
-                                                icon: modelData?.icon || (modelData?.type === "file" ? "description" : "article")
-                                                color: Appearance.fgColor
-                                                font.pixelSize: 40
-                                                opacity: 0.6
-                                                verticalAlignment: Text.AlignVCenter
-                                                horizontalAlignment: Text.AlignHCenter
-                                            }
-                                        }
-
-                                        ColumnLayout {
-                                            spacing: -4
-                                            Layout.fillWidth: true
-                                            Text {
-                                                Layout.fillWidth: true
-                                                text: modelData.name
-                                                color: Appearance.fgColor
-                                                font.pixelSize: 24
-                                                font.weight: resultsView.currentIndex === index ? Font.Normal : Font.Light
-                                            }
-                                            Text {
-                                                text: modelData.description || ""
-                                                font.pixelSize: 14
-                                                font.weight: Font.Light
-                                                visible: modelData.description && modelData.description.length > 0
-                                                color: Appearance.fgColor
-                                                opacity: 0.8
-                                                elide: Text.ElideRight
-                                                width: parent.width - 100
-                                            }
-                                        }
-                                    }
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: Appearance.animFast
                                 }
                             }
 
-                            // active result indicator
-                            Rectangle {
-                                id: activeIndicator
-
-                                width: parent.width - 20
-                                height: panelWindow.resultHeight + 30
-                                radius: 20
-                                color: Appearance.accentColor
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                opacity: 0.2
-                                visible: resultsView.currentIndex >= 0 && panelWindow.results.length > 0
-                                y: resultsView.currentItem ? resultsView.currentItem.y - resultsView.contentY - 2 : 0
-                                z: -1
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.leftMargin: 14
+                                anchors.rightMargin: 22
+                                spacing: 14
 
                                 Rectangle {
-                                    anchors.fill: parent
-                                    color: "transparent"
-                                    radius: parent.radius
-                                    border.color: Appearance.accentColor
-                                    border.width: 2
-                                }
+                                    Layout.preferredWidth: 36
+                                    Layout.preferredHeight: 36
+                                    radius: 18
+                                    color: Appearance.surfaceHighColor
 
-                                Behavior on y {
-                                    NumberAnimation {
-                                        duration: 25
-                                        easing.type: Easing.InQuad
+                                    Image {
+                                        id: rowImg
+
+                                        anchors.centerIn: parent
+                                        width: 20
+                                        height: 20
+                                        visible: status === Image.Ready && row.hasImage
+                                        source: row.hasImage ? panelWindow.iconSource(row.modelData?.image) : ""
+                                        sourceSize: Qt.size(48, 48)
+                                        fillMode: Image.PreserveAspectFit
+                                    }
+
+                                    MaterialSymbol {
+                                        anchors.centerIn: parent
+                                        visible: !rowImg.visible
+                                        icon: row.modelData?.type === "folder" ? "folder" : (row.modelData?.type === "file" ? "description" : (row.modelData?.icon || "apps"))
+                                        font.pixelSize: 18
+                                        color: Appearance.fgColor
                                     }
                                 }
 
-                                Behavior on opacity {
-                                    NumberAnimation {
-                                        duration: 150
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 0
+
+                                    StyledText {
+                                        Layout.fillWidth: true
+                                        text: row.modelData?.name
+                                        elide: Text.ElideRight
+                                        color: Appearance.fgColor
+                                        font.pixelSize: 15
+                                        font.weight: Font.DemiBold
+                                    }
+
+                                    StyledText {
+                                        Layout.fillWidth: true
+                                        visible: text !== ""
+                                        text: row.modelData?.type === "app" || row.modelData?.type === "file" || row.modelData?.type === "folder" ? (row.modelData?.description || "").replace(/^\/home\/[^/]+/, "~") : ""
+                                        elide: Text.ElideMiddle
+                                        color: Appearance.mutedColor
+                                        font.pixelSize: 12
                                     }
                                 }
+
+                                StyledText {
+                                    text: panelWindow.typeLabel(row.modelData)
+                                    color: Appearance.mutedColor
+                                    font.pixelSize: 12
+                                }
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onEntered: panelWindow.currentIndex = row.flatIndex
+                                onClicked: panelWindow.activate(row.flatIndex)
                             }
                         }
                     }
