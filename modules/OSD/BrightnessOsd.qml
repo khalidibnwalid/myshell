@@ -27,7 +27,8 @@ Scope {
     Osd {
         shown: root.shouldShowOsd
         value: backlight.percentage
-        icon: backlight.percentage < 0.35 ? "brightness_low" : (backlight.percentage < 0.7 ? "brightness_medium" : "brightness_high")
-        offset: 72
+        // same icon as the brightness slider in quick settings
+        icon: "light_mode"
+        offset: 82
     }
 }

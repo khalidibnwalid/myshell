@@ -19,8 +19,8 @@ PanelWindow {
     margins.right: offset
     margins.left: offset
     exclusiveZone: 0
-    implicitWidth: 52
-    implicitHeight: 216
+    implicitWidth: 60
+    implicitHeight: 250
     color: "transparent"
     visible: shown || keepAlive.running
     onShownChanged: {
@@ -47,7 +47,7 @@ PanelWindow {
             id: track
 
             anchors.fill: parent
-            anchors.margins: 6
+            anchors.margins: 7
             radius: width / 2
             color: Appearance.surfaceColor
             clip: true
@@ -69,20 +69,20 @@ PanelWindow {
 
             StyledText {
                 anchors.top: parent.top
-                anchors.topMargin: 14
+                anchors.topMargin: 16
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: Math.round(root.level * 100)
-                font.pixelSize: 12
+                font.pixelSize: 14
                 font.weight: Font.DemiBold
                 color: root.level > 0.86 ? Appearance.onAccentColor : Appearance.mutedColor
             }
 
             MaterialSymbol {
                 anchors.bottom: parent.bottom
-                anchors.bottomMargin: 10
+                anchors.bottomMargin: 12
                 anchors.horizontalCenter: parent.horizontalCenter
                 icon: root.icon
-                font.pixelSize: 20
+                font.pixelSize: 24
                 color: Appearance.onAccentColor
             }
         }

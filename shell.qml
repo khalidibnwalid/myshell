@@ -55,6 +55,12 @@ Scope {
     BrightnessOsd {
     }
 
+    MicOsd {
+    }
+
+    StatusOsd {
+    }
+
     Workspaces {
     }
 
