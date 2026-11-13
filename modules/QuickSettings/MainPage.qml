@@ -14,6 +14,7 @@ Item {
     property var batteryPageComponent
     property var audioPageComponent
     property var calendarPageComponent
+    property var appsPageComponent
 
     implicitHeight: layout.implicitHeight + 32
 
@@ -72,6 +73,18 @@ Item {
                 iconSize: 19
                 icon: "calendar_month"
                 onClicked: stackView.push(calendarPageComponent, {
+                    "stackView": stackView
+                })
+            }
+
+            IconButton {
+                size: 34
+                iconSize: 19
+                icon: "apps"
+                Accessible.name: "All apps"
+                ToolTip.visible: hovered
+                ToolTip.text: "All apps"
+                onClicked: stackView.push(appsPageComponent, {
                     "stackView": stackView
                 })
             }

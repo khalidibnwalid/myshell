@@ -58,6 +58,7 @@ Scope {
 
             screen: modelData
             visible: root.isActuallyOpen
+            focusable: root.open
             implicitWidth: root.panelWidth
             implicitHeight: modelData.height - 20
             color: "transparent"
@@ -161,7 +162,8 @@ Scope {
                                 "bluetoothPageComponent": bluetoothPageComponent,
                                 "batteryPageComponent": batteryPageComponent,
                                 "audioPageComponent": audioPageComponent,
-                                "calendarPageComponent": calendarPageComponent
+                                "calendarPageComponent": calendarPageComponent,
+                                "appsPageComponent": appsPageComponent
                             });
                     }
 
@@ -266,6 +268,13 @@ Scope {
                 id: calendarPageComponent
 
                 CalendarPage {
+                }
+            }
+
+            Component {
+                id: appsPageComponent
+
+                AppsPage {
                 }
             }
 

@@ -10,6 +10,7 @@ Item {
     property int size: 36
     property bool toggled: false
     property color accentColor: Appearance.accentColor
+    readonly property bool hovered: mouseArea.containsMouse
 
     signal clicked()
 
