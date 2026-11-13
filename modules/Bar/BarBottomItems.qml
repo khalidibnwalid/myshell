@@ -4,12 +4,16 @@ import "../../services/"
 import QtQuick
 import QtQuick.Layouts
 
-ColumnLayout {
+GridLayout {
     id: root
 
     property var barWindow
+    readonly property bool horizontal: Config.barHorizontal
 
-    spacing: 14
+    // a column on a side bar, a row on a top or bottom bar
+    columns: horizontal ? -1 : 1
+    rowSpacing: 14
+    columnSpacing: 14
 
     Audio {
         id: audio
@@ -18,7 +22,7 @@ ColumnLayout {
     // shown while the screen is being recorded; click to stop
     MaterialSymbol {
         visible: ScreenTools.recording
-        Layout.alignment: Qt.AlignHCenter
+        Layout.alignment: Qt.AlignCenter
         icon: "stop_circle"
         fill: 1
         font.pixelSize: 22
@@ -34,7 +38,7 @@ ColumnLayout {
 
     // wifi / bluetooth / volume / battery -> open quick settings
     Item {
-        Layout.alignment: Qt.AlignHCenter
+        Layout.alignment: Qt.AlignCenter
         implicitWidth: statusColumn.implicitWidth
         implicitHeight: statusColumn.implicitHeight
 
@@ -45,12 +49,14 @@ ColumnLayout {
             onClicked: WindowManager.toggleQuickSettingsVisible()
         }
 
-        ColumnLayout {
+        GridLayout {
             id: statusColumn
-            spacing: 14
+            columns: root.horizontal ? -1 : 1
+            rowSpacing: 14
+            columnSpacing: 14
 
         MaterialSymbol {
-            Layout.alignment: Qt.AlignHCenter
+            Layout.alignment: Qt.AlignCenter
             icon: Network.statusIcon
             font.pixelSize: 22
             color: Appearance.fgColor
@@ -58,7 +64,7 @@ ColumnLayout {
 
         MaterialSymbol {
             visible: Bluetooth.enabled
-            Layout.alignment: Qt.AlignHCenter
+            Layout.alignment: Qt.AlignCenter
             icon: Bluetooth.statusIcon
             font.pixelSize: 22
             color: Appearance.fgColor
@@ -67,7 +73,7 @@ ColumnLayout {
         MaterialSymbol {
             id: volumeIcon
 
-            Layout.alignment: Qt.AlignHCenter
+            Layout.alignment: Qt.AlignCenter
             icon: audio.mute || audio.volume === 0 ? "volume_off" : (audio.volume < 0.5 ? "volume_down" : "volume_up")
             font.pixelSize: 22
             color: Appearance.fgColor
@@ -76,14 +82,14 @@ ColumnLayout {
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
-                onEntered: volumePopup.show(volumeIcon.mapToItem(null, 0, 0).y, volumeIcon.height)
+                onEntered: volumePopup.show(volumeIcon.mapToItem(null, volumeIcon.width / 2, volumeIcon.height / 2))
                 onExited: volumePopup.hideLater()
                 onClicked: WindowManager.toggleQuickSettingsVisible()
             }
         }
 
         StyledText {
-            Layout.alignment: Qt.AlignHCenter
+            Layout.alignment: Qt.AlignCenter
             text: Keyboard.layout
             color: Appearance.fgColor
             font.pixelSize: 12
@@ -93,11 +99,11 @@ ColumnLayout {
 
         ColumnLayout {
             visible: Battery.device.isLaptopBattery
-            Layout.alignment: Qt.AlignHCenter
+            Layout.alignment: Qt.AlignCenter
             spacing: -2
 
             MaterialSymbol {
-                Layout.alignment: Qt.AlignHCenter
+                Layout.alignment: Qt.AlignCenter
                 icon: Battery.iconName
                 font.pixelSize: 22
                 fill: Battery.percentage
@@ -105,7 +111,7 @@ ColumnLayout {
             }
 
             StyledText {
-                Layout.alignment: Qt.AlignHCenter
+                Layout.alignment: Qt.AlignCenter
                 text: Math.round(Battery.percentage * 100)
                 color: Appearance.mutedColor
                 font.pixelSize: 11
@@ -116,7 +122,7 @@ ColumnLayout {
     }
 
     MaterialSymbol {
-        Layout.alignment: Qt.AlignHCenter
+        Layout.alignment: Qt.AlignCenter
         icon: "power_settings_new"
         font.pixelSize: 22
         color: Appearance.fgColor

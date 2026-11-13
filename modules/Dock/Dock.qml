@@ -137,9 +137,11 @@ Scope {
                             return;
                         }
                         // pointer in window coordinates; the window sits at the bottom of the screen
-                        const barLeft = Config.layout.barPosition === "left";
+                        // the window is pushed aside by a left bar and sits above a bottom bar
+                        const barLeft = Config.barPosition === "left";
+                        const barBottom = Config.barPosition === "bottom";
                         const x = parseInt(m[1]) - win.modelData.x - (barLeft ? win.modelData.width - win.width : 0);
-                        const y = parseInt(m[2]) - win.modelData.y - (win.modelData.height - win.height);
+                        const y = parseInt(m[2]) - win.modelData.y - (win.modelData.height - win.height - (barBottom ? Config.barSize : 0));
                         const inside = item => x >= item.x && x <= item.x + item.width && y >= item.y && y <= item.y + item.height;
                         if (win.pointerReveal && (inside(dockHit) || (card.visible && inside(cardHit))))
                             hideTimer.restart();

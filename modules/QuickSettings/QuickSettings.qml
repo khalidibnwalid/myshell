@@ -46,7 +46,7 @@ Scope {
             id: window
 
             required property var modelData
-            readonly property bool barRight: Config.layout.barPosition === "right"
+            readonly property bool barRight: Config.panelRight
             readonly property bool hasNotifications: NotificationService.count > 0
             // start the entrance only once the surface is really on screen, so no frame of it is lost
             readonly property bool shown: root.open && backingWindowVisible
@@ -60,7 +60,7 @@ Scope {
             visible: root.isActuallyOpen
             focusable: root.open
             implicitWidth: root.panelWidth
-            implicitHeight: modelData.height - 20
+            implicitHeight: modelData.height - 20 - (Config.barHorizontal ? Config.barSize : 0)
             color: "transparent"
 
             anchors {

@@ -11,7 +11,7 @@ PanelWindow {
     property string icon
     property bool shown: false
     property int offset: 12
-    readonly property bool barRight: Config.layout.barPosition === "right"
+    readonly property bool barRight: Config.panelRight
     readonly property real level: Math.max(0, Math.min(1, value))
 
     anchors.right: barRight

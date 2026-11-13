@@ -8,22 +8,26 @@ import Quickshell.Widgets
 
 // System tray: the first `maxVisible` icons, the rest behind an arrow.
 // Left or right click opens the item's menu, middle click activates the app.
-ColumnLayout {
+GridLayout {
     id: root
 
     property var barWindow
     property int maxVisible: 2
     property bool expanded: false
     readonly property int count: SystemTray.items.values.length
+    readonly property bool horizontal: Config.barHorizontal
 
-    spacing: 12
+    // a column on a side bar, a row on a top or bottom bar
+    columns: horizontal ? -1 : 1
+    rowSpacing: 12
+    columnSpacing: 12
 
     // overflow arrow
     Item {
         visible: root.count > root.maxVisible
-        Layout.alignment: Qt.AlignHCenter
-        implicitWidth: 28
-        implicitHeight: 20
+        Layout.alignment: Qt.AlignCenter
+        implicitWidth: root.horizontal ? 20 : 28
+        implicitHeight: root.horizontal ? 28 : 20
 
         Rectangle {
             anchors.fill: parent
@@ -42,7 +46,7 @@ ColumnLayout {
             icon: "keyboard_arrow_up"
             font.pixelSize: 18
             color: Appearance.fgColor
-            rotation: root.expanded ? 180 : 0
+            rotation: (root.horizontal ? -90 : 0) + (root.expanded ? 180 : 0)
 
             Behavior on rotation {
                 NumberAnimation {
@@ -81,11 +85,11 @@ ColumnLayout {
                     menu.open = false;
                     return;
                 }
-                menu.show(modelData, trayItem.mapToItem(null, 0, 0).y);
+                menu.show(modelData, trayItem.mapToItem(null, trayItem.width / 2, trayItem.height / 2));
             }
 
             visible: shown
-            Layout.alignment: Qt.AlignHCenter
+            Layout.alignment: Qt.AlignCenter
             implicitWidth: 30
             implicitHeight: 30
 

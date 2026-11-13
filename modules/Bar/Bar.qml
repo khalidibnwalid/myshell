@@ -24,16 +24,20 @@ Scope {
 
             required property var modelData
 
+            readonly property bool horizontal: Config.barHorizontal
+
             screen: modelData
             visible: true
-            implicitWidth: 50
+            implicitWidth: Config.barSize
+            implicitHeight: Config.barSize
             color: "transparent"
 
+            // a side bar spans the screen's height, a top or bottom bar its width
             anchors {
-                top: true
-                right: Config.layout.barPosition === "right"
-                left: Config.layout.barPosition === "left"
-                bottom: true
+                top: Config.barPosition !== "bottom"
+                bottom: Config.barPosition !== "top"
+                left: Config.barPosition !== "right"
+                right: Config.barPosition !== "left"
             }
 
             // translucent bar background (blurred by the compositor)
@@ -42,20 +46,17 @@ Scope {
                 color: Appearance.panelColor
             }
 
-            // top: search + workspaces
-            ColumnLayout {
-                anchors {
-                    top: parent.top
-                    left: parent.left
-                    right: parent.right
-                    topMargin: 8
-                }
-
-                spacing: 14
+            // start: search + workspaces
+            GridLayout {
+                x: panelWindow.horizontal ? 8 : Math.round((parent.width - width) / 2)
+                y: panelWindow.horizontal ? Math.round((parent.height - height) / 2) : 8
+                columns: panelWindow.horizontal ? -1 : 1
+                rowSpacing: 14
+                columnSpacing: 14
 
                 // search / launcher button
                 Rectangle {
-                    Layout.alignment: Qt.AlignHCenter
+                    Layout.alignment: Qt.AlignCenter
                     implicitWidth: 36
                     implicitHeight: 36
                     radius: 18
@@ -92,36 +93,32 @@ Scope {
                 }
 
                 BarWS {
-                    Layout.alignment: Qt.AlignHCenter
+                    Layout.alignment: Qt.AlignCenter
                     barWindow: panelWindow
                 }
             }
 
             // middle: clock
             BarClock {
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.verticalCenterOffset: 20
+                anchors.centerIn: parent
+                anchors.verticalCenterOffset: panelWindow.horizontal ? 0 : 20
             }
 
-            // bottom: tray + status icons
-            ColumnLayout {
-                anchors {
-                    left: parent.left
-                    right: parent.right
-                    bottom: parent.bottom
-                    bottomMargin: 16
-                }
-
-                spacing: 16
+            // end: tray + status icons
+            GridLayout {
+                x: panelWindow.horizontal ? parent.width - width - 16 : Math.round((parent.width - width) / 2)
+                y: panelWindow.horizontal ? Math.round((parent.height - height) / 2) : parent.height - height - 16
+                columns: panelWindow.horizontal ? -1 : 1
+                rowSpacing: 16
+                columnSpacing: 16
 
                 BarTrays {
-                    Layout.alignment: Qt.AlignHCenter
+                    Layout.alignment: Qt.AlignCenter
                     barWindow: panelWindow
                 }
 
                 BarBottomItems {
-                    Layout.alignment: Qt.AlignHCenter
+                    Layout.alignment: Qt.AlignCenter
                     barWindow: panelWindow
                 }
             }

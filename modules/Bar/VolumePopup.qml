@@ -8,15 +8,19 @@ PanelWindow {
     id: root
 
     property var barWindow
+    property real anchorX: 0
     property real anchorY: 0
-    property real anchorHeight: 24
     property bool open: false
-    readonly property bool barRight: Config.layout.barPosition === "right"
+    readonly property bool barRight: Config.barPosition === "right"
+    // beside a side bar at the pointer's height; above or below a top/bottom bar at its x
+    readonly property bool horizontal: Config.barHorizontal
+    readonly property real screenWidth: screen ? screen.width : 1280
     readonly property real screenHeight: screen ? screen.height : 800
 
-    function show(y, iconHeight) {
-        anchorY = y;
-        anchorHeight = iconHeight;
+    // point: centre of the volume icon, in bar coordinates
+    function show(point) {
+        anchorX = point.x;
+        anchorY = point.y;
         open = true;
         closeTimer.stop();
     }
@@ -28,14 +32,16 @@ PanelWindow {
     screen: barWindow ? barWindow.screen : null
     visible: open || closeTimer.running
     anchors {
-        top: true
+        top: Config.barPosition !== "bottom"
+        bottom: Config.barPosition === "bottom"
         right: barRight
         left: !barRight
     }
     margins {
-        top: Math.max(8, Math.min(anchorY + anchorHeight / 2 - implicitHeight / 2, screenHeight - implicitHeight - 8))
+        top: horizontal ? 5 : Math.max(8, Math.min(anchorY - implicitHeight / 2, screenHeight - implicitHeight - 8))
+        bottom: 5
         right: 5
-        left: 5
+        left: horizontal ? Math.max(8, Math.min(anchorX - implicitWidth / 2, screenWidth - implicitWidth - 8)) : 5
     }
     exclusiveZone: 0
     implicitWidth: 226

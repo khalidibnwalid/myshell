@@ -11,25 +11,33 @@ PanelWindow {
 
     property var item: null // SystemTrayItem
     property var barWindow
+    property real anchorX: 0
     property real anchorY: 0
     property bool open: false
-    readonly property bool barRight: Config.layout.barPosition === "right"
-    readonly property real maxHeight: (screen ? screen.height : 800) - 20
+    readonly property bool barRight: Config.barPosition === "right"
+    // beside a side bar at the pointer's height; above or below a top/bottom bar at its x
+    readonly property bool horizontal: Config.barHorizontal
+    readonly property real screenWidth: screen ? screen.width : 1280
+    readonly property real maxHeight: (screen ? screen.height : 800) - 20 - (Config.barHorizontal ? Config.barSize : 0)
 
-    function show(trayItem, y) {
+    // point: centre of the tray icon, in bar coordinates
+    function show(trayItem, point) {
         item = trayItem;
-        anchorY = y;
+        anchorX = point.x;
+        anchorY = point.y;
         open = true;
     }
 
     visible: open && item !== null
-    anchors.top: true
+    anchors.top: Config.barPosition !== "bottom"
+    anchors.bottom: Config.barPosition === "bottom"
     anchors.right: barRight
     anchors.left: !barRight
     // level with the icon, but never past the bottom of the screen
-    margins.top: Math.max(10, Math.min(anchorY - 14, maxHeight + 10 - implicitHeight))
+    margins.top: horizontal ? 8 : Math.max(10, Math.min(anchorY - 29, maxHeight + 10 - implicitHeight))
+    margins.bottom: 8
     margins.right: 8
-    margins.left: 8
+    margins.left: horizontal ? Math.max(8, Math.min(anchorX - implicitWidth / 2, screenWidth - implicitWidth - 8)) : 8
     exclusiveZone: 0
     implicitWidth: 248
     implicitHeight: Math.min(maxHeight, content.implicitHeight + 16)

@@ -13,21 +13,19 @@ Item {
     // total number of workspaces = highest id (+1 spare)
     property int _numberOfWS: Hyprland.workspaces.values.length > 0 ? Hyprland.workspaces.values[Hyprland.workspaces.values.length - 1].id : 0
 
-    implicitWidth: 40
+    readonly property bool horizontal: Config.barHorizontal
+
+    implicitWidth: column.implicitWidth
     implicitHeight: column.implicitHeight
 
-    Behavior on implicitHeight {
-        NumberAnimation {
-            duration: 160
-            easing.type: Easing.OutQuad
-        }
-    }
-
-    Column {
+    // one line of workspaces along the bar
+    GridLayout {
         id: column
 
-        anchors.horizontalCenter: parent.horizontalCenter
-        spacing: 2
+        anchors.centerIn: parent
+        columns: root.horizontal ? -1 : 1
+        rowSpacing: 2
+        columnSpacing: 2
 
         Repeater {
             model: root._numberOfWS + 1
@@ -41,10 +39,13 @@ Item {
                 property bool focused: currentWs?.focused ?? false
                 property bool occupied: (currentWs?.toplevels?.values?.length ?? 0) > 0
 
-                width: 40
-                height: focused ? 52 : 24
+                // length along the bar: the focused workspace is a longer pill
+                property real extent: focused ? 52 : 24
 
-                Behavior on height {
+                implicitWidth: root.horizontal ? extent : 40
+                implicitHeight: root.horizontal ? 40 : extent
+
+                Behavior on extent {
                     NumberAnimation {
                         duration: Appearance.animNormal
                         easing.type: Easing.BezierSpline
@@ -55,8 +56,8 @@ Item {
                 // active workspace pill
                 Rectangle {
                     anchors.centerIn: parent
-                    width: 28
-                    height: parent.height - 4
+                    width: root.horizontal ? parent.width - 4 : 28
+                    height: root.horizontal ? 28 : parent.height - 4
                     radius: 14
                     color: Appearance.accentColor
                     opacity: ws.focused ? 1 : 0
@@ -106,7 +107,7 @@ Item {
                     // hovering a workspace with windows lists them next to the bar
                     onEntered: {
                         if (ws.occupied)
-                            popup.show(ws.currentWs, ws.mapToItem(null, 0, ws.height / 2).y);
+                            popup.show(ws.currentWs, ws.mapToItem(null, ws.width / 2, ws.height / 2));
                         else
                             popup.hideLater();
                     }

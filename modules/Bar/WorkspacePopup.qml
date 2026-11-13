@@ -12,15 +12,21 @@ PanelWindow {
 
     property var barWindow
     property HyprlandWorkspace workspace: null
+    property real anchorX: 0
     property real anchorY: 0
     property bool open: false
-    readonly property bool barRight: Config.layout.barPosition === "right"
+    readonly property bool barRight: Config.barPosition === "right"
+    // beside a side bar at the pointer's height; above or below a top/bottom bar at its x
+    readonly property bool horizontal: Config.barHorizontal
+    readonly property real screenWidth: screen ? screen.width : 1280
     readonly property real screenHeight: screen ? screen.height : 800
     readonly property var windows: workspace?.toplevels?.values ?? []
 
-    function show(ws, y) {
+    // point: centre of the workspace button, in bar coordinates
+    function show(ws, point) {
         workspace = ws;
-        anchorY = y;
+        anchorX = point.x;
+        anchorY = point.y;
         closeTimer.stop();
         // a short pause, so sweeping over the dots does not flash cards
         if (!open)
@@ -47,15 +53,17 @@ PanelWindow {
     Component.onDestruction: WindowManager.unregisterBarPopup(root)
 
     anchors {
-        top: true
+        top: Config.barPosition !== "bottom"
+        bottom: Config.barPosition === "bottom"
         right: barRight
         left: !barRight
     }
 
     margins {
-        top: Math.max(8, Math.min(anchorY - implicitHeight / 2, screenHeight - implicitHeight - 8))
+        top: horizontal ? 5 : Math.max(8, Math.min(anchorY - implicitHeight / 2, screenHeight - implicitHeight - 8))
+        bottom: 5
         right: 5
-        left: 5
+        left: horizontal ? Math.max(8, Math.min(anchorX - implicitWidth / 2, screenWidth - implicitWidth - 8)) : 5
     }
 
     Timer {
@@ -86,7 +94,7 @@ PanelWindow {
         border.color: Appearance.hairlineColor
         opacity: root.open ? 1 : 0
         scale: root.open ? 1 : 0.94
-        transformOrigin: root.barRight ? Item.Right : Item.Left
+        transformOrigin: root.horizontal ? (Config.barPosition === "top" ? Item.Top : Item.Bottom) : (root.barRight ? Item.Right : Item.Left)
 
         Behavior on opacity {
             NumberAnimation {
