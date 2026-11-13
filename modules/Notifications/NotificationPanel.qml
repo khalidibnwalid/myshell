@@ -8,6 +8,10 @@ import QtQuick.Layouts
 Rectangle {
     id: root
 
+    Audio {
+        id: audio
+    }
+
     property real maxHeight: 600
     // outer radius (36) = inner radius (20) + padding (16), same as the quick settings card
     readonly property int pad: 16
@@ -62,12 +66,31 @@ Rectangle {
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         anchors.margins: root.pad
+        spacing: 6
+
+        IconButton {
+            size: 40
+            iconSize: 20
+            icon: NotificationService.dnd ? "do_not_disturb_on" : "notifications"
+            toggled: NotificationService.dnd
+            Accessible.name: "Do not disturb"
+            onClicked: NotificationService.dnd = !NotificationService.dnd
+        }
+
+        IconButton {
+            size: 40
+            iconSize: 20
+            icon: audio.mute || audio.volume === 0 ? "volume_off" : "volume_up"
+            toggled: audio.mute
+            Accessible.name: audio.mute ? "Unmute" : "Mute"
+            onClicked: audio.setMute(!audio.mute)
+        }
 
         PillButton {
             implicitHeight: 40
-            text: "Do not disturb"
-            toggled: NotificationService.dnd
-            onClicked: NotificationService.dnd = !NotificationService.dnd
+            icon: "keyboard"
+            text: Keyboard.layout
+            onClicked: Keyboard.nextLayout()
         }
 
         Item {

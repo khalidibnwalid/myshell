@@ -15,6 +15,10 @@ ApplicationWindow {
             "icon": "tune"
         },
         {
+            "name": "System",
+            "icon": "memory"
+        },
+        {
             "name": "Appearance",
             "icon": "palette"
         },
@@ -121,7 +125,7 @@ ApplicationWindow {
             color: Appearance.surfaceColor
 
             Repeater {
-                model: [generalPage, appearancePage, aboutPage]
+                model: [generalPage, systemPage, appearancePage, aboutPage]
 
                 delegate: Loader {
                     id: pageLoader
@@ -162,6 +166,13 @@ ApplicationWindow {
         id: generalPage
 
         General {
+        }
+    }
+
+    Component {
+        id: systemPage
+
+        SystemPage {
         }
     }
 

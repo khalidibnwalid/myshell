@@ -150,7 +150,8 @@ Scope {
                                 "networkPageComponent": networkPageComponent,
                                 "bluetoothPageComponent": bluetoothPageComponent,
                                 "batteryPageComponent": batteryPageComponent,
-                                "audioPageComponent": audioPageComponent
+                                "audioPageComponent": audioPageComponent,
+                                "calendarPageComponent": calendarPageComponent
                             });
                     }
 
@@ -248,6 +249,13 @@ Scope {
                 id: audioPageComponent
 
                 AudioDevicePage {
+                }
+            }
+
+            Component {
+                id: calendarPageComponent
+
+                CalendarPage {
                 }
             }
 

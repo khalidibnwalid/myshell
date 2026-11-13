@@ -6,34 +6,62 @@ import QtQuick.Layouts
 Rectangle {
     id: root
 
-    // Obsidian Entity Style - Compact version
-    color: Appearance.highlightColor
-    radius: 12
-    border.color: Appearance.borderColor
+    property int displayedMonth: new Date().getMonth()
+    property int displayedYear: new Date().getFullYear()
+
+    implicitWidth: 360
+    implicitHeight: layout.implicitHeight + 20
+    color: Appearance.surfaceColor
+    radius: 22
+    border.color: Appearance.hairlineColor
     border.width: 1
 
     ColumnLayout {
-        anchors.fill: parent
-        anchors.margins: 10
+        id: layout
+
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.margins: 12
         spacing: 8
 
         // Header Section
         RowLayout {
             Layout.fillWidth: true
 
-            Text {
-                text: Qt.formatDateTime(new Date(), "MMMM yyyy")
-                color: Appearance.accentColor
-                font.pixelSize: 15
-                font.bold: true
+            StyledText {
                 Layout.fillWidth: true
+                text: Qt.formatDate(new Date(grid.year, grid.month, 1), "MMMM yyyy")
+                font.pixelSize: 14
+                font.weight: Font.DemiBold
             }
 
-            MaterialSymbol {
-                icon: "event"
-                color: Appearance.fgColor
-                font.pixelSize: 16
-                opacity: 0.4
+            IconButton {
+                size: 30
+                iconSize: 18
+                icon: "chevron_left"
+                onClicked: {
+                    if (root.displayedMonth === 0) {
+                        root.displayedMonth = 11;
+                        root.displayedYear--;
+                    } else {
+                        root.displayedMonth--;
+                    }
+                }
+            }
+
+            IconButton {
+                size: 30
+                iconSize: 18
+                icon: "chevron_right"
+                onClicked: {
+                    if (root.displayedMonth === 11) {
+                        root.displayedMonth = 0;
+                        root.displayedYear++;
+                    } else {
+                        root.displayedMonth++;
+                    }
+                }
             }
 
         }
@@ -53,10 +81,10 @@ Rectangle {
                     Text {
                         anchors.centerIn: parent
                         text: modelData
-                        color: Appearance.fgColor
+                        color: Appearance.mutedColor
                         font.pixelSize: 9
                         font.bold: true
-                        opacity: index === 0 || index === 6 ? 0.3 : 0.5
+                        opacity: index === 0 || index === 6 ? 0.55 : 0.8
                     }
 
                 }
@@ -70,30 +98,34 @@ Rectangle {
             id: grid
 
             Layout.fillWidth: true
-            Layout.fillHeight: true
-            month: new Date().getMonth()
-            year: new Date().getFullYear()
+            Layout.preferredHeight: 180
+            Layout.minimumHeight: 180
+            Layout.maximumHeight: 180
+            month: root.displayedMonth
+            year: root.displayedYear
 
             delegate: Item {
+                required property var model
+
                 implicitWidth: 34
-                implicitHeight: 32
+                implicitHeight: 30
 
                 Rectangle {
                     anchors.centerIn: parent
-                    width: 28
-                    height: 28
-                    radius: 8
-                    color: model.today ? Appearance.accentColor : (ma.containsMouse ? Qt.alpha(Appearance.accentColor, 0.1) : "transparent")
-                    border.color: model.today ? Appearance.accentColor : (ma.containsMouse ? Appearance.borderColor : "transparent")
+                    width: 26
+                    height: 26
+                    radius: 13
+                    color: model.today ? Appearance.accentColor : (ma.containsMouse ? Appearance.surfaceHighColor : "transparent")
+                    border.color: model.today ? Appearance.accentColor : "transparent"
                     border.width: 1
-                    opacity: model.month === grid.month ? 1 : 0.2
+                    opacity: model.month === grid.month ? 1 : 0.28
 
                     Text {
                         anchors.centerIn: parent
                         text: model.day
-                        font.pixelSize: 12
+                        font.pixelSize: 11
                         font.weight: model.today ? Font.Bold : Font.Normal
-                        color: model.today ? Appearance.bgColor : Appearance.fgColor
+                        color: model.today ? Appearance.onAccentColor : Appearance.fgColor
                     }
 
                     MouseArea {
@@ -104,10 +136,7 @@ Rectangle {
                     }
 
                     Behavior on color {
-                        ColorAnimation {
-                            duration: 200
-                        }
-
+                        ColorAnimation { duration: Appearance.animFast }
                     }
 
                 }

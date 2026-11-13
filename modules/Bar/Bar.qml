@@ -113,6 +113,7 @@ Scope {
 
                 BarBottomItems {
                     Layout.alignment: Qt.AlignHCenter
+                    barWindow: panelWindow
                 }
             }
         }

@@ -283,15 +283,30 @@ Scope {
                             required property var modelData
                             required property int index
                             readonly property bool selected: panelWindow.currentIndex === index
+                            readonly property bool highlighted: selected || tileMouse.containsMouse
 
                             Layout.fillWidth: true
                             Layout.preferredWidth: 1
                             Layout.preferredHeight: 108
                             radius: 29
-                            color: selected ? Appearance.accentColor : (tileMouse.containsMouse ? Appearance.surfaceHighColor : Appearance.surfaceColor)
+                            color: highlighted ? Qt.alpha(Appearance.accentColor, 0.2) : Appearance.surfaceColor
+                            border.width: highlighted ? 2 : 0
+                            border.color: highlighted ? Qt.alpha(Appearance.accentColor, 0.5) : "transparent"
 
                             Behavior on color {
                                 ColorAnimation {
+                                    duration: Appearance.animFast
+                                }
+                            }
+
+                            Behavior on border.color {
+                                ColorAnimation {
+                                    duration: Appearance.animFast
+                                }
+                            }
+
+                            Behavior on border.width {
+                                NumberAnimation {
                                     duration: Appearance.animFast
                                 }
                             }
@@ -311,12 +326,12 @@ Scope {
                                         anchors.fill: parent
                                         radius: 22
                                         visible: tileImg.status !== Image.Ready
-                                        color: tile.selected ? Appearance.bgColor : Appearance.surfaceHighColor
+                                        color: Appearance.surfaceHighColor
 
                                         StyledText {
                                             anchors.centerIn: parent
                                             text: panelWindow.initials(tile.modelData?.name)
-                                            color: tile.selected ? Appearance.accentColor : Appearance.fgColor
+                                            color: Appearance.fgColor
                                             font.pixelSize: 15
                                             font.weight: Font.Bold
                                         }
@@ -337,7 +352,7 @@ Scope {
                                     horizontalAlignment: Text.AlignHCenter
                                     text: tile.modelData?.name
                                     elide: Text.ElideRight
-                                    color: tile.selected ? Appearance.onAccentColor : Appearance.fgColor
+                                    color: Appearance.fgColor
                                     font.pixelSize: 13
                                     font.weight: Font.Medium
                                 }

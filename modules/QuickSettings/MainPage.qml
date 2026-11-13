@@ -12,11 +12,20 @@ Item {
     property var bluetoothPageComponent
     property var batteryPageComponent
     property var audioPageComponent
+    property var calendarPageComponent
 
     implicitHeight: layout.implicitHeight + 32
 
     Audio {
         id: audio
+    }
+
+    Connections {
+        target: WindowManager
+        function onQuickSettingsVisibleChanged() {
+            if (WindowManager.quickSettingsVisible)
+                SystemInfo.refresh();
+        }
     }
 
     Backlight {
@@ -52,9 +61,18 @@ Item {
             }
 
             StyledText {
-                text: Time.format("ddd, d MMM")
+                text: Time.format("ddd, d MMM yyyy")
                 color: Appearance.mutedColor
                 font.pixelSize: 13
+            }
+
+            IconButton {
+                size: 34
+                iconSize: 19
+                icon: "calendar_month"
+                onClicked: stackView.push(calendarPageComponent, {
+                    "stackView": stackView
+                })
             }
         }
 
@@ -161,24 +179,6 @@ Item {
             Tile {
                 Layout.fillWidth: true
                 Layout.preferredWidth: 1
-                toggled: NotificationService.dnd
-                text: "Do not disturb"
-                icon: "do_not_disturb_on"
-                onClicked: NotificationService.dnd = !NotificationService.dnd
-            }
-
-            Tile {
-                Layout.fillWidth: true
-                Layout.preferredWidth: 1
-                toggled: audio.mute
-                text: audio.mute ? "Muted" : "Mute"
-                icon: audio.mute ? "volume_off" : "volume_up"
-                onClicked: audio.setMute(!audio.mute)
-            }
-
-            Tile {
-                Layout.fillWidth: true
-                Layout.preferredWidth: 1
                 toggled: true
                 text: "Battery " + Math.round(Battery.percentage * 100) + "%"
                 icon: Battery.activeProfileIcon
@@ -190,10 +190,27 @@ Item {
             Tile {
                 Layout.fillWidth: true
                 Layout.preferredWidth: 1
-                toggled: false
-                text: Keyboard.layout
-                icon: "keyboard"
+                text: SystemInfo.formatCapacityRatio(SystemInfo.memoryUsed, SystemInfo.memoryTotal)
+                icon: "memory"
+                onClicked: SystemInfo.refresh()
             }
+
+            Tile {
+                Layout.fillWidth: true
+                Layout.preferredWidth: 1
+                text: SystemInfo.cpuCores > 0 ? SystemInfo.cpuCores + " cores" + (SystemInfo.cpuTemperature >= 0 ? " · " + Math.round(SystemInfo.cpuTemperature) + "°C" : "") : "—"
+                icon: "developer_board"
+                onClicked: SystemInfo.refresh()
+            }
+
+            Tile {
+                Layout.fillWidth: true
+                Layout.preferredWidth: 1
+                text: SystemInfo.formatCapacityRatio(SystemInfo.diskUsed, SystemInfo.diskTotal)
+                icon: "storage"
+                onClicked: SystemInfo.refresh()
+            }
+
         }
 
         // --- Bottom actions ---

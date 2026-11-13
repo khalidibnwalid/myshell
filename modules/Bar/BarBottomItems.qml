@@ -7,6 +7,8 @@ import QtQuick.Layouts
 ColumnLayout {
     id: root
 
+    property var barWindow
+
     spacing: 14
 
     Audio {
@@ -46,10 +48,21 @@ ColumnLayout {
         }
 
         MaterialSymbol {
+            id: volumeIcon
+
             Layout.alignment: Qt.AlignHCenter
             icon: audio.mute || audio.volume === 0 ? "volume_off" : (audio.volume < 0.5 ? "volume_down" : "volume_up")
             font.pixelSize: 22
             color: Appearance.fgColor
+
+            MouseArea {
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onEntered: volumePopup.show(volumeIcon.mapToItem(null, 0, 0).y, volumeIcon.height)
+                onExited: volumePopup.hideLater()
+                onClicked: WindowManager.toggleQuickSettingsVisible()
+            }
         }
 
         StyledText {
@@ -97,5 +110,10 @@ ColumnLayout {
             cursorShape: Qt.PointingHandCursor
             onClicked: WindowManager.toggleQuickSettingsVisible()
         }
+    }
+
+    VolumePopup {
+        id: volumePopup
+        barWindow: root.barWindow
     }
 }

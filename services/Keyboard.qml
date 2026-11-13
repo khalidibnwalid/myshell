@@ -34,6 +34,10 @@ Singleton {
         return name.substring(0, 2).toUpperCase();
     }
 
+    function nextLayout() {
+        layoutSwitchProc.exec(["hyprctl", "switchxkblayout", "current", "next"]);
+    }
+
     Timer {
         interval: 1000
         running: true
@@ -44,6 +48,10 @@ Singleton {
                 layoutProc.running = true;
 
         }
+    }
+
+    Process {
+        id: layoutSwitchProc
     }
 
     Process {
