@@ -1,39 +1,34 @@
+import "../../../components"
+import "../../../config"
+import "../../../services"
 import QtQuick
 import QtQuick.Layouts
-import "../../../config"
-import "../../../components"
 
-Item {
-    ColumnLayout {
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.margins: 24
-        spacing: 20
+SettingsPage {
+    title: "General"
 
-        Text {
-            text: "General Settings"
-            font.pixelSize: 32
-            font.weight: Font.Bold
-            color: Appearance.fgColor
+    SettingRow {
+        Layout.fillWidth: true
+        first: true
+        title: "Keyboard layout"
+        description: "Current input language"
+
+        StyledText {
+            text: Keyboard.fullLayoutName || Keyboard.layout
+            color: Appearance.mutedColor
         }
+    }
 
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: 16
+    SettingRow {
+        Layout.fillWidth: true
+        last: true
+        title: "Do not disturb"
+        description: "Notifications arrive silently in the panel"
 
-            Text {
-                text: "Language"
-                font.pixelSize: 18
-                color: Appearance.fgColor
-                Layout.alignment: Qt.AlignVCenter
-            }
-
-            Button {
-                text: "English"
-                endIcon: "arrow_drop_down"
-                Layout.alignment: Qt.AlignVCenter
-            }
+        PillButton {
+            text: NotificationService.dnd ? "On" : "Off"
+            toggled: NotificationService.dnd
+            onClicked: NotificationService.dnd = !NotificationService.dnd
         }
     }
 }

@@ -1,127 +1,96 @@
+import "../../../components"
+import "../../../config"
 import QtQuick
 import QtQuick.Layouts
-import "../../../config"
-import "../../../components"
 
-Item {
-    property list<color> accentColors: ["#c2c1ff", "#ffc1c1", "#c1ffc1", "#fff0c2", "#ffc1ff", "#c1ffff"]
+SettingsPage {
+    id: page
 
-    ColumnLayout {
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.margins: 24
-        spacing: 20
+    property list<color> accentColors: ["#EBCB8B", "#c2c1ff", "#ffc1c1", "#c1ffc1", "#d3e3fd", "#ffc1ff", "#c1ffff"]
 
-        Text {
-            text: "Appearance Settings"
-            font.pixelSize: 32
-            font.weight: Font.Bold
-            color: Appearance.fgColor
-        }
+    title: "Appearance"
 
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: 12
+    SettingRow {
+        Layout.fillWidth: true
+        first: true
+        title: "Accent colour"
+        description: "Used for active tiles, sliders and highlights"
 
-            Text {
-                text: "Theme"
-                font.pixelSize: 18
-                color: Appearance.fgColor
-                Layout.alignment: Qt.AlignVCenter
-            }
+        Repeater {
+            model: page.accentColors
 
-            ToggleButton {
-                icon: "sunny"
-                toggled: false
-                Layout.preferredWidth: 60
-            }
+            delegate: Rectangle {
+                id: swatch
 
-            ToggleButton {
-                icon: "bedtime"
-                toggled: true
-                Layout.preferredWidth: 60
-            }
-        }
+                required property color modelData
+                readonly property bool current: Qt.colorEqual(Appearance.accentColor, modelData)
 
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: 12
+                implicitWidth: 28
+                implicitHeight: 28
+                radius: 14
+                color: modelData
+                scale: swatchArea.pressed ? 0.9 : (swatchArea.containsMouse ? 1.1 : 1)
 
-            Text {
-                text: "Accent Color"
-                font.pixelSize: 18
-                color: Appearance.fgColor
-                Layout.alignment: Qt.AlignVCenter
-            }
+                MaterialSymbol {
+                    anchors.centerIn: parent
+                    visible: swatch.current
+                    icon: "check"
+                    font.pixelSize: 16
+                    color: Appearance.bgColor
+                }
 
-            RowLayout {
-                spacing: 8
-                Repeater {
-                    model: accentColors
-                    delegate: Rectangle {
-                        width: 30
-                        height: 30
-                        radius: 15
-                        color: modelData
-                        border.color: Appearance.fgColor
-                        border.width: parent.activeFocus ? 2 : 0
+                MouseArea {
+                    id: swatchArea
 
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                Appearance.accentColor = modelData;
-                            }
-                        }
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        Config.appearance.accentColor = swatch.modelData.toString();
+                        Config.appearance.accentColorLight = Qt.lighter(swatch.modelData, 1.12).toString();
+                    }
+                }
+
+                Behavior on scale {
+                    NumberAnimation {
+                        duration: Appearance.animFast
+                        easing.type: Easing.OutCubic
                     }
                 }
             }
         }
+    }
 
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: 12
+    SettingRow {
+        Layout.fillWidth: true
+        title: "Panel opacity"
+        description: "How see-through the bar and panels are (" + Math.round(Appearance.panelOpacity * 100) + "%)"
 
-            Text {
-                text: "Font Size"
-                font.pixelSize: 18
-                color: Appearance.fgColor
-                Layout.alignment: Qt.AlignVCenter
-            }
-
-            Slider {
-                width: 200
-                value: 0.5
-                onDragged: console.log("Font size:", value)
-            }
+        PillSlider {
+            implicitWidth: 220
+            implicitHeight: 36
+            icon: "opacity"
+            // slider covers 35% – 100%
+            value: (Appearance.panelOpacity - 0.35) / 0.65
+            onDragged: v => Config.appearance.opacity = Math.round((0.35 + v * 0.65) * 100) / 100
         }
+    }
 
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: 12
+    SettingRow {
+        Layout.fillWidth: true
+        last: true
+        title: "Bar position"
+        description: "Which edge of the screen the bar sits on"
 
-            Text {
-                text: "Bar Position"
-                font.pixelSize: 18
-                color: Appearance.fgColor
-                Layout.alignment: Qt.AlignVCenter
-            }
+        Repeater {
+            model: ["left", "right"]
 
-            RowLayout {
-                spacing: 8
-                Repeater {
-                    model: ["left", "right"]
-                    delegate: ToggleButton {
-                        toggled: Config.layout.barPosition === modelData
-                        Layout.preferredWidth: 120
-                        text: modelData.charAt(0).toUpperCase() + modelData.slice(1)
+            delegate: PillButton {
+                required property string modelData
 
-                        onClicked: {
-                            Config.layout.barPosition = modelData;
-                        }
-                    }
-                }
+                toggled: Config.layout.barPosition === modelData
+                text: modelData.charAt(0).toUpperCase() + modelData.slice(1)
+                onClicked: Config.layout.barPosition = modelData
             }
         }
     }

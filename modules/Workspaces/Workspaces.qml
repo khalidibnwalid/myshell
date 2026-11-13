@@ -1,5 +1,6 @@
 pragma ComponentBehavior: Bound
 
+import "../../components/"
 import "../../config/"
 import QtQuick
 import QtQuick.Layouts
@@ -36,18 +37,33 @@ Scope {
 
                 required property var modelData
                 property real scale: 0.1
-                implicitWidth: contentGrid.implicitWidth + 16
-                implicitHeight: contentGrid.implicitHeight + 16
+                // outer radius = cell radius + padding
+                readonly property int cellRadius: 14
+                readonly property int padding: 12
+
+                implicitWidth: contentGrid.implicitWidth + padding * 2
+                implicitHeight: contentGrid.implicitHeight + padding * 2
                 WlrLayershell.layer: WlrLayer.Overlay
                 color: "transparent"
 
                 Rectangle {
+                    id: background
+
                     anchors.fill: parent
-                    color: Appearance.bgColor
-                    opacity: 0.5
-                    radius: 16
-                    border.color: Appearance.accentColor
-                    border.width: 2
+                    color: Appearance.panelColor
+                    radius: root.cellRadius + root.padding
+                    border.color: Appearance.hairlineColor
+                    border.width: 1
+                }
+
+                // entrance
+                NumberAnimation {
+                    targets: [background, contentGrid]
+                    property: "opacity"
+                    from: 0
+                    to: 1
+                    duration: Appearance.animFast
+                    running: true
                 }
 
                 // Ghost placeholder for new workspaces
@@ -63,19 +79,18 @@ Scope {
                     width: monitor.width * root.scale
                     height: monitor.height * root.scale
                     
-                    color: Appearance.accentColor
-                    opacity: 0.2
-                    radius: 8
-                    border.color: Appearance.accentColor
-                    border.width: 2
+                    color: Qt.alpha(Appearance.accentColor, 0.16)
+                    radius: root.cellRadius
+                    border.color: Qt.alpha(Appearance.accentColor, 0.6)
+                    border.width: 1
                     z: 5 // Below dragged item but above grid backgrounds
 
-                    Text {
+                    StyledText {
                         text: globalDropArea.ghostWorkspaceId
                         anchors.centerIn: parent
-                        color: Appearance.fgColor
-                        opacity: 0.5
-                        font.pixelSize: 32
+                        color: Appearance.accentColor
+                        font.pixelSize: 22
+                        font.weight: Font.Bold
                     }
                 }
 
@@ -83,8 +98,8 @@ Scope {
                     id: contentGrid
                     rows: 2
                     columns: 5
-                    rowSpacing: 12
-                    columnSpacing: 12
+                    rowSpacing: 8
+                    columnSpacing: 8
                     anchors.centerIn: parent
 
                     // workspaces
@@ -105,8 +120,8 @@ Scope {
                             width: monitor.width * root.scale
                             height: monitor.height * root.scale
 
-                            color: "transparent"
-                            radius: 8
+                            color: Appearance.surfaceColor
+                            radius: root.cellRadius
 
                             // Ensure source of drag is always on top of other workspaces
                             z: (workspace && globalDropArea.draggingSourceWs === workspace.id) ? 200 : 0
@@ -114,15 +129,15 @@ Scope {
                             // Base background
                             Rectangle {
                                 anchors.fill: parent
-                                color: Appearance.accentColor
-                                opacity: workspace?.focused ? 0.3 : 0
-                                radius: 8
-                                border.color: workspace?.focused ? Appearance.accentColor : "transparent"
+                                color: Qt.alpha(Appearance.accentColor, 0.12)
+                                opacity: workspace?.focused ? 1 : 0
+                                radius: root.cellRadius
+                                border.color: Appearance.accentColor
                                 border.width: 2
+                                z: 3 // the focus ring stays above the window previews
                                 Behavior on opacity {
                                     NumberAnimation {
-                                        duration: 300
-                                        easing.type: Easing.OutQuart
+                                        duration: Appearance.animNormal
                                     }
                                 }
                             }
@@ -130,15 +145,15 @@ Scope {
                             // Drag highlight
                             Rectangle {
                                 anchors.fill: parent
-                                color: Appearance.accentColor
-                                opacity: workspaceContainer.containsDrag ? 0.4 : 0
-                                radius: 8
+                                color: Qt.alpha(Appearance.accentColor, 0.3)
+                                opacity: workspaceContainer.containsDrag ? 1 : 0
+                                radius: root.cellRadius
                                 border.color: Appearance.accentColor
-                                border.width: 3
-                                scale: workspaceContainer.containsDrag ? 1.05 : 1.0
+                                border.width: 2
+                                scale: workspaceContainer.containsDrag ? 1.03 : 1.0
 
-                                Behavior on opacity { NumberAnimation { duration: 150 } }
-                                Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack } }
+                                Behavior on opacity { NumberAnimation { duration: Appearance.animFast } }
+                                Behavior on scale { NumberAnimation { duration: Appearance.animNormal; easing.type: Easing.OutCubic } }
                             }
 
                             // Drop Placeholder
@@ -154,9 +169,9 @@ Scope {
 
                                 color: Appearance.accentColor
                                 opacity: 0.4
-                                radius: 4
+                                radius: 8
                                 border.color: Appearance.accentColor
-                                border.width: 2
+                                border.width: 1
                                 z: 10
 
                                 SequentialAnimation on opacity {
@@ -190,8 +205,8 @@ Scope {
                                     x: (toplevelData.at[0]) * root.scale * monitor.scale
                                     y: (toplevelData.at[1]) * root.scale * monitor.scale
                                     z: dragArea.drag.active ? 100 : ((waylandHandle.fullscreen || waylandHandle.maximized) ? 2 : toplevelData.floating)
-                                    scale: dragArea.drag.active ? 1.1 : 1.0
-                                    opacity: dragArea.drag.active ? 0.8 : 1.0
+                                    scale: dragArea.drag.active ? 1.06 : 1.0
+                                    opacity: dragArea.drag.active ? 0.85 : 1.0
 
                                     // Move Drag properties to the wrapper itself
                                     Drag.active: dragArea.drag.active
@@ -200,10 +215,15 @@ Scope {
                                     Drag.hotSpot.x: width / 2
                                     Drag.hotSpot.y: height / 2
 
-                                    Behavior on scale { NumberAnimation { id: dropAnim; duration: 250; easing.type: Easing.OutBack } }
+                                    Behavior on scale { NumberAnimation { id: dropAnim; duration: Appearance.animNormal; easing.type: Easing.OutCubic } }
                                     Behavior on opacity { NumberAnimation { duration: 200 } }
                                     Behavior on x { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
                                     Behavior on y { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
+
+                                    ClippingRectangle {
+                                    anchors.fill: parent
+                                    radius: Math.min(root.cellRadius, 10)
+                                    color: "transparent"
 
                                     ScreencopyView {
                                         id: toplevel
@@ -212,8 +232,9 @@ Scope {
                                         live: true
 
                                         IconImage {
-                                            source: Quickshell.iconPath(DesktopEntries.heuristicLookup(toplevelWrapper.toplevelData?.class)?.icon, "image-missing")
-                                            implicitSize: 48
+                                            source: Quickshell.iconPath(DesktopEntries.heuristicLookup(toplevelWrapper.toplevelData?.class)?.icon ?? "", true)
+                                            visible: source != ""
+                                            implicitSize: 40
                                             anchors.centerIn: parent
                                         }
 
@@ -244,18 +265,27 @@ Scope {
                                             }
                                         }
                                     }
+                                    }
                                 }
                             }
 
-                            Text {
-                                text: workspaceContainer.workspaceId
-                                color: Appearance.fgColor
-                                font.pixelSize: 28
-                                font.weight: Font.DemiBold
-                                x: 14
+                            // workspace number badge
+                            Rectangle {
+                                x: 8
+                                y: parent.height - height - 8
                                 z: 4
-                                opacity: 0.7
-                                anchors.bottom: parent.bottom
+                                width: 24
+                                height: 24
+                                radius: 12
+                                color: workspace?.focused ? Appearance.accentColor : Qt.alpha(Appearance.bgColor, 0.72)
+
+                                StyledText {
+                                    anchors.centerIn: parent
+                                    text: workspaceContainer.workspaceId
+                                    color: workspace?.focused ? Appearance.onAccentColor : Appearance.fgColor
+                                    font.pixelSize: 12
+                                    font.weight: Font.Bold
+                                }
                             }
                         }
                     }
