@@ -1,21 +1,12 @@
 import "../../config/"
 import "../../components/"
 import "../../services/"
-import "./BarTrays.qml"
-import "./BarBottomItems.qml"
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Hyprland
-import Quickshell.Io
 
 Scope {
     id: root
-
-    property HyprlandWorkspace activeWs: Hyprland.workspaces.values.find(ws => ws.focused)
-    property list<HyprlandToplevel> workspaceToplevels: activeWs?.toplevels?.values || []
-    // TODO: add floating windows
-    property bool shouldShowBarBg: workspaceToplevels.length > 0
 
     Variants {
         model: Quickshell.screens
@@ -37,79 +28,91 @@ Scope {
                 bottom: true
             }
 
-            // background
+            // translucent bar background (blurred by the compositor)
             Rectangle {
-                width: parent.width
-                color: Appearance.bgColor
-                height: root.shouldShowBarBg ? parent.height : 0
-                y: root.shouldShowBarBg ? 0 : parent.height / 2
-                opacity: root.shouldShowBarBg ? 0.6 : 0
-                radius: root.shouldShowBarBg ? 0 : 25
-
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: 300
-                        easing.type: Easing.OutQuart
-                    }
-                }
-
-                Behavior on height {
-                    NumberAnimation {
-                        duration: 250
-                        easing.type: Easing.OutQuart
-                    }
-                }
-
-                Behavior on y {
-                    NumberAnimation {
-                        duration: 300
-                        easing.type: Easing.OutQuart
-                    }
-                }
-
-                Behavior on radius {
-                    SequentialAnimation {
-                        PauseAnimation {
-                            duration: root.shouldShowBarBg ? 250 : 0
-                        }
-
-                        NumberAnimation {
-                            duration: 500
-                            easing.type: Easing.OutQuart
-                        }
-                    }
-                }
+                anchors.fill: parent
+                color: Appearance.panelColor
             }
 
-            Rectangle {
-                width: parent.width
-                height: parent ? parent.height : 400
-                color: 'transparent'
+            // top: search + workspaces
+            ColumnLayout {
+                anchors {
+                    top: parent.top
+                    left: parent.left
+                    right: parent.right
+                    topMargin: 8
+                }
+
+                spacing: 14
+
+                // search / launcher button
+                Rectangle {
+                    Layout.alignment: Qt.AlignHCenter
+                    implicitWidth: 36
+                    implicitHeight: 36
+                    radius: 18
+                    color: WindowManager.searchVisible ? Appearance.accentColor : (searchArea.containsMouse ? Appearance.surfaceHighColor : Appearance.surfaceColor)
+                    scale: searchArea.pressed ? 0.92 : 1
+
+                    MaterialSymbol {
+                        anchors.centerIn: parent
+                        icon: "apps"
+                        font.pixelSize: 20
+                        color: WindowManager.searchVisible ? Appearance.onAccentColor : Appearance.fgColor
+                    }
+
+                    MouseArea {
+                        id: searchArea
+
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: WindowManager.toggleSearchVisible()
+                    }
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: Appearance.animFast
+                        }
+                    }
+
+                    Behavior on scale {
+                        NumberAnimation {
+                            duration: Appearance.animFast
+                        }
+                    }
+                }
 
                 BarWS {
                     Layout.alignment: Qt.AlignHCenter
-                    anchors.centerIn: parent
+                }
+            }
+
+            // middle: clock
+            BarClock {
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.verticalCenterOffset: 20
+            }
+
+            // bottom: tray + status icons
+            ColumnLayout {
+                anchors {
+                    left: parent.left
+                    right: parent.right
+                    bottom: parent.bottom
+                    bottomMargin: 16
                 }
 
-                // bottom islands
-                ColumnLayout {
-                    anchors {
-                        left: parent.left
-                        right: parent.right
-                        bottom: parent.bottom
-                        margins: 5
-                        bottomMargin: 10
-                    }
+                spacing: 16
 
-                    spacing: 10
+                BarTrays {
+                    Layout.alignment: Qt.AlignHCenter
+                    barWindow: panelWindow
+                }
 
-                    BarTrays {
-                        Layout.alignment: Qt.AlignHCenter
-                    }
-
-                    BarBottomItems {
-                        Layout.alignment: Qt.AlignHCenter
-                    }
+                BarBottomItems {
+                    Layout.alignment: Qt.AlignHCenter
                 }
             }
         }

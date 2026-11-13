@@ -1,10 +1,6 @@
-import "../../components/"
-import "../../config/"
 import "../../services/"
 import QtQuick
-import QtQuick.Layouts
 import Quickshell
-import Quickshell.Widgets
 
 Scope {
     id: root
@@ -24,55 +20,14 @@ Scope {
     Timer {
         id: hideTimer
 
-        interval: 1500
+        interval: 1200
         onTriggered: root.shouldShowOsd = false
     }
 
-    PanelWindow {
-        anchors.right: true
-        margins.right: 110
-        exclusiveZone: 0
-        implicitWidth: 64
-        implicitHeight: 240
-        color: "transparent"
-        visible: root.shouldShowOsd
-
-        Rectangle {
-            anchors.fill: parent
-            color: "transparent"
-
-            // background
-            Rectangle {
-                anchors.fill: parent
-                color: Appearance.bgColor
-                radius: 20
-                opacity: 0.7
-                border.color: Appearance.borderColor
-                border.width: 1
-            }
-
-            ColumnLayout {
-                anchors {
-                    fill: parent
-                    margins: 4
-                }
-
-                VolumeSlider {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    value: backlight.percentage
-                    onDragged: backlight.setBrightness(value)
-                    icon: "light_mode"
-                    borderMargin: 4
-                }
-
-            }
-
-        }
-
-        mask: Region {
-        }
-
+    Osd {
+        shown: root.shouldShowOsd
+        value: backlight.percentage
+        icon: backlight.percentage < 0.35 ? "brightness_low" : (backlight.percentage < 0.7 ? "brightness_medium" : "brightness_high")
+        offset: 72
     }
-
 }

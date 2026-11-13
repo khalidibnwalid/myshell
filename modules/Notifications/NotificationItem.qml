@@ -1,186 +1,221 @@
 import "../../components"
 import "../../config"
+import "../../services"
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
+import Quickshell.Widgets
 
+// One notification. Used as a floating toast and as a row of the notification panel.
 Rectangle {
     id: root
 
-    property var notification
+    property var notification // live notification object, may be null
     property string summary
     property string body
     property string appName
     property string appIcon
-    readonly property int timeout: notification ? notification.expireTimeout : -1
+    property string image
+    property string meta // text after the title: age or app name
+    property bool inPanel: false
+    property bool first: true
+    property bool last: true
+    property bool expanded: false
+    property int cornerRadius: 24
+    readonly property string avatarSource: NotificationService.iconSource(image || appIcon)
+    readonly property var actions: expanded && notification ? notification.actions : []
 
-    signal dismissed()
+    signal closeRequested()
+    signal bodyClicked()
 
-    implicitWidth: 350
-    implicitHeight: layout.implicitHeight + 24
-    radius: 16
-    color: Appearance.bgColor
-    opacity: 0.95
-    border.color: Appearance.borderColor
-    border.width: 1
-    Component.onCompleted: {
-        root.opacity = 0;
-        root.scale = 0.8;
-        entryAnim.start();
-    }
-    ListView.onRemove: {
-        removeAnim.start();
-    }
+    implicitHeight: content.implicitHeight + 28
+    color: inPanel ? (hover.hovered ? Appearance.surfaceHighColor : Appearance.surfaceColor) : Appearance.panelColor
+    border.width: inPanel ? 0 : 1
+    border.color: Appearance.hairlineColor
+    topLeftRadius: first ? cornerRadius : 6
+    topRightRadius: first ? cornerRadius : 6
+    bottomLeftRadius: last ? cornerRadius : 6
+    bottomRightRadius: last ? cornerRadius : 6
+    clip: true
 
-    Timer {
-        interval: timeout > 0 ? timeout : 5000
-        running: timeout !== 0
-        onTriggered: {
-            if (root.notification)
-                root.notification.expire();
-
-            root.dismissed();
-        }
+    HoverHandler {
+        id: hover
     }
 
-    RowLayout {
-        id: layout
+    MouseArea {
+        anchors.fill: parent
+        cursorShape: Qt.PointingHandCursor
+        onClicked: root.bodyClicked()
+    }
 
+    ColumnLayout {
+        id: content
+
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.margins: 14
         spacing: 12
 
-        anchors {
-            fill: parent
-            margins: 12
-        }
-
-        Rectangle {
-            Layout.preferredWidth: 42
-            Layout.preferredHeight: 42
-            radius: 8
-            color: Appearance.accentColor
-            opacity: 0.2
-
-            Image {
-                anchors.fill: parent
-                anchors.margins: 4
-                source: root.appIcon.startsWith("/") ? "file://" + root.appIcon : (root.appIcon !== "" ? "image://icon/" + root.appIcon : "")
-                fillMode: Image.PreserveAspectFit
-                visible: source != ""
-            }
-
-            MaterialSymbol {
-                anchors.centerIn: parent
-                icon: "notifications"
-                font.pixelSize: 24
-                color: Appearance.accentColor
-                visible: !root.appIcon
-            }
-
-        }
-
-        ColumnLayout {
+        RowLayout {
             Layout.fillWidth: true
-            spacing: 2
+            spacing: 12
 
-            RowLayout {
-                Layout.fillWidth: true
+            // avatar: image / app icon, falling back to an initial
+            ClippingRectangle {
+                Layout.alignment: Qt.AlignTop
+                Layout.preferredWidth: 40
+                Layout.preferredHeight: 40
+                radius: 20
+                color: Qt.alpha(Appearance.accentColor, 0.16)
 
-                Text {
-                    text: root.summary
-                    font.pixelSize: 14
+                StyledText {
+                    anchors.centerIn: parent
+                    visible: avatar.status !== Image.Ready
+                    text: (root.summary || root.appName || "?").trim().charAt(0).toUpperCase()
+                    color: Appearance.accentColor
+                    font.pixelSize: 16
                     font.weight: Font.Bold
-                    color: Appearance.fgColor
-                    Layout.fillWidth: true
-                    elide: Text.ElideRight
                 }
 
-                Text {
-                    text: root.appName
-                    font.pixelSize: 10
-                    color: Appearance.fgColor
-                    opacity: 0.5
-                }
+                Image {
+                    id: avatar
 
+                    anchors.fill: parent
+                    anchors.margins: root.image ? 0 : 8
+                    source: root.avatarSource
+                    sourceSize: Qt.size(96, 96)
+                    fillMode: root.image ? Image.PreserveAspectCrop : Image.PreserveAspectFit
+                    asynchronous: true
+                    visible: status === Image.Ready
+                }
             }
 
-            Text {
-                text: root.body
-                font.pixelSize: 13
-                color: Appearance.fgColor
-                opacity: 0.8
+            ColumnLayout {
                 Layout.fillWidth: true
-                wrapMode: Text.WordWrap
-                maximumLineCount: 3
-                elide: Text.ElideRight
+                Layout.alignment: Qt.AlignVCenter
+                spacing: 1
+
+                RowLayout {
+                    id: titleRow
+
+                    Layout.fillWidth: true
+                    spacing: 5
+
+                    StyledText {
+                        Layout.maximumWidth: titleRow.width - metaText.implicitWidth - 5
+                        text: root.summary
+                        elide: Text.ElideRight
+                        font.weight: Font.DemiBold
+                    }
+
+                    StyledText {
+                        id: metaText
+
+                        visible: root.meta !== ""
+                        text: "· " + root.meta
+                        color: Appearance.mutedColor
+                        font.pixelSize: 12
+                    }
+
+                    Item {
+                        Layout.fillWidth: true
+                    }
+                }
+
+                StyledText {
+                    Layout.fillWidth: true
+                    visible: text !== ""
+                    text: root.body
+                    textFormat: Text.PlainText
+                    color: Qt.alpha(Appearance.fgColor, 0.82)
+                    font.pixelSize: 13
+                    wrapMode: Text.Wrap
+                    elide: Text.ElideRight
+                    maximumLineCount: root.expanded ? 8 : (root.inPanel ? 1 : 2)
+                }
             }
 
-        }
+            // panel: expand chevron, toast: close
+            Rectangle {
+                Layout.alignment: Qt.AlignVCenter
+                implicitWidth: 28
+                implicitHeight: 28
+                radius: 14
+                color: btnArea.containsMouse ? Qt.alpha(Appearance.fgColor, 0.2) : Appearance.surfaceHighColor
 
-        IconButton {
-            icon: "close"
-            iconSize: 18
-            onClicked: {
-                if (root.notification)
-                    root.notification.dismiss();
+                MaterialSymbol {
+                    anchors.centerIn: parent
+                    icon: root.inPanel ? "keyboard_arrow_down" : "close"
+                    font.pixelSize: root.inPanel ? 20 : 16
+                    color: Appearance.fgColor
+                    rotation: root.expanded ? 180 : 0
 
-                root.dismissed();
+                    Behavior on rotation {
+                        NumberAnimation {
+                            duration: Appearance.animNormal
+                            easing.type: Easing.BezierSpline
+                            easing.bezierCurve: Appearance.easeStandard
+                        }
+                    }
+                }
+
+                MouseArea {
+                    id: btnArea
+
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.inPanel ? root.expanded = !root.expanded : root.closeRequested()
+                }
+
+                Behavior on color {
+                    ColorAnimation {
+                        duration: Appearance.animFast
+                    }
+                }
             }
         }
 
+        // actions, shown when expanded
+        Flow {
+            Layout.fillWidth: true
+            Layout.leftMargin: 52
+            visible: root.expanded
+            spacing: 6
+
+            Repeater {
+                model: root.actions
+
+                delegate: PillButton {
+                    required property var modelData
+
+                    implicitHeight: 30
+                    text: modelData.text
+                    onClicked: modelData.invoke()
+                }
+            }
+
+            PillButton {
+                implicitHeight: 30
+                text: "Dismiss"
+                onClicked: root.closeRequested()
+            }
+        }
     }
 
-    ParallelAnimation {
-        id: entryAnim
+    Behavior on implicitHeight {
+        enabled: root.inPanel
 
         NumberAnimation {
-            target: root
-            property: "opacity"
-            to: 0.95
-            duration: 300
-            easing.type: Easing.OutCubic
+            duration: Appearance.animNormal
+            easing.type: Easing.BezierSpline
+            easing.bezierCurve: Appearance.easeStandard
         }
-
-        NumberAnimation {
-            target: root
-            property: "scale"
-            to: 1
-            duration: 400
-            easing.type: Easing.OutBack
-        }
-
     }
 
-    SequentialAnimation {
-        id: removeAnim
-
-        PropertyAction {
-            target: root
-            property: "ListView.delayRemove"
-            value: true
+    Behavior on color {
+        ColorAnimation {
+            duration: Appearance.animFast
         }
-
-        NumberAnimation {
-            target: root
-            property: "opacity"
-            to: 0
-            duration: 250
-            easing.type: Easing.OutCubic
-        }
-
-        NumberAnimation {
-            target: root
-            property: "scale"
-            to: 0.8
-            duration: 250
-            easing.type: Easing.OutCubic
-        }
-
-        PropertyAction {
-            target: root
-            property: "ListView.delayRemove"
-            value: false
-        }
-
     }
-
 }

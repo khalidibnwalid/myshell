@@ -1,99 +1,118 @@
-import "../../components"
 import "../../config"
+import "../../services"
 import QtQuick
-import QtQuick.Layouts
 import Quickshell
-import Quickshell.Services.Notifications
-import Quickshell.Widgets
 
+// Floating notification toasts. They hide after a timeout but stay in the
+// notification panel (next to the quick settings) until dismissed.
 Scope {
-    id: root
-
-    function removeById(id) {
-        for (let i = 0; i < notificationModel.count; i++) {
-            if (notificationModel.get(i).notifId === id) {
-                console.log("Center: Removing ID", id);
-                notificationModel.remove(i);
-                break;
-            }
-        }
-    }
-
-    // Central model
-    ListModel {
-        id: notificationModel
-    }
-
-    // Central server
-    NotificationServer {
-        onNotification: (notification) => {
-            console.log("Center: Adding", notification.summary);
-            notificationModel.append({
-                "notif": notification,
-                "summary": notification.summary,
-                "body": notification.body,
-                "appName": notification.appName,
-                "appIcon": notification.appIcon,
-                "notifId": notification.id
-            });
-            notification.closed.connect(() => {
-                removeById(notification.id);
-            });
-        }
-    }
-
     PanelWindow {
-        id: notificationWindow
-
         anchors.top: true
-        anchors.right: true
+        anchors.right: Config.layout.barPosition === "right"
+        anchors.left: Config.layout.barPosition === "left"
         margins.top: 10
-        margins.right: Config.layout.barPosition === "right" ? 60 : 10
-        margins.left: Config.layout.barPosition === "left" ? 60 : 10
-        implicitWidth: 370
-        implicitHeight: Math.min(600, Math.max(1, notificationList.contentHeight))
+        margins.right: 10
+        margins.left: 10
+        implicitWidth: 364
+        implicitHeight: Math.min(640, Math.max(1, list.contentHeight))
         color: "transparent"
-        visible: notificationModel.count > 0
+        visible: NotificationService.popups.count > 0 || hideDelay.running
+
+        // keep the window alive while the last toast animates out
+        Timer {
+            id: hideDelay
+
+            interval: Appearance.animSlow
+        }
+
+        Connections {
+            function onCountChanged() {
+                if (NotificationService.popups.count === 0)
+                    hideDelay.restart();
+            }
+
+            target: NotificationService.popups
+        }
 
         ListView {
-            id: notificationList
+            id: list
 
             anchors.fill: parent
-            model: notificationModel
+            model: NotificationService.popups
             spacing: 8
             interactive: false
 
             delegate: NotificationItem {
-                notification: model.notif
-                summary: model.summary
+                id: toast
+
+                required property var model
+
+                width: list.width
+                notification: NotificationService.find(model.nid)
+                summary: model.summary || model.appName
                 body: model.body
                 appName: model.appName
                 appIcon: model.appIcon
-                width: notificationList.width
-                // Allow the item to tell us to remove it
-                onDismissed: root.removeById(model.notifId)
+                image: model.image
+                meta: model.summary ? model.appName : ""
+                onBodyClicked: NotificationService.hidePopup(model.nid)
+                onCloseRequested: NotificationService.dismiss(model.nid)
+
+                Timer {
+                    interval: toast.model.timeout > 0 ? toast.model.timeout : 5000
+                    running: true
+                    onTriggered: NotificationService.hidePopup(toast.model.nid)
+                }
             }
 
-            move: Transition {
+            add: Transition {
                 NumberAnimation {
-                    properties: "x,y"
-                    duration: 300
-                    easing.type: Easing.OutCubic
+                    property: "opacity"
+                    from: 0
+                    to: 1
+                    duration: Appearance.animNormal
                 }
 
+                NumberAnimation {
+                    property: "x"
+                    from: 40
+                    to: 0
+                    duration: Appearance.animSlow
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Appearance.easeOut
+                }
+            }
+
+            remove: Transition {
+                NumberAnimation {
+                    property: "opacity"
+                    to: 0
+                    duration: Appearance.animNormal
+                }
+
+                NumberAnimation {
+                    property: "x"
+                    to: 40
+                    duration: Appearance.animNormal
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Appearance.easeStandard
+                }
             }
 
             displaced: Transition {
                 NumberAnimation {
                     properties: "x,y"
-                    duration: 300
-                    easing.type: Easing.OutCubic
+                    duration: Appearance.animSlow
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Appearance.easeOut
                 }
 
+                NumberAnimation {
+                    property: "opacity"
+                    to: 1
+                    duration: Appearance.animFast
+                }
             }
-
         }
-
     }
-
 }

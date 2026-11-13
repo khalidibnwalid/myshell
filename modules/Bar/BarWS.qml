@@ -1,136 +1,105 @@
+import "../../components/"
 import "../../config/"
 import QtQuick
 import QtQuick.Layouts
-import Quickshell
 import Quickshell.Hyprland
-import Quickshell.Wayland
-import Quickshell.Io
 
 Item {
-    id: wsIndicatorBar
+    id: root
 
-    property HyprlandWorkspace activeWs: Hyprland.workspaces.values.find(ws => ws.focused)
-    // get the total number of workspaces, by getting the highest ID
+    // total number of workspaces = highest id (+1 spare)
     property int _numberOfWS: Hyprland.workspaces.values.length > 0 ? Hyprland.workspaces.values[Hyprland.workspaces.values.length - 1].id : 0
 
-    property int vPadding: 10
-    width: 42 // 26px + 16px padding (8px on each side)
-    height: column.implicitHeight + (vPadding * 2) // Add vertical padding
+    implicitWidth: 40
+    implicitHeight: column.implicitHeight
 
-    Behavior on height {
+    Behavior on implicitHeight {
         NumberAnimation {
-            duration: 140
+            duration: 160
             easing.type: Easing.OutQuad
-        }
-    }
-
-    // background
-    Rectangle {
-        anchors.fill: parent
-        color: Appearance.bgColor
-        radius: 16
-        border.color: Appearance.borderColor
-        border.width: 2
-    }
-
-    // indicator
-    Rectangle {
-        id: activeIndicator
-        width: 26 + vPadding
-        height: 46 + vPadding
-        radius: 14
-        color: Appearance.accentColorLight
-        anchors.horizontalCenter: parent.horizontalCenter
-        opacity: 0.3
-
-        // Position based on active workspace
-        y: {
-            if (!activeWs)
-                return 0;
-            let activeIndex = activeWs.id - 1;
-            return 10 + activeIndex * (26 + 8) - 5;
-        }
-
-        Behavior on y {
-            NumberAnimation {
-                duration: 150
-                easing.type: Easing.InOutQuad
-            }
-        }
-
-        Rectangle {
-            anchors.fill: parent
-            color: "transparent"
-            radius: parent.radius
-            border.color: Appearance.accentColor
-            border.width: 2
         }
     }
 
     Column {
         id: column
-        anchors.fill: parent
-        anchors.margins: 8
-        anchors.topMargin: 10
-        anchors.bottomMargin: 10
-        spacing: 8
+
+        anchors.horizontalCenter: parent.horizontalCenter
+        spacing: 2
 
         Repeater {
-            model: _numberOfWS + 1
+            model: root._numberOfWS + 1
 
-            delegate: Rectangle {
-                id: wsRect
+            delegate: Item {
+                id: ws
 
                 required property int index
                 property int workspaceId: index + 1
-                property HyprlandWorkspace currentWs: Hyprland.workspaces.values.find(ws => ws.id === workspaceId) || null
-                property list<HyprlandToplevel> workspaceToplevels: currentWs?.toplevels?.values || []
+                property HyprlandWorkspace currentWs: Hyprland.workspaces.values.find(w => w.id === workspaceId) || null
+                property bool focused: currentWs?.focused ?? false
+                property bool occupied: (currentWs?.toplevels?.values?.length ?? 0) > 0
 
-                width: 26
-                radius: 10
-                implicitHeight: 26
-                height: currentWs?.focused ? implicitHeight + 20 : implicitHeight
-                color: currentWs?.focused ? Appearance.accentColor : Appearance.highlightColor
-
-                Rectangle {
-                    visible: workspaceToplevels.length > 0 && !currentWs?.focused
-                    anchors.fill: parent
-                    anchors.margins: 2
-                    color: Appearance.accentColor
-                    opacity: 0.8
-                    radius: 8
-                    border.width: 1
-                    border.color: Appearance.accentColor
-                }
-
-                Text {
-                    anchors.centerIn: parent
-                    text: workspaceId
-                    font.pixelSize: 16
-                    font.family: "Monospace"
-                    font.bold: true
-                    opacity: currentWs?.focused ? 1 : (workspaceToplevels.length > 0 ? 0.8 : 0.4)
-                    color: (currentWs?.focused || workspaceToplevels.length > 0) ? Appearance.bgColor : Appearance.fgColor
-                }
-
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: Hyprland.dispatch(`workspace ${workspaceId.toString()}`)
-                }
+                width: 40
+                height: focused ? 52 : 24
 
                 Behavior on height {
                     NumberAnimation {
-                        duration: 150
-                        easing.type: Easing.InQuad
+                        duration: Appearance.animNormal
+                        easing.type: Easing.BezierSpline
+                        easing.bezierCurve: Appearance.easeOut
                     }
                 }
 
-                Behavior on color {
-                    ColorAnimation {
-                        duration: 150
-                        easing.type: Easing.InOutQuad
+                // active workspace pill
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: 28
+                    height: parent.height - 4
+                    radius: 14
+                    color: Appearance.accentColor
+                    opacity: ws.focused ? 1 : 0
+
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: Appearance.animFast
+                        }
                     }
+
+                    StyledText {
+                        anchors.centerIn: parent
+                        text: ws.workspaceId
+                        color: Appearance.onAccentColor
+                        font.pixelSize: 14
+                        font.weight: Font.Bold
+                    }
+                }
+
+                // dot: filled = has windows, hollow = empty
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: 9
+                    height: 9
+                    radius: 4.5
+                    visible: !ws.focused
+                    color: ws.occupied ? Appearance.fgColor : "transparent"
+                    border.width: ws.occupied ? 0 : 1.5
+                    border.color: Appearance.mutedColor
+                    scale: wsArea.containsMouse ? 1.35 : 1
+
+                    Behavior on scale {
+                        NumberAnimation {
+                            duration: Appearance.animFast
+                            easing.type: Easing.OutCubic
+                        }
+                    }
+                }
+
+                MouseArea {
+                    id: wsArea
+
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: Hyprland.dispatch(`workspace ${ws.workspaceId}`)
                 }
             }
         }

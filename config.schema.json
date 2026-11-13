@@ -11,7 +11,9 @@
         "accentColor": { "type": "string", "format": "color" },
         "accentColorLight": { "type": "string", "format": "color" },
         "highlightColor": { "type": "string", "format": "color" },
-        "borderColor": { "type": "string", "format": "color" }
+        "borderColor": { "type": "string", "format": "color" },
+        "fontFamily": { "type": "string" },
+        "opacity": { "type": "number", "minimum": 0.35, "maximum": 1 }
       }
     },
     "layout": {
@@ -20,6 +22,29 @@
         "barPosition": {
           "type": "string",
           "enum": ["left", "right", "top", "bottom"]
+        }
+      }
+    },
+    "search": {
+      "type": "object",
+      "properties": {
+        "browser": { "type": "string", "description": "Command used to open web searches" },
+        "browserClass": { "type": "string", "description": "Window class to focus after opening a search (empty to skip)" },
+        "privateFlag": { "type": "string", "description": "Flag that opens a private window, used by !!bang" },
+        "defaultBang": { "type": "string", "description": "Bang used when a query has none, e.g. g or ddg" },
+        "bangs": {
+          "type": "object",
+          "description": "Extra bangs: key -> { name, url } where %s in url is the query",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "url": { "type": "string" },
+              "privateUrl": { "type": "string", "description": "Used by !! instead of a private window, e.g. a temporary-chat URL" },
+              "icon": { "type": "string", "description": "Path or icon name shown in results" }
+            },
+            "required": ["name", "url"]
+          }
         }
       }
     },

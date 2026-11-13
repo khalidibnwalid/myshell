@@ -7,7 +7,7 @@ import QtQuick.Layouts
 Item {
     property var stackView
 
-    implicitHeight: layout.implicitHeight
+    implicitHeight: layout.implicitHeight + 32
 
     ColumnLayout {
         id: layout
@@ -15,78 +15,93 @@ Item {
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.margins: 6
-        spacing: 3
+        anchors.margins: 16
+        spacing: 14
 
-        RowLayout {
+        PageHeader {
             Layout.fillWidth: true
-            spacing: 8
+            title: "Battery"
+            subtitle: Battery.stateString
+            onBack: stackView.pop()
+        }
 
-            IconButton {
-                icon: "arrow_back"
-                onClicked: stackView.pop()
-            }
+        // charge level
+        Rectangle {
+            Layout.fillWidth: true
+            implicitHeight: 48
+            radius: 24
+            color: Appearance.surfaceColor
+            clip: true
 
-            ColumnLayout {
-                spacing: 0
+            Rectangle {
+                height: parent.height
+                width: Math.max(height, parent.width * Battery.percentage)
+                radius: height / 2
+                color: Appearance.accentColor
 
-                Text {
-                    text: "Battery"
-                    font.pixelSize: 18
-                    font.weight: Font.Bold
-                    color: Appearance.fgColor
+                Behavior on width {
+                    NumberAnimation {
+                        duration: Appearance.animSlow
+                        easing.type: Easing.BezierSpline
+                        easing.bezierCurve: Appearance.easeOut
+                    }
                 }
 
-                Text {
-                    text: Math.round(Battery.percentage * 100) + "% - " + Battery.stateString
-                    font.pixelSize: 12
-                    color: Appearance.fgColor
-                    opacity: 0.5
+                StyledText {
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.right: parent.right
+                    anchors.rightMargin: 16
+                    visible: parent.width > 80
+                    text: Math.round(Battery.percentage * 100) + "%"
+                    color: Appearance.onAccentColor
+                    font.weight: Font.DemiBold
                 }
 
+                MaterialSymbol {
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.left: parent.left
+                    anchors.leftMargin: 14
+                    icon: Battery.iconName
+                    fill: Battery.percentage
+                    font.pixelSize: 20
+                    color: Appearance.onAccentColor
+                }
             }
+        }
 
-            Item {
-                Layout.fillWidth: true
-            }
-
-            MaterialSymbol {
-                icon: Battery.iconName
-                font.pixelSize: 24
-                color: Appearance.fgColor
-                opacity: 0.8
-                fill: Battery.percentage
-            }
-
+        StyledText {
+            Layout.leftMargin: 6
+            Layout.topMargin: 2
+            text: "Power profile"
+            color: Appearance.mutedColor
+            font.pixelSize: 12
+            font.weight: Font.Medium
         }
 
         ColumnLayout {
             Layout.fillWidth: true
-            spacing: 10
-            Layout.margins: 10
-
-            Text {
-                text: "Power Profiles"
-                font.pixelSize: 20
-                font.weight: Font.Bold
-                color: Appearance.fgColor
-            }
+            Layout.topMargin: -6
+            spacing: 3
 
             Repeater {
+                id: profiles
+
                 model: Battery.powerProfilesList
 
-                delegate: ToggleButton {
-                    text: modelData.name
-                    icon: modelData.icon
+                delegate: ListRow {
+                    required property var modelData
+                    required property int index
+
                     Layout.fillWidth: true
-                    toggled: Battery.activeProfile === modelData.key
+                    first: index === 0
+                    last: index === profiles.count - 1
+                    title: modelData.name
+                    icon: modelData.icon
+                    active: Battery.activeProfile === modelData.key
+                    trailingIcon: active ? "check" : ""
                     onClicked: Battery.setProfile(modelData.key)
                 }
-
             }
-
         }
-
     }
-
 }

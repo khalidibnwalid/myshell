@@ -7,10 +7,8 @@ import QtQuick.Layouts
 Item {
     property var stackView
 
-    implicitHeight: layout.implicitHeight + 12
-    Component.onCompleted: {
-        Network.rescanWifi();
-    }
+    implicitHeight: layout.implicitHeight + 32
+    Component.onCompleted: Network.rescanWifi()
 
     ColumnLayout {
         id: layout
@@ -18,95 +16,69 @@ Item {
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.margins: 10
-        spacing: 10
+        anchors.margins: 16
+        spacing: 14
 
-        RowLayout {
+        PageHeader {
             Layout.fillWidth: true
-            spacing: 8
+            title: "Wi-Fi"
+            subtitle: !Network.enabled ? "Off" : (Network.connected ? Network.active.ssid : "Not connected")
+            onBack: stackView.pop()
 
             IconButton {
-                icon: "arrow_back"
-                onClicked: stackView.pop()
+                toggled: Network.scanning
+                icon: "sync"
+                onClicked: Network.rescanWifi()
             }
 
-            ColumnLayout {
-                spacing: 0
-
-                Text {
-                    text: "Wi-Fi"
-                    font.pixelSize: 18
-                    font.weight: Font.Bold
-                    color: Appearance.fgColor
-                }
-
-                Text {
-                    text: Network.connected ? Network.active.ssid : "Not connected"
-                    font.pixelSize: 12
-                    color: Appearance.fgColor
-                    opacity: 0.5
-                }
-
+            IconButton {
+                toggled: Network.enabled
+                icon: Network.enabled ? "wifi" : "wifi_off"
+                onClicked: Network.toggleWifi()
             }
-
-            Item {
-                Layout.fillWidth: true
-            }
-
-            RowLayout {
-                spacing: 4
-
-                IconButton {
-                    toggled: Network.scanning
-                    icon: "sensors"
-                    onClicked: Network.rescanWifi()
-                }
-
-                IconButton {
-                    toggled: Network.enabled
-                    icon: "wifi"
-                    onClicked: Network.toggleWifi()
-                    accentColor: Appearance.accentColor
-                }
-
-            }
-
         }
 
         ListView {
+            id: list
+
             model: Network.networks
             Layout.fillWidth: true
-            Layout.preferredHeight: Math.min(Network.networks.length * 64, 256)
+            Layout.preferredHeight: Math.min(contentHeight, 5 * 59 - 3)
             spacing: 3
-            currentIndex: -1
             clip: true
+            boundsBehavior: Flickable.StopAtBounds
 
-            delegate: RowLayout {
-                width: parent.width
-                spacing: 3
+            //TODO: password prompt
+            delegate: ListRow {
+                required property var modelData
+                required property int index
 
-                ToggleButton {
-                    //TODO: password prompt
-
-                    text: modelData.ssid
-                    Layout.fillWidth: true
-                    toggled: modelData.active
-                    onClicked: {
-                        if (!modelData.active)
-                            Network.connectToNetwork(modelData.ssid, "");
-                        else
-                            Network.disconnectFromNetwork();
-                    }
-                    wrapMode: Text.NoWrap
-                    elide: Text.ElideRight
-                    icon: Network.getStatusIcon(modelData.strength)
-                    endIcon: modelData.secure ? "key" : ""
+                width: list.width
+                first: index === 0
+                last: index === list.count - 1
+                active: modelData.active
+                title: modelData.ssid
+                subtitle: modelData.active ? "Connected" : ""
+                icon: Network.getStatusIcon(modelData.strength)
+                trailingIcon: modelData.isSecure ? "lock" : ""
+                onClicked: {
+                    if (!modelData.active)
+                        Network.connectToNetwork(modelData.ssid, "");
+                    else
+                        Network.disconnectFromNetwork();
                 }
-
             }
-
         }
 
+        StyledText {
+            Layout.fillWidth: true
+            Layout.topMargin: 12
+            Layout.bottomMargin: 12
+            visible: list.count === 0
+            horizontalAlignment: Text.AlignHCenter
+            text: !Network.enabled ? "Wi-Fi is off" : (Network.scanning ? "Looking for networks…" : "No networks found")
+            color: Appearance.mutedColor
+            font.pixelSize: 13
+        }
     }
-
 }

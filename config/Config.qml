@@ -6,6 +6,7 @@ Singleton {
     readonly property alias appearance: jsonAdapter.appearance
     readonly property alias layout: jsonAdapter.layout
     readonly property alias keyboard: jsonAdapter.keyboard
+    readonly property alias search: jsonAdapter.search
 
     FileView {
         watchChanges: true
@@ -24,6 +25,8 @@ Singleton {
                 property string accentColorLight: "#E3E3FA"
                 property string highlightColor: "#54545f"
                 property string borderColor: "#000000"
+                property real opacity: 0.5
+                property string fontFamily: "Adwaita Sans"
             }
 
             property JsonObject layout
@@ -34,6 +37,15 @@ Singleton {
 
             property var keyboard: ({
                 "layouts": {
+                }
+            })
+            // web search: browser command, the bang used for plain queries, extra bangs
+            property var search: ({
+                "browser": "helium-browser",
+                "browserClass": "helium",
+                "privateFlag": "--incognito",
+                "defaultBang": "g",
+                "bangs": {
                 }
             })
         }

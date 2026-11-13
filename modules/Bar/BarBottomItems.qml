@@ -1,80 +1,101 @@
 import "../../components/"
 import "../../config/"
 import "../../services/"
-import "./BarClock.qml"
 import QtQuick
 import QtQuick.Layouts
-import Quickshell.Io
 
 ColumnLayout {
-    Layout.fillWidth: true
-    width: parent.width
+    id: root
 
-    // background
-    Rectangle {
-        anchors.fill: parent
-        color: Appearance.bgColor
-        radius: 16
-        border.color: Appearance.borderColor
-        border.width: 2
+    spacing: 14
+
+    Audio {
+        id: audio
+    }
+
+    // wifi / bluetooth / volume / battery -> open quick settings
+    Item {
+        Layout.alignment: Qt.AlignHCenter
+        implicitWidth: statusColumn.implicitWidth
+        implicitHeight: statusColumn.implicitHeight
 
         MouseArea {
             anchors.fill: parent
-            onClicked: WindowManager.setQuickSettingsVisible(!WindowManager.quickSettingsVisible)
+            anchors.margins: -4
             cursorShape: Qt.PointingHandCursor
+            onClicked: WindowManager.toggleQuickSettingsVisible()
         }
 
-    }
-
-    ColumnLayout {
-        Layout.fillWidth: true
-        Layout.alignment: Qt.AlignHCenter
-        Layout.topMargin: 8
-        Layout.bottomMargin: 8
+        ColumnLayout {
+            id: statusColumn
+            spacing: 14
 
         MaterialSymbol {
-            Layout.fillWidth: true
-            horizontalAlignment: Text.AlignHCenter
+            Layout.alignment: Qt.AlignHCenter
             icon: Network.statusIcon
-            font.pixelSize: 24
+            font.pixelSize: 22
             color: Appearance.fgColor
         }
 
         MaterialSymbol {
             visible: Bluetooth.enabled
-            Layout.fillWidth: true
-            horizontalAlignment: Text.AlignHCenter
+            Layout.alignment: Qt.AlignHCenter
             icon: Bluetooth.statusIcon
-            font.pixelSize: 24
+            font.pixelSize: 22
             color: Appearance.fgColor
         }
 
         MaterialSymbol {
-            visible: Battery.device.isLaptopBattery
-            Layout.fillWidth: true
-            horizontalAlignment: Text.AlignHCenter
-            icon: Battery.iconName
-            font.pixelSize: 24
-            fill: Battery.percentage
+            Layout.alignment: Qt.AlignHCenter
+            icon: audio.mute || audio.volume === 0 ? "volume_off" : (audio.volume < 0.5 ? "volume_down" : "volume_up")
+            font.pixelSize: 22
             color: Appearance.fgColor
         }
 
-        Text {
-            Layout.fillWidth: true
-            horizontalAlignment: Text.AlignHCenter
-            color: Appearance.fgColor
-            font.pixelSize: 14
-            font.family: "Monospace"
-            font.weight: Font.DemiBold
+        StyledText {
+            Layout.alignment: Qt.AlignHCenter
             text: Keyboard.layout
+            color: Appearance.fgColor
+            font.pixelSize: 12
+            font.weight: Font.DemiBold
             opacity: 0.8
-            Layout.bottomMargin: 4
         }
 
-        BarClock {
-            Layout.fillWidth: true
+        ColumnLayout {
+            visible: Battery.device.isLaptopBattery
+            Layout.alignment: Qt.AlignHCenter
+            spacing: -2
+
+            MaterialSymbol {
+                Layout.alignment: Qt.AlignHCenter
+                icon: Battery.iconName
+                font.pixelSize: 22
+                fill: Battery.percentage
+                color: Appearance.fgColor
+            }
+
+            StyledText {
+                Layout.alignment: Qt.AlignHCenter
+                text: Math.round(Battery.percentage * 100)
+                color: Appearance.mutedColor
+                font.pixelSize: 11
+            }
         }
 
+        }
     }
 
+    MaterialSymbol {
+        Layout.alignment: Qt.AlignHCenter
+        icon: "power_settings_new"
+        font.pixelSize: 22
+        color: Appearance.fgColor
+
+        MouseArea {
+            anchors.fill: parent
+            anchors.margins: -4
+            cursorShape: Qt.PointingHandCursor
+            onClicked: WindowManager.toggleQuickSettingsVisible()
+        }
+    }
 }

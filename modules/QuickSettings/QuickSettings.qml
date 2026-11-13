@@ -1,5 +1,6 @@
 import "../../config/"
 import "../../services"
+import "../Notifications"
 import QtQuick
 import QtQuick.Controls
 import Quickshell
@@ -7,14 +8,16 @@ import Quickshell
 Scope {
     id: root
 
-    // Tracking for opening/closing animation
-    property bool isActuallyOpen: WindowManager.quickSettingsVisible || closeTimer.running
+    readonly property bool open: WindowManager.quickSettingsVisible
+    // keep the window mapped while the closing animation runs
+    readonly property bool isActuallyOpen: open || closeTimer.running
+    readonly property int panelWidth: 412
+    readonly property int gap: 12
 
     Connections {
         function onQuickSettingsVisibleChanged() {
             if (!WindowManager.quickSettingsVisible)
                 closeTimer.restart();
-
         }
 
         target: WindowManager
@@ -23,175 +26,207 @@ Scope {
     Timer {
         id: closeTimer
 
-        interval: 350
+        interval: Appearance.animFast + 30
     }
 
     Variants {
         model: Quickshell.screens
 
         PanelWindow {
-            id: bottomPanel
+            id: window
 
             required property var modelData
+            readonly property bool barRight: Config.layout.barPosition === "right"
+            readonly property bool hasNotifications: NotificationService.count > 0
+            // start the entrance only once the surface is really on screen, so no frame of it is lost
+            readonly property bool shown: root.open && backingWindowVisible
+
+            // the card resizes inside a fixed window, so page changes never resize the surface
+            // and it never gets shorter than the main page, so sub-pages do not collapse it
+            property Item mainPage: null
+            property real cardHeight: Math.min(height, Math.max(280, mainPage ? mainPage.implicitHeight : 0, stackView.currentItem ? stackView.currentItem.implicitHeight : 0))
 
             screen: modelData
-            visible: isActuallyOpen
-            implicitWidth: 460
-            implicitHeight: Math.max(400, (stackView.currentItem ? stackView.currentItem.implicitHeight : 0) + 24)
+            visible: root.isActuallyOpen
+            implicitWidth: root.panelWidth
+            implicitHeight: modelData.height - 20
             color: "transparent"
 
             anchors {
-                right: Config.layout.barPosition === "right"
-                left: Config.layout.barPosition === "left"
+                right: barRight
+                left: !barRight
                 bottom: true
             }
 
             margins {
-                right: Config.layout.barPosition === "right" ? 10 : 0
-                left: Config.layout.barPosition === "left" ? 10 : 0
-                bottom: 15
+                right: 10
+                left: 10
+                bottom: 10
             }
 
-            // Visual Content and Animation Wrapper
+            // only the two cards take input, the rest of the window is click-through
+            mask: Region {
+                item: panelArea
+
+                Region {
+                    item: notifArea
+                }
+            }
+
             Item {
-                id: animationWrapper
+                id: panelArea
+
+                y: parent.height - height
+                width: root.panelWidth
+                height: window.cardHeight
+            }
+
+            Item {
+                id: notifArea
+
+                // stacked on top of the quick settings card
+                y: panelArea.y - root.gap - height
+                width: window.hasNotifications ? root.panelWidth : 0
+                height: Math.min(notifications.implicitHeight, notifications.maxHeight)
+            }
+
+            // both cards open and close together
+            Item {
+                id: stage
 
                 anchors.fill: parent
-                // Animation properties
-                opacity: WindowManager.quickSettingsVisible ? 1 : 0
-                scale: WindowManager.quickSettingsVisible ? 1 : 0.94
-                y: WindowManager.quickSettingsVisible ? 0 : 30
-                Component.onCompleted: {
-                    if (stackView.depth === 0)
-                        stackView.push(mainPageComponent, {
-                        "stackView": stackView,
-                        "networkPageComponent": networkPageComponent,
-                        "bluetoothPageComponent": bluetoothPageComponent,
-                        "batteryPageComponent": batteryPageComponent
-                    });
+                opacity: window.shown ? 1 : 0
 
+                // fades while sliding in from the bar side
+                transform: Translate {
+                    x: window.shown ? 0 : (window.barRight ? 72 : -72)
+
+                    Behavior on x {
+                        NumberAnimation {
+                            duration: window.shown ? 300 : Appearance.animFast
+                            easing.type: Easing.BezierSpline
+                            easing.bezierCurve: window.shown ? Appearance.easeOut : Appearance.easeStandard
+                        }
+                    }
                 }
 
-                // The actual background/panel
+                NotificationPanel {
+                    id: notifications
+
+                    x: notifArea.x
+                    y: notifArea.y
+                    width: root.panelWidth
+                    height: notifArea.height
+                    maxHeight: Math.max(120, panelArea.y - root.gap)
+                    visible: opacity > 0
+                    opacity: window.hasNotifications ? 1 : 0
+
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: Appearance.animFast
+                        }
+                    }
+                }
+
                 Rectangle {
-                    anchors.fill: parent
-                    color: Appearance.bgColor
-                    radius: 16
-                    border.color: Appearance.borderColor
+                    x: panelArea.x
+                    y: panelArea.y
+                    width: panelArea.width
+                    height: panelArea.height
+                    // outer radius = inner radius (20) + padding (16)
+                    radius: 36
+                    color: Appearance.panelColor
+                    border.color: Appearance.hairlineColor
                     border.width: 1
-
-                    // Premium Inner Highlight (Creates the "top-lit" glass effect)
-                    Rectangle {
-                        anchors.fill: parent
-                        anchors.margins: 1
-                        color: "transparent"
-                        radius: 15
-                        border.color: "white"
-                        border.width: 1
-                        opacity: 0.04
+                    Component.onCompleted: {
+                        if (stackView.depth === 0)
+                            window.mainPage = stackView.push(mainPageComponent, {
+                                "stackView": stackView,
+                                "networkPageComponent": networkPageComponent,
+                                "bluetoothPageComponent": bluetoothPageComponent,
+                                "batteryPageComponent": batteryPageComponent
+                            });
                     }
 
-                    // Soft light gradient for subtle depth
-                    Rectangle {
-                        anchors.fill: parent
-                        radius: 24
-                        opacity: 0.03
+                    // pages cross-fade quickly with a short nudge in the travel direction
+                    StackView {
+                        id: stackView
 
-                        gradient: Gradient {
-                            GradientStop {
-                                position: 0
-                                color: "white"
+                        clip: true
+                        anchors.fill: parent
+
+                        pushEnter: Transition {
+                            NumberAnimation {
+                                property: "opacity"
+                                from: 0
+                                to: 1
+                                duration: 150
                             }
 
-                            GradientStop {
-                                position: 0.4
-                                color: "transparent"
+                            NumberAnimation {
+                                property: "x"
+                                from: 14
+                                to: 0
+                                duration: 180
+                                easing.type: Easing.OutCubic
+                            }
+                        }
+
+                        pushExit: Transition {
+                            NumberAnimation {
+                                property: "opacity"
+                                to: 0
+                                duration: 70
+                            }
+                        }
+
+                        popEnter: Transition {
+                            NumberAnimation {
+                                property: "opacity"
+                                from: 0
+                                to: 1
+                                duration: 150
                             }
 
+                            NumberAnimation {
+                                property: "x"
+                                from: -14
+                                to: 0
+                                duration: 180
+                                easing.type: Easing.OutCubic
+                            }
                         }
 
+                        popExit: Transition {
+                            NumberAnimation {
+                                property: "opacity"
+                                to: 0
+                                duration: 70
+                            }
+                        }
                     }
-
-                }
-
-                StackView {
-                    id: stackView
-
-                    clip: true
-                    anchors.fill: parent
-
-                    // Add a nice transition for page switching too
-                    replaceEnter: Transition {
-                        NumberAnimation {
-                            property: "opacity"
-                            from: 0
-                            to: 1
-                            duration: 200
-                        }
-
-                        NumberAnimation {
-                            property: "x"
-                            from: 30
-                            to: 0
-                            duration: 250
-                            easing.type: Easing.OutCubic
-                        }
-
-                    }
-
-                    replaceExit: Transition {
-                        NumberAnimation {
-                            property: "opacity"
-                            from: 1
-                            to: 0
-                            duration: 150
-                        }
-
-                        NumberAnimation {
-                            property: "x"
-                            from: 0
-                            to: -30
-                            duration: 200
-                            easing.type: Easing.InCubic
-                        }
-
-                    }
-
                 }
 
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: 250
-                        easing.type: Easing.OutCubic
+                        duration: window.shown ? 200 : Appearance.animFast
                     }
-
                 }
-
-                Behavior on scale {
-                    NumberAnimation {
-                        duration: 350
-                        easing.type: Easing.OutBack
-                    }
-
-                }
-
-                Behavior on y {
-                    NumberAnimation {
-                        duration: 350
-                        easing.type: Easing.OutQuint
-                    }
-
-                }
-
             }
 
-            // --- Navigation Components ---
+            Behavior on cardHeight {
+                NumberAnimation {
+                    duration: 180
+                    easing.type: Easing.OutCubic
+                }
+            }
+
+            // --- Pages ---
             Component {
                 id: networkPageComponent
 
                 NetworkPage {
                 }
-
             }
 
             Component {
@@ -199,7 +234,6 @@ Scope {
 
                 BluetoothPage {
                 }
-
             }
 
             Component {
@@ -207,7 +241,6 @@ Scope {
 
                 BatteryPage {
                 }
-
             }
 
             Component {
@@ -215,19 +248,7 @@ Scope {
 
                 MainPage {
                 }
-
             }
-
-            Behavior on implicitHeight {
-                NumberAnimation {
-                    duration: 250
-                    easing.type: Easing.InOutQuad
-                }
-
-            }
-
         }
-
     }
-
 }

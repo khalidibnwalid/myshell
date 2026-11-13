@@ -7,7 +7,25 @@ import QtQuick.Layouts
 Item {
     property var stackView
 
-    implicitHeight: layout.implicitHeight + 12
+    function deviceIcon(name) {
+        const icon = (name || "").toLowerCase();
+        // ref: /usr/share/icons/Adwaita/scalable/devices
+        if (icon.includes("headphone") || icon.includes("headset"))
+            return "headphones";
+        if (icon.includes("microphone"))
+            return "mic";
+        if (icon.includes("keyboard"))
+            return "keyboard";
+        if (icon.includes("mouse"))
+            return "mouse";
+        if (icon.includes("printer"))
+            return "print";
+        if (icon.includes("phone"))
+            return "smartphone";
+        return "devices_other";
+    }
+
+    implicitHeight: layout.implicitHeight + 32
     Component.onCompleted: {
         if (Bluetooth.enabled && !Bluetooth.isScanning) {
             Bluetooth.toggleScan();
@@ -20,9 +38,8 @@ Item {
 
         interval: 10000 // Scan for 10 seconds
         onTriggered: {
-            if (Bluetooth.isScanning) {
+            if (Bluetooth.isScanning)
                 Bluetooth.toggleScan();
-            }
         }
     }
 
@@ -32,117 +49,63 @@ Item {
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.margins: 10
-        spacing: 10
+        anchors.margins: 16
+        spacing: 14
 
-        RowLayout {
+        PageHeader {
             Layout.fillWidth: true
-            spacing: 8
+            title: "Bluetooth"
+            subtitle: !Bluetooth.enabled ? "Off" : (Bluetooth.connectedDevices.length ? Bluetooth.connectedDevices[0].name : (Bluetooth.isScanning ? "Scanning…" : "On"))
+            onBack: stackView.pop()
 
             IconButton {
-                icon: "arrow_back"
-                onClicked: stackView.pop()
+                icon: "sync"
+                toggled: Bluetooth.isScanning
+                onClicked: Bluetooth.toggleScan()
             }
 
-            ColumnLayout {
-                spacing: 0
-
-                Text {
-                    text: "Bluetooth"
-                    font.pixelSize: 18
-                    font.weight: Font.Bold
-                    color: Appearance.fgColor
-                }
-
-                Text {
-                    text: Bluetooth.enabled ? (Bluetooth.connectedDevices.length ? Bluetooth.connectedDevices[0].name : "Discovery On") : "Off"
-                    font.pixelSize: 12
-                    color: Appearance.fgColor
-                    opacity: 0.5
-                }
-
+            IconButton {
+                icon: Bluetooth.enabled ? "bluetooth" : "bluetooth_disabled"
+                toggled: Bluetooth.enabled
+                onClicked: Bluetooth.toggle()
             }
-
-            Item {
-                Layout.fillWidth: true
-            }
-
-            RowLayout {
-                spacing: 4
-
-                IconButton {
-                    icon: "sensors"
-                    toggled: Bluetooth.isScanning
-                    onClicked: Bluetooth.toggleScan()
-                }
-
-                IconButton {
-                    icon: "bluetooth"
-                    toggled: Bluetooth.enabled
-                    onClicked: Bluetooth.toggle()
-                    accentColor: Appearance.accentColor
-                }
-
-            }
-
         }
 
         ListView {
+            id: list
+
             model: Bluetooth.devices
             Layout.fillWidth: true
-            Layout.preferredHeight: Math.min(Bluetooth.devices.length * 64, 256)
+            Layout.preferredHeight: Math.min(contentHeight, 5 * 59 - 3)
             spacing: 3
-            currentIndex: -1
             clip: true
+            boundsBehavior: Flickable.StopAtBounds
 
-            delegate: RowLayout {
-                width: parent.width
-                spacing: 3
+            delegate: ListRow {
+                required property var modelData
+                required property int index
 
-                ToggleButton {
-                    text: modelData.name
-                    Layout.fillWidth: true
-                    toggled: modelData.connected
-                    onClicked: modelData.connected = !modelData.connected
-                    wrapMode: Text.NoWrap
-                    elide: Text.ElideRight
-                    icon: {
-                        const icon = modelData.icon.toLowerCase();
-                        // ref: /usr/share/icons/Adwaita/scalable/devices
-                        if (icon.includes("headphone") || icon.includes("headset"))
-                            return "headphones";
-
-                        if (icon.includes("microphone"))
-                            return "mic";
-
-                        if (icon.includes("keyboard"))
-                            return "keyboard";
-
-                        if (icon.includes("mouse"))
-                            return "mouse";
-
-                        if (icon.includes("printer"))
-                            return "print";
-
-                        return "general_device";
-                    }
-                }
-
-                //battery status
-                ToggleButton {
-                    visible: modelData.batteryAvailable
-                    text: modelData.battery * 100 + "%"
-                    icon: "battery_android_0"
-                    iconFill: modelData.battery
-                    Layout.preferredWidth: 110
-                    toggled: false
-                    enabled: false
-                }
-
+                width: list.width
+                first: index === 0
+                last: index === list.count - 1
+                active: modelData.connected
+                title: modelData.name
+                subtitle: modelData.connected ? "Connected" : (modelData.paired ? "Paired" : "")
+                icon: deviceIcon(modelData.icon)
+                trailingText: modelData.batteryAvailable ? Math.round(modelData.battery * 100) + "%" : ""
+                onClicked: modelData.connected = !modelData.connected
             }
-
         }
 
+        StyledText {
+            Layout.fillWidth: true
+            Layout.topMargin: 12
+            Layout.bottomMargin: 12
+            visible: list.count === 0
+            horizontalAlignment: Text.AlignHCenter
+            text: !Bluetooth.enabled ? "Bluetooth is off" : (Bluetooth.isScanning ? "Looking for devices…" : "No devices found")
+            color: Appearance.mutedColor
+            font.pixelSize: 13
+        }
     }
-
 }

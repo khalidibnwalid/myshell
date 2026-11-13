@@ -3,7 +3,6 @@ import "../../config/"
 import "../../services/"
 import QtQuick
 import QtQuick.Layouts
-import Quickshell.Io
 
 Item {
     id: root
@@ -12,9 +11,8 @@ Item {
     property var networkPageComponent
     property var bluetoothPageComponent
     property var batteryPageComponent
-    property string username: ""
 
-    implicitHeight: layout.implicitHeight
+    implicitHeight: layout.implicitHeight + 32
 
     Audio {
         id: audio
@@ -24,187 +22,193 @@ Item {
         id: backlight
     }
 
-    Process {
-        running: true
-        command: ["whoami"]
-
-        stdout: StdioCollector {
-            onStreamFinished: root.username = text.trim()
-        }
-
-    }
-
     ColumnLayout {
         id: layout
 
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.margins: 12
+        anchors.margins: 16
         spacing: 12
 
-        // --- Header Section ---
+        // --- Clock header ---
         RowLayout {
             Layout.fillWidth: true
-            Layout.bottomMargin: 0
+            Layout.leftMargin: 6
+            Layout.rightMargin: 6
+            Layout.topMargin: 4
+            Layout.bottomMargin: 2
 
-            RowLayout {
-                spacing: 12
-
-                Rectangle {
-                    width: 38
-                    height: 38
-                    radius: 19
-                    color: Appearance.accentColor
-
-                    MaterialSymbol {
-                        icon: "person"
-                        color: Appearance.bgColor
-                        font.pixelSize: 22
-                        anchors.centerIn: parent
-                    }
-
-                }
-
-                ColumnLayout {
-                    spacing: 0
-
-                    Text {
-                        text: root.username || "User"
-                        color: Appearance.fgColor
-                        font.pixelSize: 18
-                        font.bold: true
-                    }
-
-                    Text {
-                        text: Qt.formatDateTime(new Date(), "dddd, MMMM dd")
-                        color: Appearance.fgColor
-                        font.pixelSize: 12
-                        opacity: 0.5
-                    }
-
-                }
-
+            StyledText {
+                text: Time.format("HH:mm")
+                font.pixelSize: 32
+                font.weight: Font.Bold
+                font.letterSpacing: -0.5
             }
 
             Item {
                 Layout.fillWidth: true
             }
 
-            RowLayout {
-                spacing: 4
-
-                IconButton {
-                    icon: "restart_alt"
-                    onClicked: WindowManager.restartComputer()
-                }
-
-                IconButton {
-                    icon: "power_settings_new"
-                    color: Appearance.accentColor
-                    onClicked: WindowManager.shutdownComputer()
-                }
-
+            StyledText {
+                text: Time.format("ddd, d MMM")
+                color: Appearance.mutedColor
+                font.pixelSize: 13
             }
-
         }
 
-        // --- Grid Section ---
-        GridLayout {
-            id: contentGrid
+        // --- Brightness ---
+        PillSlider {
+            Layout.fillWidth: true
+            icon: "light_mode"
+            value: backlight.percentage
+            onDragged: v => backlight.setBrightness(v)
+        }
 
+        // --- Volume ---
+        PillSlider {
+            Layout.fillWidth: true
+            icon: audio.mute || audio.volume === 0 ? "volume_off" : (audio.volume < 0.5 ? "volume_down" : "volume_up")
+            value: audio.volume
+            onDragged: v => audio.setVolume(v)
+        }
+
+        // --- Media ---
+        MediaCard {
+            Layout.fillWidth: true
+        }
+
+        // --- Tiles ---
+        GridLayout {
             columns: 2
             rowSpacing: 8
             columnSpacing: 8
             Layout.fillWidth: true
 
-            ToggleButton {
+            Tile {
+                Layout.fillWidth: true
+                Layout.preferredWidth: 1
                 toggled: Network.enabled
-                text: Network.connected ? Network.active.ssid : (Network.enabled ? "Available" : "Disabled")
+                text: Network.connected ? Network.active.ssid : (Network.enabled ? "Wi-Fi" : "Wi-Fi off")
                 icon: Network.statusIcon
-                endIcon: "arrow_forward_ios"
                 onClicked: stackView.push(networkPageComponent, {
                     "stackView": stackView
                 })
-                Layout.fillWidth: true
-                elide: Text.ElideRight
-                wrapMode: Text.NoWrap
             }
 
-            ToggleButton {
+            Tile {
+                Layout.fillWidth: true
+                Layout.preferredWidth: 1
                 toggled: Bluetooth.enabled
                 text: Bluetooth.connectedDevices.length ? Bluetooth.connectedDevices[0].name : "Bluetooth"
                 icon: Bluetooth.statusIcon
-                endIcon: "arrow_forward_ios"
                 onClicked: stackView.push(bluetoothPageComponent, {
                     "stackView": stackView
                 })
-                Layout.fillWidth: true
-                elide: Text.ElideRight
-                wrapMode: Text.NoWrap
             }
 
-            Button {
+            Tile {
+                Layout.fillWidth: true
+                Layout.preferredWidth: 1
+                toggled: NotificationService.dnd
+                text: "Do not disturb"
+                icon: "do_not_disturb_on"
+                onClicked: NotificationService.dnd = !NotificationService.dnd
+            }
+
+            Tile {
+                Layout.fillWidth: true
+                Layout.preferredWidth: 1
+                toggled: audio.mute
+                text: audio.mute ? "Muted" : "Mute"
+                icon: audio.mute ? "volume_off" : "volume_up"
+                onClicked: audio.setMute(!audio.mute)
+            }
+
+            Tile {
+                Layout.fillWidth: true
+                Layout.preferredWidth: 1
+                toggled: true
                 text: "Battery " + Math.round(Battery.percentage * 100) + "%"
                 icon: Battery.activeProfileIcon
-                endIcon: "arrow_forward_ios"
                 onClicked: stackView.push(batteryPageComponent, {
                     "stackView": stackView
                 })
-                Layout.fillWidth: true
-                fillColor: "black"
-                borderColor: Appearance.accentColor
-                progressColor: Appearance.accentColor
-                progress: Battery.percentage
-                textColor: progress > 0.4 ? Appearance.bgColor : Appearance.fgColor
             }
 
-            ToggleButton {
+            Tile {
+                Layout.fillWidth: true
+                Layout.preferredWidth: 1
                 toggled: false
-                text: "Settings"
-                icon: "settings"
-                onClicked: WindowManager.toggleSettingsVisible()
-                Layout.fillWidth: true
+                text: Keyboard.layout
+                icon: "keyboard"
             }
-
         }
 
-        Text {
-            text: "Controls"
-            color: Appearance.fgColor
-            font.pixelSize: 14
-            font.weight: Font.DemiBold
-            opacity: 0.6
-            Layout.topMargin: 4
-            Layout.leftMargin: 4
-        }
-
-        // --- Volume Section ---
-        VolumeSlider {
-            vertical: false
-            value: audio.volume
-            onDragged: audio.setVolume(value)
+        // --- Bottom actions ---
+        RowLayout {
             Layout.fillWidth: true
-            Layout.preferredHeight: 52
-            icon: audio.volume === 0 ? "volume_mute" : (audio.volume < 0.5 ? "volume_down" : "volume_up")
-        }
+            spacing: 8
 
-        // --- Brightness Section ---
-        VolumeSlider {
-            vertical: false
-            value: backlight.percentage
-            onDragged: backlight.setBrightness(value)
-            Layout.fillWidth: true
-            Layout.preferredHeight: 52
-            icon: "light_mode"
-        }
+            Repeater {
+                model: [
+                    {
+                        "icon": "restart_alt",
+                        "action": () => WindowManager.restartComputer()
+                    },
+                    {
+                        "icon": "settings",
+                        "action": () => WindowManager.toggleSettingsVisible()
+                    },
+                    {
+                        "icon": "power_settings_new",
+                        "action": () => WindowManager.shutdownComputer()
+                    }
+                ]
 
-        // --- Calendar Section ---
-        CalendarWidget {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 220
-        }
+                delegate: Rectangle {
+                    id: actionBtn
 
+                    required property var modelData
+
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: 1
+                    Layout.preferredHeight: 40
+                    radius: 20
+                    color: ma.containsMouse ? Appearance.surfaceColor : "transparent"
+                    border.width: 1
+                    border.color: Appearance.outlineColor
+                    scale: ma.pressed ? 0.97 : 1
+
+                    MaterialSymbol {
+                        anchors.centerIn: parent
+                        icon: actionBtn.modelData.icon
+                        font.pixelSize: 18
+                        color: Appearance.fgColor
+                    }
+
+                    MouseArea {
+                        id: ma
+
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: actionBtn.modelData.action()
+                    }
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: Appearance.animFast
+                        }
+                    }
+
+                    Behavior on scale {
+                        NumberAnimation {
+                            duration: Appearance.animFast
+                        }
+                    }
+                }
+            }
+        }
     }
-
 }
