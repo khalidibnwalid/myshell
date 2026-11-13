@@ -213,68 +213,121 @@ Item {
 
         }
 
-        // --- Bottom actions ---
-        RowLayout {
+        // --- Actions: screen utilities on the left, system on the right, in one pill ---
+        Rectangle {
             Layout.fillWidth: true
-            spacing: 8
+            Layout.preferredHeight: 54
+            radius: 27
+            color: Appearance.surfaceColor
 
-            Repeater {
-                model: [
-                    {
-                        "icon": "restart_alt",
-                        "action": () => WindowManager.restartComputer()
-                    },
-                    {
-                        "icon": "settings",
-                        "action": () => WindowManager.toggleSettingsVisible()
-                    },
-                    {
-                        "icon": "power_settings_new",
-                        "action": () => WindowManager.shutdownComputer()
-                    }
-                ]
+            Component {
+                id: actionButton
 
-                delegate: Rectangle {
-                    id: actionBtn
+                Item {
+                    id: btn
 
                     required property var modelData
+                    readonly property bool live: !!modelData.record && ScreenTools.recording
 
                     Layout.fillWidth: true
                     Layout.preferredWidth: 1
-                    Layout.preferredHeight: 40
-                    radius: 20
-                    color: ma.containsMouse ? Appearance.surfaceColor : "transparent"
-                    border.width: 1
-                    border.color: Appearance.outlineColor
-                    scale: ma.pressed ? 0.97 : 1
+                    Layout.fillHeight: true
+                    Accessible.name: modelData.name
 
-                    MaterialSymbol {
+                    Rectangle {
                         anchors.centerIn: parent
-                        icon: actionBtn.modelData.icon
-                        font.pixelSize: 18
-                        color: Appearance.fgColor
+                        width: 42
+                        height: 42
+                        radius: 21
+                        color: btn.live ? "#ff5f5f" : (btnArea.containsMouse ? Appearance.surfaceHighColor : "transparent")
+                        scale: btnArea.pressed ? 0.92 : 1
+
+                        MaterialSymbol {
+                            anchors.centerIn: parent
+                            icon: btn.live ? "stop" : btn.modelData.icon
+                            fill: btn.live ? 1 : 0
+                            font.pixelSize: 20
+                            color: btn.live ? Appearance.bgColor : Appearance.fgColor
+                        }
+
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: Appearance.animFast
+                            }
+                        }
+
+                        Behavior on scale {
+                            NumberAnimation {
+                                duration: Appearance.animFast
+                            }
+                        }
                     }
 
                     MouseArea {
-                        id: ma
+                        id: btnArea
 
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: actionBtn.modelData.action()
+                        onClicked: btn.modelData.action()
                     }
+                }
+            }
 
-                    Behavior on color {
-                        ColorAnimation {
-                            duration: Appearance.animFast
-                        }
-                    }
+            RowLayout {
+                anchors.fill: parent
+                anchors.margins: 6
+                spacing: 0
 
-                    Behavior on scale {
-                        NumberAnimation {
-                            duration: Appearance.animFast
+                Repeater {
+                    model: [
+                        {
+                            "icon": "colorize",
+                            "name": "Pick a colour",
+                            "action": () => ScreenTools.pickColor()
+                        },
+                        {
+                            "icon": "screenshot_region",
+                            "name": "Screenshot",
+                            "action": () => ScreenTools.screenshot()
+                        },
+                        {
+                            "icon": "videocam",
+                            "name": "Record screen",
+                            "record": true,
+                            "action": () => ScreenTools.toggleRecording()
                         }
-                    }
+                    ]
+                    delegate: actionButton
+                }
+
+                Rectangle {
+                    Layout.leftMargin: 4
+                    Layout.rightMargin: 4
+                    implicitWidth: 1
+                    implicitHeight: 22
+                    color: Appearance.outlineColor
+                }
+
+                Repeater {
+                    model: [
+                        {
+                            "icon": "settings",
+                            "name": "Settings",
+                            "action": () => WindowManager.toggleSettingsVisible()
+                        },
+                        {
+                            "icon": "restart_alt",
+                            "name": "Restart",
+                            "action": () => WindowManager.restartComputer()
+                        },
+                        {
+                            "icon": "power_settings_new",
+                            "name": "Shut down",
+                            "action": () => WindowManager.shutdownComputer()
+                        }
+                    ]
+                    delegate: actionButton
                 }
             }
         }

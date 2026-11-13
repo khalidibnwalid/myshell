@@ -44,7 +44,14 @@ Rectangle {
     MouseArea {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
-        onClicked: root.bodyClicked()
+        onClicked: {
+            // clicking the body runs the notification's default action, as the spec intends
+            const actions = root.notification ? root.notification.actions : [];
+            const action = actions.find(a => a.identifier === "default");
+            if (action)
+                action.invoke();
+            root.bodyClicked();
+        }
     }
 
     ColumnLayout {

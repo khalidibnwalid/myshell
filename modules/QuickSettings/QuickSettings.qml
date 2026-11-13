@@ -32,7 +32,7 @@ Scope {
 
     // click anywhere else to dismiss; the bar stays usable so its buttons can toggle
     HyprlandFocusGrab {
-        windows: [...panels.instances, ...WindowManager.barWindows]
+        windows: [...panels.instances, ...WindowManager.barWindows, ...WindowManager.barPopups]
         active: root.open
         onCleared: WindowManager.quickSettingsVisible = false
     }

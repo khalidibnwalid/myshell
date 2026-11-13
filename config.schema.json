@@ -48,6 +48,15 @@
         }
       }
     },
+    "capture": {
+      "type": "object",
+      "properties": {
+        "autoSave": { "type": "boolean", "description": "Also save each screenshot as a file; it is always copied to the clipboard" },
+        "screenshotDir": { "type": "string", "description": "Folder for saved screenshots" },
+        "recordingDir": { "type": "string", "description": "Folder for screen recordings" },
+        "recordAudio": { "type": "boolean", "description": "Record audio with the screen" }
+      }
+    },
     "clipboard": {
       "type": "object",
       "properties": {

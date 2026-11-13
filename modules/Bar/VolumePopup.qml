@@ -41,6 +41,8 @@ PanelWindow {
     implicitWidth: 226
     implicitHeight: 58
     color: "transparent"
+    Component.onCompleted: WindowManager.registerBarPopup(root)
+    Component.onDestruction: WindowManager.unregisterBarPopup(root)
 
     Timer {
         id: closeTimer

@@ -8,6 +8,7 @@ Singleton {
     readonly property alias keyboard: jsonAdapter.keyboard
     readonly property alias search: jsonAdapter.search
     readonly property alias clipboard: jsonAdapter.clipboard
+    readonly property alias capture: jsonAdapter.capture
 
     FileView {
         watchChanges: true
@@ -34,6 +35,17 @@ Singleton {
 
             layout: JsonObject {
                 property string barPosition: "right"
+            }
+
+            // screenshots and screen recordings
+            property JsonObject capture
+
+            capture: JsonObject {
+                // also save each screenshot as a file (it is always copied)
+                property bool autoSave: false
+                property string screenshotDir: "~/Pictures/Screenshots"
+                property string recordingDir: "~/Videos"
+                property bool recordAudio: false
             }
 
             property var keyboard: ({

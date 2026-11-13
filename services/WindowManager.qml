@@ -11,6 +11,16 @@ Singleton {
     property bool clipboardVisible: false
     // the bar windows, so a panel's click-outside grab can leave the bar usable
     property var barWindows: []
+    // small windows that belong to the bar (volume popup); they stay usable under a grab too
+    property var barPopups: []
+
+    function registerBarPopup(w) {
+        barPopups = barPopups.concat([w]);
+    }
+
+    function unregisterBarPopup(w) {
+        barPopups = barPopups.filter(p => p !== w);
+    }
 
     signal toggleQuickSettingsVisible
     signal setQuickSettingsVisible(bool visible)

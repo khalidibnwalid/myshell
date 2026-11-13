@@ -15,6 +15,23 @@ ColumnLayout {
         id: audio
     }
 
+    // shown while the screen is being recorded; click to stop
+    MaterialSymbol {
+        visible: ScreenTools.recording
+        Layout.alignment: Qt.AlignHCenter
+        icon: "stop_circle"
+        fill: 1
+        font.pixelSize: 22
+        color: "#ff5f5f"
+
+        MouseArea {
+            anchors.fill: parent
+            anchors.margins: -4
+            cursorShape: Qt.PointingHandCursor
+            onClicked: ScreenTools.stopRecording()
+        }
+    }
+
     // wifi / bluetooth / volume / battery -> open quick settings
     Item {
         Layout.alignment: Qt.AlignHCenter

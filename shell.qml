@@ -6,6 +6,7 @@ import "modules/Dock"
 import "modules/Notifications"
 import "modules/OSD"
 import "modules/QuickSettings"
+import "modules/ScreenTools"
 import "modules/Search"
 import "modules/Settings"
 import "modules/Workspaces"
@@ -30,6 +31,9 @@ Scope {
     }
 
     Clipboard {
+    }
+
+    ScreenTools {
     }
 
     VolumeOsd {

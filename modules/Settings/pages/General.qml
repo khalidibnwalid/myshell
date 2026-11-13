@@ -21,6 +21,18 @@ SettingsPage {
 
     SettingRow {
         Layout.fillWidth: true
+        title: "Save screenshots"
+        description: "Also keep a file in " + Config.capture.screenshotDir + "; screenshots are always copied"
+
+        PillButton {
+            text: Config.capture.autoSave ? "On" : "Off"
+            toggled: Config.capture.autoSave
+            onClicked: Config.capture.autoSave = !Config.capture.autoSave
+        }
+    }
+
+    SettingRow {
+        Layout.fillWidth: true
         last: true
         title: "Do not disturb"
         description: "Notifications arrive silently in the panel"

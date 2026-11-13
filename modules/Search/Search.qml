@@ -16,7 +16,7 @@ Scope {
 
     // click anywhere else to dismiss; the bar stays usable so its search button can toggle
     HyprlandFocusGrab {
-        windows: [...searchWindows.instances, ...Services.WindowManager.barWindows]
+        windows: [...searchWindows.instances, ...Services.WindowManager.barWindows, ...Services.WindowManager.barPopups]
         active: Services.WindowManager.searchVisible
         onCleared: Services.WindowManager.searchVisible = false
     }
