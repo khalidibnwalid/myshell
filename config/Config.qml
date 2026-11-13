@@ -10,6 +10,7 @@ Singleton {
     readonly property alias clipboard: jsonAdapter.clipboard
     readonly property alias capture: jsonAdapter.capture
     readonly property alias dock: jsonAdapter.dock
+    readonly property alias idle: jsonAdapter.idle
 
     FileView {
         watchChanges: true
@@ -26,6 +27,7 @@ Singleton {
                 property string fgColor: "#e5e1e7"
                 property string accentColor: "#c2c1ff"
                 property string accentColorLight: "#E3E3FA"
+                property string wallpaper: ""
                 property string highlightColor: "#54545f"
                 property string borderColor: "#000000"
                 property real opacity: 0.5
@@ -53,6 +55,14 @@ Singleton {
 
             dock: JsonObject {
                 property bool enabled: false
+            }
+
+            property JsonObject idle
+
+            idle: JsonObject {
+                property bool enabled: true
+                property int lockAfterMinutes: 5
+                property int screenOffAfterMinutes: 10
             }
 
             property var keyboard: ({

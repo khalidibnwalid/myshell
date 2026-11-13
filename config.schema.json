@@ -10,6 +10,7 @@
         "fgColor": { "type": "string", "format": "color" },
         "accentColor": { "type": "string", "format": "color" },
         "accentColorLight": { "type": "string", "format": "color" },
+        "wallpaper": { "type": "string", "description": "Image used as both the desktop and lock screen background" },
         "highlightColor": { "type": "string", "format": "color" },
         "borderColor": { "type": "string", "format": "color" },
         "fontFamily": { "type": "string" },
@@ -52,6 +53,14 @@
       "type": "object",
       "properties": {
         "enabled": { "type": "boolean", "description": "Show the bottom dock on empty workspaces and at the bottom screen edge" }
+      }
+    },
+    "idle": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean", "description": "Lock the session after inactivity" },
+        "lockAfterMinutes": { "type": "integer", "minimum": 1, "maximum": 120 },
+        "screenOffAfterMinutes": { "type": "integer", "minimum": 0, "maximum": 240, "description": "Turn off displays after inactivity; 0 disables this" }
       }
     },
     "capture": {

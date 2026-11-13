@@ -9,6 +9,7 @@ Singleton {
     property bool settingsVisible: false
     property bool searchVisible: false
     property bool clipboardVisible: false
+    property int idlePauseRemainingSeconds: 0
     // the bar windows, so a panel's click-outside grab can leave the bar usable
     property var barWindows: []
     // small windows that belong to the bar (volume popup); they stay usable under a grab too
@@ -22,6 +23,10 @@ Singleton {
         barPopups = barPopups.filter(p => p !== w);
     }
 
+    function toggleIdlePause() {
+        idlePauseRemainingSeconds = idlePauseRemainingSeconds > 0 ? 0 : 3600;
+    }
+
     signal toggleQuickSettingsVisible
     signal setQuickSettingsVisible(bool visible)
     signal toggleSettingsVisible
@@ -31,6 +36,13 @@ Singleton {
     onSetQuickSettingsVisible: quickSettingsVisible = visible
     onToggleSettingsVisible: settingsVisible = !settingsVisible
     onToggleSearchVisible: searchVisible = !searchVisible
+
+    Timer {
+        interval: 1000
+        repeat: true
+        running: root.idlePauseRemainingSeconds > 0
+        onTriggered: root.idlePauseRemainingSeconds = Math.max(0, root.idlePauseRemainingSeconds - 1)
+    }
 
     function shutdownComputer() {
         shutdownProc.exec(["systemctl", "poweroff"]);

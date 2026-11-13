@@ -16,6 +16,8 @@ Required packages:
 - `bluez` — provides Bluetooth support. `busctl` from `systemd` reads Bluetooth signal strength.
 - `pipewire`, `pipewire-audio`, and `wireplumber` — provide audio devices and routing. Add `pipewire-pulse` for PulseAudio compatibility with other applications.
 - `upower` — provides battery and power-profile information.
+- `swaybg` — applies the shared desktop and lock screen wallpaper.
+- `procps-ng` — provides `pkill` so wallpaper changes replace the previous `swaybg` process.
 - `brightnessctl` — controls display backlight brightness.
 - `xdg-utils` — provides `xdg-open` for opening files and web links.
 - `bc` — provides calculator results in the launcher.
@@ -47,3 +49,9 @@ sudo systemctl enable --now NetworkManager bluetooth
 ```
 
 PipeWire, WirePlumber, and UPower should also be available to the user session. Backlight control requires a supported backlight device and suitable permissions. Wi-Fi, Bluetooth, battery, and temperature features naturally depend on compatible hardware.
+
+### Idle lock and wallpaper
+
+The shell includes its own idle monitor and Wayland session lock. It authenticates through the system PAM `login` service and defaults to locking after 5 minutes, with displays turning off after 10 minutes. Configure the timers in Settings → General. The Quick Settings footer can pause auto-lock for an hour without changing the saved settings. `Super + L` locks immediately.
+
+Choose a wallpaper in Settings → Appearance. The selected image is shared by the desktop and lock screen.

@@ -5,6 +5,7 @@
     "fgColor": "#e5e1e7",
     "accentColor": "#EBCB8B",
     "accentColorLight": "#d7c196",
+    "wallpaper": "/home/khalid/Pictures/Wallpapers/cat.jpg",
     "highlightColor": "#000000",
     "borderColor": "#000000",
     "opacity": 0.5
@@ -26,5 +27,10 @@
       "Spanish": "ES",
       "Italian": "IT"
     }
+  },
+  "idle": {
+    "enabled": true,
+    "lockAfterMinutes": 5,
+    "screenOffAfterMinutes": 10
   }
 }

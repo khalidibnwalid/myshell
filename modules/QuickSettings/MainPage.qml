@@ -2,6 +2,7 @@ import "../../components/"
 import "../../config/"
 import "../../services/"
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 
 Item {
@@ -227,24 +228,28 @@ Item {
                     id: btn
 
                     required property var modelData
-                    readonly property bool live: !!modelData.record && ScreenTools.recording
+                    readonly property bool live: (!!modelData.record && ScreenTools.recording) || (!!modelData.pause && WindowManager.idlePauseRemainingSeconds > 0)
 
                     Layout.fillWidth: true
                     Layout.preferredWidth: 1
                     Layout.fillHeight: true
                     Accessible.name: modelData.name
+                    ToolTip.visible: btnArea.containsMouse
+                    ToolTip.text: modelData.pause && WindowManager.idlePauseRemainingSeconds > 0
+                        ? "Resume auto-lock (" + Math.ceil(WindowManager.idlePauseRemainingSeconds / 60) + " min left)"
+                        : modelData.name
 
                     Rectangle {
                         anchors.centerIn: parent
                         width: 42
                         height: 42
                         radius: 21
-                        color: btn.live ? "#ff5f5f" : (btnArea.containsMouse ? Appearance.surfaceHighColor : "transparent")
+                        color: btn.live ? (btn.modelData.pause ? Appearance.accentColor : "#ff5f5f") : (btnArea.containsMouse ? Appearance.surfaceHighColor : "transparent")
                         scale: btnArea.pressed ? 0.92 : 1
 
                         MaterialSymbol {
                             anchors.centerIn: parent
-                            icon: btn.live ? "stop" : btn.modelData.icon
+                            icon: btn.modelData.pause && btn.live ? "lock_clock" : (btn.live ? "stop" : btn.modelData.icon)
                             fill: btn.live ? 1 : 0
                             font.pixelSize: 20
                             color: btn.live ? Appearance.bgColor : Appearance.fgColor
@@ -311,6 +316,12 @@ Item {
 
                 Repeater {
                     model: [
+                        {
+                            "icon": WindowManager.idlePauseRemainingSeconds > 0 ? "lock_clock" : "bedtime_off",
+                            "name": WindowManager.idlePauseRemainingSeconds > 0 ? "Resume auto-lock" : "Pause auto-lock for one hour",
+                            "pause": true,
+                            "action": () => WindowManager.toggleIdlePause()
+                        },
                         {
                             "icon": "settings",
                             "name": "Settings",

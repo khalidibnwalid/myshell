@@ -1,6 +1,7 @@
 import "../../../components"
 import "../../../config"
 import QtQuick
+import QtQuick.Dialogs
 import QtQuick.Layouts
 
 SettingsPage {
@@ -10,9 +11,33 @@ SettingsPage {
 
     title: "Appearance"
 
+    FileDialog {
+        id: wallpaperDialog
+        title: "Choose desktop and lock screen wallpaper"
+        nameFilters: ["Images (*.png *.jpg *.jpeg *.webp *.bmp)"]
+        onAccepted: Config.appearance.wallpaper = selectedFile.toLocalFile()
+    }
+
     SettingRow {
         Layout.fillWidth: true
         first: true
+        title: "Wallpaper"
+        description: Config.appearance.wallpaper ? Config.appearance.wallpaper.split("/").pop() + " · shared by desktop and lock screen" : "Choose the same background for desktop and lock screen"
+
+        PillButton {
+            text: "Choose"
+            onClicked: wallpaperDialog.open()
+        }
+
+        PillButton {
+            visible: Config.appearance.wallpaper !== ""
+            text: "Clear"
+            onClicked: Config.appearance.wallpaper = ""
+        }
+    }
+
+    SettingRow {
+        Layout.fillWidth: true
         title: "Accent colour"
         description: "Used for active tiles, sliders and highlights"
 
