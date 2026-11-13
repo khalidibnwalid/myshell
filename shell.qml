@@ -15,7 +15,12 @@ import "modules/Workspaces"
 import "services" as Services
 
 Scope {
-    Component.onCompleted: Services.Wallpaper.apply()
+    Component.onCompleted: {
+        Services.Wallpaper.apply();
+        // these two apply their saved settings on their own once created
+        Services.NightLight.refresh();
+        Services.Displays.applySaved();
+    }
 
     Dock {
     }

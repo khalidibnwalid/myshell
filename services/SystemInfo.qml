@@ -20,6 +20,20 @@ Singleton {
     property real temperature: -1
     property real cpuTemperature: -1
     property string gpuName: "Loading…"
+    // 0–1, averaged over the time between two refreshLive() calls
+    property real cpuUsage: 0
+    property var cpuSample: null
+    property real uptimeSeconds: 0
+    property string kernel: ""
+    property string hostname: ""
+    property string osName: ""
+    readonly property string uptimeText: {
+        const s = Math.floor(uptimeSeconds);
+        const d = Math.floor(s / 86400);
+        const h = Math.floor((s % 86400) / 3600);
+        const m = Math.floor((s % 3600) / 60);
+        return (d > 0 ? d + "d " : "") + (h > 0 || d > 0 ? h + "h " : "") + m + "m";
+    }
 
     readonly property real memoryPercent: memoryTotal > 0 ? memoryUsed / memoryTotal : 0
 
@@ -60,6 +74,14 @@ Singleton {
         diskProc.running = true;
         temperatureProc.running = true;
         gpuProc.running = true;
+    }
+
+    // the cheap readings, for a page that updates every couple of seconds
+    function refreshLive() {
+        memoryProc.running = true;
+        diskProc.running = true;
+        temperatureProc.running = true;
+        liveProc.running = true;
     }
 
     function readTemperatures(value, results) {
@@ -158,6 +180,47 @@ Singleton {
                     root.temperature = -1;
                     root.cpuTemperature = -1;
                 }
+            }
+        }
+    }
+
+    Process {
+        id: liveProc
+        command: ["sh", "-c", "head -n1 /proc/stat; cut -d' ' -f1 /proc/uptime"]
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const lines = text.trim().split(/\r?\n/);
+                const ticks = (lines[0] || "").trim().split(/\s+/).slice(1).map(Number);
+                if (ticks.length >= 5 && ticks.every(Number.isFinite)) {
+                    const total = ticks.reduce((a, b) => a + b, 0);
+                    const idle = ticks[3] + ticks[4];
+                    const last = root.cpuSample;
+                    if (last && total > last.total)
+                        root.cpuUsage = Math.max(0, Math.min(1, 1 - (idle - last.idle) / (total - last.total)));
+                    root.cpuSample = {
+                        "total": total,
+                        "idle": idle
+                    };
+                }
+                const up = Number(lines[1]);
+                if (Number.isFinite(up))
+                    root.uptimeSeconds = up;
+            }
+        }
+    }
+
+    Process {
+        id: osProc
+        running: true
+        command: ["sh", "-c", "uname -r; uname -n; . /etc/os-release 2>/dev/null; echo \"$PRETTY_NAME\""]
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const lines = text.split(/\r?\n/);
+                root.kernel = (lines[0] || "").trim();
+                root.hostname = (lines[1] || "").trim();
+                root.osName = (lines[2] || "").trim() || "Linux";
             }
         }
     }

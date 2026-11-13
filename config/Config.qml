@@ -1,3 +1,4 @@
+import QtQuick
 import Quickshell
 import Quickshell.Io
 pragma Singleton
@@ -11,10 +12,38 @@ Singleton {
     readonly property alias capture: jsonAdapter.capture
     readonly property alias dock: jsonAdapter.dock
     readonly property alias idle: jsonAdapter.idle
+    readonly property alias bar: jsonAdapter.bar
+    readonly property alias notifications: jsonAdapter.notifications
+    readonly property alias display: jsonAdapter.display
+    readonly property alias monitors: jsonAdapter.monitors
+
+    function setMonitors(value) {
+        jsonAdapter.monitors = value;
+    }
+
+    // --- where the bar is, for everything that lines up with it ---
+    readonly property string barPosition: ["left", "right", "top", "bottom"].indexOf(layout.barPosition) >= 0 ? layout.barPosition : "right"
+    readonly property bool barHorizontal: barPosition === "top" || barPosition === "bottom"
+    // thickness of the bar
+    readonly property int barSize: 50
+    // side panels (quick settings, toasts, OSD) sit on the right unless the bar is on the left
+    readonly property bool panelRight: barPosition !== "left"
+
+    // The keyboard, search and clipboard sections are plain objects, so a change
+    // has to replace the whole section: Config.setIn("search", "browser", "firefox")
+    function setIn(section, key, value) {
+        const copy = JSON.parse(JSON.stringify(jsonAdapter[section] || {}));
+        copy[key] = value;
+        jsonAdapter[section] = copy;
+    }
 
     FileView {
+        id: file
+
         watchChanges: true
         onFileChanged: reload()
+        // changes made in the Settings window are written back to config.json
+        onAdapterUpdated: saveTimer.restart()
         path: Qt.resolvedUrl("../config.json")
 
         JsonAdapter {
@@ -28,6 +57,8 @@ Singleton {
                 property string accentColor: "#c2c1ff"
                 property string accentColorLight: "#E3E3FA"
                 property string wallpaper: ""
+                // folder shown in the wallpaper picker
+                property string wallpaperDir: "~/Pictures/Wallpapers"
                 property string highlightColor: "#54545f"
                 property string borderColor: "#000000"
                 property real opacity: 0.5
@@ -57,6 +88,35 @@ Singleton {
                 property bool enabled: false
             }
 
+            property JsonObject display
+
+            display: JsonObject {
+                // screen filter through hyprsunset: colour temperature (K) and brightness (%)
+                property bool nightLight: true
+                property int nightLightTemperature: 5500
+                property int nightLightGamma: 80
+            }
+
+            // monitor name -> { mode: "1920x1080@60.00Hz", scale: 1 }, applied when the shell starts.
+            // Kept at the top level: a plain-object property nested inside a JsonObject
+            // crashes Quickshell when the file is read back.
+            property var monitors: ({
+            })
+
+            property JsonObject bar
+
+            bar: JsonObject {
+                property bool clock24h: false
+            }
+
+            property JsonObject notifications
+
+            notifications: JsonObject {
+                property bool dnd: false
+                // how long a toast stays when the app does not ask for a time
+                property int popupSeconds: 5
+            }
+
             property JsonObject idle
 
             idle: JsonObject {
@@ -84,6 +144,14 @@ Singleton {
             })
         }
 
+    }
+
+    // one write for a burst of changes (dragging a slider)
+    Timer {
+        id: saveTimer
+
+        interval: 400
+        onTriggered: file.writeAdapter()
     }
 
 }

@@ -5,113 +5,339 @@ import "./pages"
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Quickshell.Io
 
 ApplicationWindow {
     id: root
 
+    // keywords are what the sidebar search matches besides the name
     readonly property var pages: [
         {
-            "name": "General",
-            "icon": "tune"
+            "key": "wifi",
+            "name": "Network",
+            "icon": "wifi",
+            "group": "Connections",
+            "keywords": "wifi wi-fi internet wireless password ip address ethernet wired cable lan",
+            "component": wifiPage
         },
         {
-            "name": "System",
-            "icon": "memory"
+            "key": "bluetooth",
+            "name": "Bluetooth",
+            "icon": "bluetooth",
+            "group": "Connections",
+            "keywords": "devices pair headphones discoverable",
+            "component": bluetoothPage
         },
         {
+            "key": "sound",
+            "name": "Sound",
+            "icon": "volume_up",
+            "group": "Device",
+            "keywords": "audio volume output input microphone speaker mute applications",
+            "component": soundPage
+        },
+        {
+            "key": "display",
+            "name": "Display",
+            "icon": "desktop_windows",
+            "group": "Device",
+            "keywords": "brightness night light temperature monitor screen resolution scale",
+            "component": displayPage
+        },
+        {
+            "key": "power",
+            "name": "Power",
+            "icon": "bolt",
+            "group": "Device",
+            "keywords": "battery profile performance saver suspend restart shut down log out session",
+            "component": powerPage
+        },
+        {
+            "key": "keyboard",
+            "name": "Keyboard",
+            "icon": "keyboard",
+            "group": "Device",
+            "keywords": "layout language input labels",
+            "component": keyboardPage
+        },
+        {
+            "key": "appearance",
             "name": "Appearance",
-            "icon": "palette"
+            "icon": "palette",
+            "group": "Personalisation",
+            "keywords": "wallpaper theme accent colour color background text opacity font transparency",
+            "component": appearancePage
         },
         {
+            "key": "bar",
+            "name": "Bar & dock",
+            "icon": "dock_to_right",
+            "group": "Personalisation",
+            "keywords": "position left right clock 24 hour pinned apps",
+            "component": barPage
+        },
+        {
+            "key": "notifications",
+            "name": "Notifications",
+            "icon": "notifications",
+            "group": "Personalisation",
+            "keywords": "do not disturb dnd toast popup duration clear",
+            "component": notificationsPage
+        },
+        {
+            "key": "lock",
+            "name": "Lock & idle",
+            "icon": "lock",
+            "group": "Personalisation",
+            "keywords": "lock screen auto idle timeout displays off pause",
+            "component": lockPage
+        },
+        {
+            "key": "launcher",
+            "name": "Launcher",
+            "icon": "search",
+            "group": "Tools",
+            "keywords": "search browser bangs web engine private usage history",
+            "component": launcherPage
+        },
+        {
+            "key": "capture",
+            "name": "Clipboard & capture",
+            "icon": "content_paste",
+            "group": "Tools",
+            "keywords": "clipboard history paste screenshot recording folder audio",
+            "component": capturePage
+        },
+        {
+            "key": "system",
+            "name": "System",
+            "icon": "memory",
+            "group": "System",
+            "keywords": "cpu processor memory ram storage disk temperature gpu graphics uptime kernel",
+            "component": systemPage
+        },
+        {
+            "key": "about",
             "name": "About",
-            "icon": "info"
+            "icon": "info",
+            "group": "System",
+            "keywords": "version config file reload dependencies tools ipc keybind",
+            "component": aboutPage
         }
     ]
-    property int currentIndex: 0
+    property string currentKey: "wifi"
+    property string query: ""
+    readonly property var shownPages: {
+        const q = query.trim().toLowerCase();
+        if (q === "")
+            return pages;
+        return pages.filter(p => (p.name + " " + p.keywords).toLowerCase().includes(q));
+    }
 
-    width: 820
-    height: 560
+    function showPage(name) {
+        const wanted = String(name || "").toLowerCase();
+        if (wanted === "")
+            return;
+        const page = pages.find(p => p.key === wanted || p.name.toLowerCase() === wanted);
+        if (page)
+            currentKey = page.key;
+    }
+
+    width: 980
+    height: 680
+    minimumWidth: 720
+    minimumHeight: 440
     title: "Settings"
     visible: WindowManager.settingsVisible
     color: Appearance.bgColor
     onClosing: WindowManager.settingsVisible = false
+    onVisibleChanged: {
+        if (visible && WindowManager.settingsPage !== "") {
+            showPage(WindowManager.settingsPage);
+            WindowManager.settingsPage = "";
+        }
+    }
+
+    Connections {
+        function onSettingsPageChanged() {
+            if (WindowManager.settingsPage !== "" && root.visible) {
+                root.showPage(WindowManager.settingsPage);
+                WindowManager.settingsPage = "";
+            }
+        }
+
+        target: WindowManager
+    }
+
+    // qs ipc call settings toggle | open | close | page <name>
+    IpcHandler {
+        function toggle(): void {
+            WindowManager.settingsVisible = !WindowManager.settingsVisible;
+        }
+
+        function open(): void {
+            WindowManager.openSettings("");
+        }
+
+        function close(): void {
+            WindowManager.settingsVisible = false;
+        }
+
+        function page(name: string): void {
+            WindowManager.openSettings(name);
+        }
+
+        target: "settings"
+    }
+
+    Shortcut {
+        sequence: "Ctrl+F"
+        onActivated: search.focusInput()
+    }
+
+    Shortcut {
+        sequence: "Escape"
+        enabled: root.query !== ""
+        onActivated: {
+            search.clear();
+            root.query = "";
+        }
+    }
 
     RowLayout {
         anchors.fill: parent
         spacing: 0
 
-        // --- sidebar ---
+        // --- sidebar: fixed width, the page area takes the rest ---
         ColumnLayout {
-            Layout.preferredWidth: 216
+            Layout.fillWidth: false
+            Layout.preferredWidth: 232
+            Layout.minimumWidth: 232
+            Layout.maximumWidth: 232
             Layout.fillHeight: true
             Layout.margins: 12
-            spacing: 3
+            spacing: 10
 
             StyledText {
-                Layout.leftMargin: 14
-                Layout.topMargin: 14
-                Layout.bottomMargin: 14
+                Layout.leftMargin: 12
+                Layout.topMargin: 10
                 text: "Settings"
                 font.pixelSize: 18
                 font.weight: Font.Bold
             }
 
-            Repeater {
-                model: root.pages
+            FieldInput {
+                id: search
 
-                delegate: Rectangle {
-                    id: navItem
-
-                    required property var modelData
-                    required property int index
-                    readonly property bool current: root.currentIndex === index
-                    readonly property color contentColor: current ? Appearance.onAccentColor : Appearance.fgColor
-
-                    Layout.fillWidth: true
-                    implicitHeight: 44
-                    radius: 22
-                    color: current ? Appearance.accentColor : (navArea.containsMouse ? Appearance.surfaceColor : "transparent")
-
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.leftMargin: 16
-                        anchors.rightMargin: 16
-                        spacing: 12
-
-                        MaterialSymbol {
-                            icon: navItem.modelData.icon
-                            fill: navItem.current ? 1 : 0
-                            font.pixelSize: 20
-                            color: navItem.contentColor
-                        }
-
-                        StyledText {
-                            Layout.fillWidth: true
-                            text: navItem.modelData.name
-                            font.weight: Font.Medium
-                            color: navItem.contentColor
-                        }
-                    }
-
-                    MouseArea {
-                        id: navArea
-
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.currentIndex = navItem.index
-                    }
-
-                    Behavior on color {
-                        ColorAnimation {
-                            duration: Appearance.animFast
-                        }
+                Layout.fillWidth: true
+                icon: "search"
+                placeholder: "Search settings"
+                onEdited: text => root.query = text
+                onAccepted: {
+                    if (root.shownPages.length > 0) {
+                        root.currentKey = root.shownPages[0].key;
+                        search.clear();
+                        root.query = "";
                     }
                 }
             }
 
-            Item {
+            Flickable {
+                Layout.fillWidth: true
                 Layout.fillHeight: true
+                contentHeight: nav.implicitHeight
+                clip: true
+                boundsBehavior: Flickable.StopAtBounds
+
+                ColumnLayout {
+                    id: nav
+
+                    width: parent.width
+                    spacing: 3
+
+                    Repeater {
+                        model: root.shownPages
+
+                        delegate: ColumnLayout {
+                            id: navEntry
+
+                            required property var modelData
+                            required property int index
+                            readonly property bool current: root.currentKey === modelData.key
+                            readonly property color contentColor: current ? Appearance.onAccentColor : Appearance.fgColor
+                            // group heading above the first page of each group (not while searching)
+                            readonly property bool startsGroup: root.query.trim() === "" && (index === 0 || root.shownPages[index - 1].group !== modelData.group)
+
+                            Layout.fillWidth: true
+                            spacing: 3
+
+                            StyledText {
+                                Layout.leftMargin: 14
+                                Layout.topMargin: navEntry.index === 0 ? 2 : 12
+                                Layout.bottomMargin: 2
+                                visible: navEntry.startsGroup
+                                text: navEntry.modelData.group
+                                color: Appearance.mutedColor
+                                font.pixelSize: 11
+                                font.weight: Font.DemiBold
+                            }
+
+                            Rectangle {
+                                Layout.fillWidth: true
+                                implicitHeight: 40
+                                radius: 20
+                                color: navEntry.current ? Appearance.accentColor : (navArea.containsMouse ? Appearance.surfaceColor : "transparent")
+
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.leftMargin: 14
+                                    anchors.rightMargin: 14
+                                    spacing: 12
+
+                                    MaterialSymbol {
+                                        icon: navEntry.modelData.icon
+                                        fill: navEntry.current ? 1 : 0
+                                        font.pixelSize: 20
+                                        color: navEntry.contentColor
+                                    }
+
+                                    StyledText {
+                                        Layout.fillWidth: true
+                                        text: navEntry.modelData.name
+                                        elide: Text.ElideRight
+                                        font.weight: Font.Medium
+                                        color: navEntry.contentColor
+                                    }
+                                }
+
+                                MouseArea {
+                                    id: navArea
+
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: root.currentKey = navEntry.modelData.key
+                                }
+
+                                Behavior on color {
+                                    ColorAnimation {
+                                        duration: Appearance.animFast
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    StyledText {
+                        Layout.fillWidth: true
+                        Layout.topMargin: 16
+                        visible: root.shownPages.length === 0
+                        horizontalAlignment: Text.AlignHCenter
+                        text: "No settings match"
+                        color: Appearance.mutedColor
+                        font.pixelSize: 13
+                    }
+                }
             }
         }
 
@@ -123,19 +349,22 @@ ApplicationWindow {
             Layout.leftMargin: 0
             radius: 24
             color: Appearance.surfaceColor
+            clip: true
 
             Repeater {
-                model: [generalPage, systemPage, appearancePage, aboutPage]
+                model: root.pages
 
+                // a page only exists while it is shown, so its timers and
+                // background commands stop when you leave it or close the window
                 delegate: Loader {
                     id: pageLoader
 
                     required property var modelData
-                    required property int index
-                    readonly property bool current: root.currentIndex === index
+                    readonly property bool current: root.currentKey === modelData.key
 
                     anchors.fill: parent
-                    sourceComponent: modelData
+                    active: root.visible && (current || opacity > 0)
+                    sourceComponent: modelData.component
                     visible: opacity > 0
                     opacity: current ? 1 : 0
 
@@ -163,16 +392,44 @@ ApplicationWindow {
     }
 
     Component {
-        id: generalPage
+        id: wifiPage
 
-        General {
+        WifiPage {
         }
     }
 
     Component {
-        id: systemPage
+        id: bluetoothPage
 
-        SystemPage {
+        BluetoothPage {
+        }
+    }
+
+    Component {
+        id: soundPage
+
+        SoundPage {
+        }
+    }
+
+    Component {
+        id: displayPage
+
+        DisplayPage {
+        }
+    }
+
+    Component {
+        id: powerPage
+
+        PowerPage {
+        }
+    }
+
+    Component {
+        id: keyboardPage
+
+        KeyboardPage {
         }
     }
 
@@ -184,9 +441,51 @@ ApplicationWindow {
     }
 
     Component {
+        id: barPage
+
+        BarPage {
+        }
+    }
+
+    Component {
+        id: notificationsPage
+
+        NotificationsPage {
+        }
+    }
+
+    Component {
+        id: lockPage
+
+        LockPage {
+        }
+    }
+
+    Component {
+        id: launcherPage
+
+        LauncherPage {
+        }
+    }
+
+    Component {
+        id: capturePage
+
+        CapturePage {
+        }
+    }
+
+    Component {
+        id: systemPage
+
+        SystemPage {
+        }
+    }
+
+    Component {
         id: aboutPage
 
-        About {
+        AboutPage {
         }
     }
 }

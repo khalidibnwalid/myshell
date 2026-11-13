@@ -8,8 +8,8 @@ import Quickshell
 Scope {
     PanelWindow {
         anchors.top: true
-        anchors.right: Config.layout.barPosition === "right"
-        anchors.left: Config.layout.barPosition === "left"
+        anchors.right: Config.panelRight
+        anchors.left: !Config.panelRight
         margins.top: 10
         margins.right: 10
         margins.left: 10
@@ -59,7 +59,7 @@ Scope {
                 onCloseRequested: NotificationService.dismiss(model.nid)
 
                 Timer {
-                    interval: toast.model.timeout > 0 ? toast.model.timeout : 5000
+                    interval: toast.model.timeout > 0 ? toast.model.timeout : Math.max(1, Config.notifications.popupSeconds) * 1000
                     running: true
                     onTriggered: NotificationService.hidePopup(toast.model.nid)
                 }

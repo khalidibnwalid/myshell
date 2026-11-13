@@ -40,6 +40,11 @@ These optional packages enable additional hardware readings on the System Info p
 - `lm_sensors` — provides `sensors` for temperature readings. Support depends on the hardware and sensor configuration.
 - `pciutils` — provides `lspci` for graphics-device identification.
 
+### Optional settings tools
+
+- `hyprsunset` — running in the background, it enables the night light controls in Settings → Display.
+- `matugen` — enables "Match the wallpaper" in Settings → Appearance.
+
 ### Services and hardware
 
 Network, Bluetooth, audio, and power controls require their corresponding system services to be running. On a typical system, enable NetworkManager and BlueZ with:
@@ -52,6 +57,10 @@ PipeWire, WirePlumber, and UPower should also be available to the user session. 
 
 ### Idle lock and wallpaper
 
-The shell includes its own idle monitor and Wayland session lock. It authenticates through the system PAM `login` service and defaults to locking after 5 minutes, with displays turning off after 10 minutes. Configure the timers in Settings → General. The Quick Settings footer can pause auto-lock for an hour without changing the saved settings. `Super + L` locks immediately.
+The shell includes its own idle monitor and Wayland session lock. It authenticates through the system PAM `login` service and defaults to locking after 5 minutes, with displays turning off after 10 minutes. Configure the timers in Settings → Lock & idle. The Quick Settings footer can pause auto-lock for an hour without changing the saved settings. `Super + L` locks immediately.
 
 Choose a wallpaper in Settings → Appearance. The selected image is shared by the desktop and lock screen.
+
+### Settings window
+
+Open it from the Quick Settings footer, or bind a key to `qs ipc call settings toggle` (also `open`, `close`, and `page <name>`, e.g. `page appearance`). Everything changed there is written to `config.json`; Settings → About lists any missing command-line tools.

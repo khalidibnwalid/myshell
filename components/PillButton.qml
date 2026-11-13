@@ -18,6 +18,7 @@ Rectangle {
     radius: height / 2
     color: toggled ? (mouseArea.containsMouse ? Appearance.accentColorLight : Appearance.accentColor) : (mouseArea.containsMouse ? Appearance.surfaceHighColor : Appearance.surfaceColor)
     scale: mouseArea.pressed ? 0.96 : 1
+    opacity: enabled ? 1 : 0.45
 
     RowLayout {
         id: row

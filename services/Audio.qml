@@ -12,7 +12,7 @@ Scope {
     // Explicitly handle null/undefined states to prevent NaN at startup
     // QML bindings are reactive, so these will update once Pipewire connects.
     property real volume: defaultSink && defaultSink.audio ? defaultSink.audio.volume : 0
-    property bool mute: defaultSink && defaultSink.audio ? defaultSink.audio.mute : false
+    property bool mute: defaultSink && defaultSink.audio ? defaultSink.audio.muted : false
 
     function setVolume(newVolume) {
         if (defaultSink && defaultSink.audio)
@@ -22,7 +22,7 @@ Scope {
 
     function setMute(muted) {
         if (defaultSink && defaultSink.audio)
-            defaultSink.audio.mute = muted;
+            defaultSink.audio.muted = muted;
 
     }
 

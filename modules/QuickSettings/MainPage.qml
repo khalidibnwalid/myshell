@@ -52,7 +52,7 @@ Item {
             Layout.bottomMargin: 2
 
             StyledText {
-                text: Time.format("hh:mm AP")
+                text: Time.format(Config.bar.clock24h ? "HH:mm" : "hh:mm AP")
                 font.pixelSize: 32
                 font.weight: Font.Bold
                 font.letterSpacing: -0.5

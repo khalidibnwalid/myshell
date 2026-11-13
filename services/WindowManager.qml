@@ -5,8 +5,12 @@ import Quickshell
 import Quickshell.Io
 
 Singleton {
+    id: root
+
     property bool quickSettingsVisible: false
     property bool settingsVisible: false
+    // page the Settings window should show next time it opens ("" keeps the current one)
+    property string settingsPage: ""
     property bool searchVisible: false
     property bool clipboardVisible: false
     property int idlePauseRemainingSeconds: 0
@@ -31,6 +35,13 @@ Singleton {
     signal setQuickSettingsVisible(bool visible)
     signal toggleSettingsVisible
     signal toggleSearchVisible
+    // handled by the Idle module, which owns the lock screen
+    signal lockRequested
+
+    function openSettings(page) {
+        settingsPage = page || "";
+        settingsVisible = true;
+    }
 
     onToggleQuickSettingsVisible: quickSettingsVisible = !quickSettingsVisible
     onSetQuickSettingsVisible: quickSettingsVisible = visible
@@ -50,6 +61,14 @@ Singleton {
 
     function restartComputer() {
         restartProc.exec(["systemctl", "reboot"]);
+    }
+
+    function suspendComputer() {
+        Quickshell.execDetached(["systemctl", "suspend"]);
+    }
+
+    function logOut() {
+        Quickshell.execDetached(["hyprctl", "dispatch", "exit"]);
     }
 
     Process {

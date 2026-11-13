@@ -58,6 +58,14 @@ Scope {
         onPressed: root.lockNow()
     }
 
+    Connections {
+        function onLockRequested() {
+            root.lockNow();
+        }
+
+        target: WindowManager
+    }
+
     IdleMonitor {
         timeout: Math.max(1, Config.idle.lockAfterMinutes) * 60
         enabled: Config.idle.enabled && Config.idle.lockAfterMinutes > 0 && WindowManager.idlePauseRemainingSeconds <= 0
@@ -168,7 +176,7 @@ Scope {
                             }
 
                             StyledText {
-                                text: Time.format("hh:mm AP")
+                                text: Time.format(Config.bar.clock24h ? "HH:mm" : "hh:mm AP")
                                 font.pixelSize: 54
                                 font.weight: Font.Bold
                             }

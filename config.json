@@ -1,36 +1,65 @@
 {
-  "$schema": "./config.schema.json",
-  "appearance": {
-    "bgColor": "#0B0B0D",
-    "fgColor": "#e5e1e7",
-    "accentColor": "#EBCB8B",
-    "accentColorLight": "#d7c196",
-    "wallpaper": "/home/khalid/Pictures/Wallpapers/cat.jpg",
-    "highlightColor": "#000000",
-    "borderColor": "#000000",
-    "opacity": 0.5
-  },
-  "search": {
-    "browser": "helium-browser",
-    "browserClass": "helium",
-    "privateFlag": "--incognito",
-    "defaultBang": "g",
-    "bangs": {}
-  },
-  "keyboard": {
-    "layouts": {
-      "English": "EN",
-      "Arabic": "عربي",
-      "Russian": "RU",
-      "French": "FR",
-      "German": "DE",
-      "Spanish": "ES",
-      "Italian": "IT"
+    "appearance": {
+        "accentColor": "#ebcb8b",
+        "accentColorLight": "#ffdf9f",
+        "bgColor": "#0b0b0d",
+        "borderColor": "#000000",
+        "fgColor": "#e5e1e7",
+        "fontFamily": "Adwaita Sans",
+        "highlightColor": "#000000",
+        "opacity": 0.5,
+        "wallpaper": "/home/khalid/Pictures/Wallpapers/cat.jpg",
+        "wallpaperDir": "~/Pictures/Wallpapers"
+    },
+    "bar": {
+        "clock24h": false
+    },
+    "capture": {
+        "autoSave": false,
+        "recordAudio": false,
+        "recordingDir": "~/Videos",
+        "screenshotDir": "~/Pictures/Screenshots"
+    },
+    "clipboard": {
+        "autoPaste": true
+    },
+    "display": {
+        "nightLight": true,
+        "nightLightGamma": 80,
+        "nightLightTemperature": 5500
+    },
+    "dock": {
+        "enabled": false
+    },
+    "idle": {
+        "enabled": true,
+        "lockAfterMinutes": 5,
+        "screenOffAfterMinutes": 10
+    },
+    "keyboard": {
+        "layouts": {
+            "Arabic": "عربي",
+            "English": "EN",
+            "French": "FR",
+            "German": "DE",
+            "Italian": "IT",
+            "Russian": "RU",
+            "Spanish": "ES"
+        }
+    },
+    "layout": {
+        "barPosition": "right"
+    },
+    "monitors": {},
+    "notifications": {
+        "dnd": false,
+        "popupSeconds": 5
+    },
+    "search": {
+        "bangs": {},
+        "browser": "helium-browser",
+        "browserClass": "helium",
+        "defaultBang": "g",
+        "privateFlag": "--incognito"
     }
-  },
-  "idle": {
-    "enabled": true,
-    "lockAfterMinutes": 5,
-    "screenOffAfterMinutes": 10
-  }
 }

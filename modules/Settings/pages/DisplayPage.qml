@@ -1,0 +1,207 @@
+import "../../../components"
+import "../../../config"
+import "../../../services"
+import QtQuick
+import QtQuick.Layouts
+import Quickshell.Hyprland
+
+SettingsPage {
+    id: page
+
+    title: "Display"
+    Component.onCompleted: {
+        NightLight.refresh();
+        Hyprland.refreshMonitors();
+    }
+    // an unconfirmed change does not outlive the page
+    Component.onDestruction: Displays.revert()
+
+    Backlight {
+        id: backlight
+    }
+
+    SettingGroup {
+        visible: Displays.pending !== null
+        title: "Confirm"
+
+        SettingRow {
+            icon: "help"
+            title: "Keep these display settings?"
+            description: "Going back to the previous settings in " + Displays.secondsLeft + " s"
+
+            PillButton {
+                text: "Revert"
+                onClicked: Displays.revert()
+            }
+
+            PillButton {
+                toggled: true
+                text: "Keep"
+                onClicked: Displays.keep()
+            }
+        }
+    }
+
+    Repeater {
+        model: Hyprland.monitors
+
+        delegate: SettingGroup {
+            id: monitorGroup
+
+            required property var modelData
+            readonly property string mode: Displays.currentMode(modelData)
+
+            title: modelData.name + (modelData.description ? "  ·  " + modelData.description : "")
+
+            SettingRow {
+                icon: "aspect_ratio"
+                title: "Resolution and refresh rate"
+                description: Math.round(monitorGroup.modelData.width / monitorGroup.modelData.scale) + " × " + Math.round(monitorGroup.modelData.height / monitorGroup.modelData.scale) + " after scaling"
+
+                Dropdown {
+                    model: Displays.modes(monitorGroup.modelData).map(m => ({
+                        "label": Displays.modeLabel(m),
+                        "value": m
+                    }))
+                    value: monitorGroup.mode
+                    placeholder: Displays.modeLabel(monitorGroup.mode)
+                    popupWidth: 240
+                    onSelected: m => {
+                        if (m !== monitorGroup.mode)
+                            Displays.change(monitorGroup.modelData, m, monitorGroup.modelData.scale);
+                    }
+                }
+            }
+
+            SettingRow {
+                icon: "zoom_in"
+                title: "Scale"
+                description: "How large text and windows appear"
+
+                Segmented {
+                    model: Displays.scales(monitorGroup.mode, monitorGroup.modelData.scale).map(s => ({
+                        "label": Math.round(s * 100) + "%",
+                        "value": s
+                    }))
+                    value: monitorGroup.modelData.scale
+                    onSelected: s => {
+                        if (s !== monitorGroup.modelData.scale)
+                            Displays.change(monitorGroup.modelData, monitorGroup.mode, s);
+                    }
+                }
+            }
+
+            SettingRow {
+                visible: Displays.isSaved(monitorGroup.modelData.name)
+                icon: "restart_alt"
+                title: "Set from Settings"
+                description: "Applied every time the shell starts. Reset to use the Hyprland config again."
+
+                PillButton {
+                    text: "Reset"
+                    onClicked: Displays.forget(monitorGroup.modelData.name)
+                }
+            }
+        }
+    }
+
+    SettingGroup {
+        title: "Brightness"
+
+        SettingRow {
+            icon: "light_mode"
+            title: "Screen brightness"
+            description: "Backlight level"
+
+            StyledText {
+                Layout.preferredWidth: 40
+                horizontalAlignment: Text.AlignRight
+                text: Math.round(backlight.percentage * 100) + "%"
+                font.weight: Font.Medium
+            }
+
+            PillSlider {
+                implicitWidth: 280
+                implicitHeight: 36
+                icon: "light_mode"
+                value: backlight.percentage
+                // never all the way to black
+                onDragged: v => backlight.setBrightness(Math.max(0.02, v))
+            }
+        }
+    }
+
+    SettingGroup {
+        title: "Night light"
+
+        actions: [
+            PillButton {
+                visible: NightLight.available && !NightLight.isDefault
+                implicitHeight: 28
+                icon: "restart_alt"
+                text: "Reset to " + NightLight.defaultTemperature + " K · " + NightLight.defaultGamma + "%"
+                onClicked: NightLight.reset()
+            }
+        ]
+
+        SettingRow {
+            icon: "nightlight"
+            title: "Screen filter"
+            description: NightLight.available ? (NightLight.active ? "On · " + NightLight.temperature + " K at " + NightLight.gamma + "% brightness" : "Off · colours and brightness untouched") : "Needs hyprsunset running in the background"
+
+            ToggleSwitch {
+                enabled: NightLight.available
+                checked: NightLight.active
+                onToggled: on => NightLight.setActive(on)
+            }
+        }
+
+        SettingRow {
+            visible: NightLight.available
+            icon: "thermostat"
+            title: "Colour temperature"
+            description: "Lower is warmer and easier on the eyes at night"
+
+            StyledText {
+                Layout.preferredWidth: 56
+                horizontalAlignment: Text.AlignRight
+                text: NightLight.temperature + " K"
+                font.weight: Font.Medium
+            }
+
+            PillSlider {
+                readonly property int span: NightLight.maxTemperature - NightLight.minTemperature
+
+                implicitWidth: 280
+                implicitHeight: 36
+                icon: "thermostat"
+                value: (NightLight.temperature - NightLight.minTemperature) / span
+                onDragged: v => NightLight.setTemperature(NightLight.minTemperature + v * span)
+            }
+        }
+
+        SettingRow {
+            visible: NightLight.available
+            icon: "brightness_medium"
+            title: "Filter brightness"
+            description: "Dims the picture itself, on top of the backlight"
+
+            StyledText {
+                Layout.preferredWidth: 56
+                horizontalAlignment: Text.AlignRight
+                text: NightLight.gamma + "%"
+                font.weight: Font.Medium
+            }
+
+            PillSlider {
+                readonly property int span: NightLight.maxGamma - NightLight.minGamma
+
+                implicitWidth: 280
+                implicitHeight: 36
+                icon: "brightness_medium"
+                value: (NightLight.gamma - NightLight.minGamma) / span
+                onDragged: v => NightLight.setGamma(NightLight.minGamma + v * span)
+            }
+        }
+    }
+}

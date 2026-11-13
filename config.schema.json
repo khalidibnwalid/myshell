@@ -6,15 +6,46 @@
     "appearance": {
       "type": "object",
       "properties": {
-        "bgColor": { "type": "string", "format": "color" },
-        "fgColor": { "type": "string", "format": "color" },
-        "accentColor": { "type": "string", "format": "color" },
-        "accentColorLight": { "type": "string", "format": "color" },
-        "wallpaper": { "type": "string", "description": "Image used as both the desktop and lock screen background" },
-        "highlightColor": { "type": "string", "format": "color" },
-        "borderColor": { "type": "string", "format": "color" },
-        "fontFamily": { "type": "string" },
-        "opacity": { "type": "number", "minimum": 0.35, "maximum": 1 }
+        "bgColor": {
+          "type": "string",
+          "format": "color"
+        },
+        "fgColor": {
+          "type": "string",
+          "format": "color"
+        },
+        "accentColor": {
+          "type": "string",
+          "format": "color"
+        },
+        "accentColorLight": {
+          "type": "string",
+          "format": "color"
+        },
+        "wallpaper": {
+          "type": "string",
+          "description": "Image used as both the desktop and lock screen background"
+        },
+        "wallpaperDir": {
+          "type": "string",
+          "description": "Folder shown in the wallpaper picker in Settings"
+        },
+        "highlightColor": {
+          "type": "string",
+          "format": "color"
+        },
+        "borderColor": {
+          "type": "string",
+          "format": "color"
+        },
+        "fontFamily": {
+          "type": "string"
+        },
+        "opacity": {
+          "type": "number",
+          "minimum": 0.35,
+          "maximum": 1
+        }
       }
     },
     "layout": {
@@ -22,60 +53,165 @@
       "properties": {
         "barPosition": {
           "type": "string",
-          "enum": ["left", "right", "top", "bottom"]
+          "enum": [
+            "left",
+            "right",
+            "top",
+            "bottom"
+          ]
         }
       }
     },
     "search": {
       "type": "object",
       "properties": {
-        "browser": { "type": "string", "description": "Command used to open web searches" },
-        "browserClass": { "type": "string", "description": "Window class to focus after opening a search (empty to skip)" },
-        "privateFlag": { "type": "string", "description": "Flag that opens a private window, used by !!bang" },
-        "defaultBang": { "type": "string", "description": "Bang used when a query has none, e.g. g or ddg" },
+        "browser": {
+          "type": "string",
+          "description": "Command used to open web searches"
+        },
+        "browserClass": {
+          "type": "string",
+          "description": "Window class to focus after opening a search (empty to skip)"
+        },
+        "privateFlag": {
+          "type": "string",
+          "description": "Flag that opens a private window, used by !!bang"
+        },
+        "defaultBang": {
+          "type": "string",
+          "description": "Bang used when a query has none, e.g. g or ddg"
+        },
         "bangs": {
           "type": "object",
           "description": "Extra bangs: key -> { name, url } where %s in url is the query",
           "additionalProperties": {
             "type": "object",
             "properties": {
-              "name": { "type": "string" },
-              "url": { "type": "string" },
-              "privateUrl": { "type": "string", "description": "Used by !! instead of a private window, e.g. a temporary-chat URL" },
-              "icon": { "type": "string", "description": "Path or icon name shown in results" }
+              "name": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string"
+              },
+              "privateUrl": {
+                "type": "string",
+                "description": "Used by !! instead of a private window, e.g. a temporary-chat URL"
+              },
+              "icon": {
+                "type": "string",
+                "description": "Path or icon name shown in results"
+              }
             },
-            "required": ["name", "url"]
+            "required": [
+              "name",
+              "url"
+            ]
           }
+        }
+      }
+    },
+    "display": {
+      "type": "object",
+      "properties": {
+        "nightLight": {
+          "type": "boolean",
+          "description": "Apply the hyprsunset screen filter"
+        },
+        "nightLightTemperature": {
+          "type": "integer",
+          "minimum": 2500,
+          "maximum": 6500,
+          "description": "Colour temperature in kelvin"
+        },
+        "nightLightGamma": {
+          "type": "integer",
+          "minimum": 40,
+          "maximum": 100,
+          "description": "Screen brightness of the filter in percent"
+        }
+      }
+    },
+    "bar": {
+      "type": "object",
+      "properties": {
+        "clock24h": {
+          "type": "boolean",
+          "description": "Show a 24-hour clock in the bar, quick settings and lock screen"
+        }
+      }
+    },
+    "notifications": {
+      "type": "object",
+      "properties": {
+        "dnd": {
+          "type": "boolean",
+          "description": "Do not disturb: notifications skip the toast and go straight to the panel"
+        },
+        "popupSeconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60,
+          "description": "How long a toast stays when the app does not set a time"
         }
       }
     },
     "dock": {
       "type": "object",
       "properties": {
-        "enabled": { "type": "boolean", "description": "Show the bottom dock on empty workspaces and at the bottom screen edge" }
+        "enabled": {
+          "type": "boolean",
+          "description": "Show the bottom dock on empty workspaces and at the bottom screen edge"
+        }
       }
     },
     "idle": {
       "type": "object",
       "properties": {
-        "enabled": { "type": "boolean", "description": "Lock the session after inactivity" },
-        "lockAfterMinutes": { "type": "integer", "minimum": 1, "maximum": 120 },
-        "screenOffAfterMinutes": { "type": "integer", "minimum": 0, "maximum": 240, "description": "Turn off displays after inactivity; 0 disables this" }
+        "enabled": {
+          "type": "boolean",
+          "description": "Lock the session after inactivity"
+        },
+        "lockAfterMinutes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 120
+        },
+        "screenOffAfterMinutes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 240,
+          "description": "Turn off displays after inactivity; 0 disables this"
+        }
       }
     },
     "capture": {
       "type": "object",
       "properties": {
-        "autoSave": { "type": "boolean", "description": "Also save each screenshot as a file; it is always copied to the clipboard" },
-        "screenshotDir": { "type": "string", "description": "Folder for saved screenshots" },
-        "recordingDir": { "type": "string", "description": "Folder for screen recordings" },
-        "recordAudio": { "type": "boolean", "description": "Record audio with the screen" }
+        "autoSave": {
+          "type": "boolean",
+          "description": "Also save each screenshot as a file; it is always copied to the clipboard"
+        },
+        "screenshotDir": {
+          "type": "string",
+          "description": "Folder for saved screenshots"
+        },
+        "recordingDir": {
+          "type": "string",
+          "description": "Folder for screen recordings"
+        },
+        "recordAudio": {
+          "type": "boolean",
+          "description": "Record audio with the screen"
+        }
       }
     },
     "clipboard": {
       "type": "object",
       "properties": {
-        "autoPaste": { "type": "boolean", "description": "Paste the picked item into the focused window (needs wtype); false only copies it" }
+        "autoPaste": {
+          "type": "boolean",
+          "description": "Paste the picked item into the focused window (needs wtype); false only copies it"
+        }
       }
     },
     "keyboard": {
@@ -83,7 +219,24 @@
       "properties": {
         "layouts": {
           "type": "object",
-          "additionalProperties": { "type": "string" }
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "monitors": {
+      "type": "object",
+      "description": "Monitor name -> mode and scale chosen in Settings, applied when the shell starts",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "type": "string"
+          },
+          "scale": {
+            "type": "number"
+          }
         }
       }
     }

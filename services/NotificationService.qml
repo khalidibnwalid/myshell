@@ -1,5 +1,6 @@
 pragma Singleton
 
+import "../config"
 import QtQuick
 import Quickshell
 import Quickshell.Services.Notifications
@@ -10,7 +11,21 @@ import Quickshell.Services.Notifications
 Singleton {
     id: root
 
-    property bool dnd: false
+    // kept in config.json so it survives a restart
+    property bool dnd: Config.notifications.dnd
+    onDndChanged: {
+        if (Config.notifications.dnd !== dnd)
+            Config.notifications.dnd = dnd;
+    }
+
+    Connections {
+        function onDndChanged() {
+            root.dnd = Config.notifications.dnd;
+        }
+
+        target: Config.notifications
+    }
+
     readonly property var list: server.trackedNotifications.values.slice().reverse()
     readonly property int count: server.trackedNotifications.values.length
     readonly property alias popups: popupModel
