@@ -7,11 +7,17 @@ Item {
 
     property real value: 0
     property string icon: "light_mode"
+    property int iconRightMargin: 14
     readonly property bool dragging: mouseArea.pressed
+    readonly property bool hovered: mouseArea.containsMouse
     property real dragValue: 0
     readonly property real displayValue: dragging ? dragValue : value
 
     signal dragged(real value)
+
+    Behavior on iconRightMargin {
+        NumberAnimation { duration: Appearance.animFast }
+    }
 
     implicitHeight: 48
     implicitWidth: 380
@@ -51,7 +57,7 @@ Item {
             MaterialSymbol {
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.right: parent.right
-                anchors.rightMargin: 14
+                anchors.rightMargin: root.iconRightMargin
                 icon: root.icon
                 font.pixelSize: 20
                 color: Appearance.onAccentColor

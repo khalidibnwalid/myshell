@@ -8,7 +8,10 @@ Item {
     property var stackView
 
     implicitHeight: layout.implicitHeight + 32
-    Component.onCompleted: Network.rescanWifi()
+    Component.onCompleted: {
+        Network.getWifiStatus();
+        Network.rescanWifi();
+    }
 
     ColumnLayout {
         id: layout
@@ -38,6 +41,15 @@ Item {
             }
         }
 
+        StyledText {
+            Layout.fillWidth: true
+            visible: Network.connectionError !== ""
+            text: Network.connectionError
+            color: Appearance.accentColor
+            font.pixelSize: 12
+            wrapMode: Text.Wrap
+        }
+
         ListView {
             id: list
 
@@ -48,7 +60,6 @@ Item {
             clip: true
             boundsBehavior: Flickable.StopAtBounds
 
-            //TODO: password prompt
             delegate: ListRow {
                 required property var modelData
                 required property int index
@@ -58,14 +69,21 @@ Item {
                 last: index === list.count - 1
                 active: modelData.active
                 title: modelData.ssid
-                subtitle: modelData.active ? "Connected" : ""
+                subtitle: modelData.active ? "Connected" : (modelData.isSecure ? "Secured" : "Open network")
                 icon: Network.getStatusIcon(modelData.strength)
                 trailingIcon: modelData.isSecure ? "lock" : ""
+                interactive: !Network.connecting
                 onClicked: {
-                    if (!modelData.active)
-                        Network.connectToNetwork(modelData.ssid, "");
-                    else
+                    if (modelData.active) {
                         Network.disconnectFromNetwork();
+                    } else if (modelData.isSecure) {
+                        stackView.push(passwordPage, {
+                            "accessPoint": modelData,
+                            "stackView": stackView
+                        });
+                    } else {
+                        Network.connectToNetwork(modelData.ssid, "");
+                    }
                 }
             }
         }
@@ -79,6 +97,13 @@ Item {
             text: !Network.enabled ? "Wi-Fi is off" : (Network.scanning ? "Looking for networks…" : "No networks found")
             color: Appearance.mutedColor
             font.pixelSize: 13
+        }
+    }
+
+    Component {
+        id: passwordPage
+
+        WifiPasswordPage {
         }
     }
 }

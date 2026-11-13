@@ -8,16 +8,38 @@ import Quickshell.Widgets
 Rectangle {
     id: root
 
+    property bool seeking: false
+    property real seekProgress: 0
+    property var selectedPlayer: null
+
+    readonly property var players: Mpris.players.values
     readonly property var player: {
-        const list = Mpris.players.values;
-        const playing = list.find(p => p.isPlaying);
-        return playing || list[0] || null;
+        const list = root.players;
+        if (root.selectedPlayer && list.includes(root.selectedPlayer))
+            return root.selectedPlayer;
+        return list.find(p => p.isPlaying) || list[0] || null;
     }
 
     visible: player !== null
-    implicitHeight: 92
+    implicitHeight: 120
     radius: 24
     color: Appearance.surfaceColor
+
+    readonly property real progress: player && player.length > 0
+        ? Math.max(0, Math.min(1, player.position / player.length)) : 0
+
+    function movePlayer(offset) {
+        const list = root.players;
+        if (list.length < 2)
+            return;
+        const currentIndex = list.indexOf(root.player);
+        root.selectedPlayer = list[(currentIndex + offset + list.length) % list.length];
+    }
+
+    FrameAnimation {
+        running: root.player !== null && root.player.isPlaying && root.player.positionSupported
+        onTriggered: root.player.positionChanged()
+    }
 
     RowLayout {
         anchors.fill: parent
@@ -93,6 +115,77 @@ Rectangle {
                         font.weight: Font.Medium
                     }
                 }
+
+                RowLayout {
+                    visible: root.players.length > 1
+                    spacing: 2
+
+                    Rectangle {
+                        implicitWidth: 24
+                        implicitHeight: 24
+                        radius: 12
+                        color: previousPlayerArea.containsMouse ? Appearance.surfaceHighColor : "transparent"
+
+                        MaterialSymbol {
+                            anchors.centerIn: parent
+                            icon: "chevron_left"
+                            font.pixelSize: 18
+                            color: Appearance.fgColor
+                        }
+
+                        MouseArea {
+                            id: previousPlayerArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.movePlayer(-1)
+                        }
+                    }
+
+                    Repeater {
+                        model: root.players
+
+                        delegate: Rectangle {
+                            required property var modelData
+                            required property int index
+
+                            Layout.alignment: Qt.AlignVCenter
+                            width: index === root.players.indexOf(root.player) ? 7 : 5
+                            height: width
+                            radius: width / 2
+                            color: index === root.players.indexOf(root.player) ? Appearance.accentColor : Appearance.outlineColor
+
+                            MouseArea {
+                                anchors.fill: parent
+                                anchors.margins: -4
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: root.selectedPlayer = modelData
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        implicitWidth: 24
+                        implicitHeight: 24
+                        radius: 12
+                        color: nextPlayerArea.containsMouse ? Appearance.surfaceHighColor : "transparent"
+
+                        MaterialSymbol {
+                            anchors.centerIn: parent
+                            icon: "chevron_right"
+                            font.pixelSize: 18
+                            color: Appearance.fgColor
+                        }
+
+                        MouseArea {
+                            id: nextPlayerArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.movePlayer(1)
+                        }
+                    }
+                }
             }
 
             StyledText {
@@ -102,6 +195,68 @@ Rectangle {
                 color: Appearance.fgColor
                 opacity: 0.7
                 font.pixelSize: 13
+            }
+
+            Item {
+                id: seekSlider
+
+                Layout.fillWidth: true
+                Layout.preferredHeight: 14
+                Layout.topMargin: 6
+                visible: root.player !== null && root.player.lengthSupported && root.player.positionSupported
+                property real shownProgress: root.seeking ? root.seekProgress : root.progress
+
+                Rectangle {
+                    anchors.verticalCenter: parent.verticalCenter
+                    x: 0
+                    width: parent.width
+                    height: 4
+                    radius: 2
+                    color: Appearance.surfaceHighColor
+
+                    Rectangle {
+                        width: parent.width * seekSlider.shownProgress
+                        height: parent.height
+                        radius: parent.radius
+                        color: Appearance.accentColor
+                    }
+                }
+
+                Rectangle {
+                    width: 10
+                    height: 10
+                    radius: 5
+                    x: Math.max(0, Math.min(seekSlider.width - width, seekSlider.width * seekSlider.shownProgress - width / 2))
+                    anchors.verticalCenter: parent.verticalCenter
+                    color: Appearance.accentColor
+                    border.width: 2
+                    border.color: Appearance.bgColor
+                }
+
+                MouseArea {
+                    id: seekArea
+
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    enabled: root.player !== null && root.player.canSeek && root.player.positionSupported
+
+                    function updateProgress() {
+                        root.seekProgress = Math.max(0, Math.min(1, mouseX / width));
+                    }
+
+                    onPressed: {
+                        root.seeking = true;
+                        updateProgress();
+                    }
+                    onPositionChanged: if (pressed) updateProgress()
+                    onReleased: {
+                        if (root.player && root.player.canSeek)
+                            root.player.position = root.seekProgress * root.player.length;
+                        root.seeking = false;
+                    }
+                    onCanceled: root.seeking = false
+                }
             }
 
             Item {

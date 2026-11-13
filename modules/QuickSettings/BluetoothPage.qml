@@ -5,38 +5,35 @@ import QtQuick
 import QtQuick.Layouts
 
 Item {
+    id: page
+
     property var stackView
 
-    function deviceIcon(name) {
-        const icon = (name || "").toLowerCase();
-        // ref: /usr/share/icons/Adwaita/scalable/devices
-        if (icon.includes("headphone") || icon.includes("headset"))
-            return "headphones";
-        if (icon.includes("microphone"))
-            return "mic";
-        if (icon.includes("keyboard"))
-            return "keyboard";
-        if (icon.includes("mouse"))
-            return "mouse";
-        if (icon.includes("printer"))
-            return "print";
-        if (icon.includes("phone"))
-            return "smartphone";
-        return "devices_other";
+    implicitHeight: layout.implicitHeight + 32
+
+    TapHandler {
+        acceptedButtons: Qt.LeftButton
+        onTapped: Bluetooth.closeContextMenu()
     }
 
-    implicitHeight: layout.implicitHeight + 32
     Component.onCompleted: {
+        Bluetooth.startTracking();
         if (Bluetooth.enabled && !Bluetooth.isScanning) {
             Bluetooth.toggleScan();
             scanTimer.start();
         }
     }
+    Component.onDestruction: {
+        Bluetooth.closeContextMenu();
+        Bluetooth.stopTracking();
+        if (scanTimer.running && Bluetooth.isScanning)
+            Bluetooth.toggleScan();
+    }
 
     Timer {
         id: scanTimer
 
-        interval: 10000 // Scan for 10 seconds
+        interval: 20000 // scan for 20 seconds
         onTriggered: {
             if (Bluetooth.isScanning)
                 Bluetooth.toggleScan();
@@ -55,13 +52,25 @@ Item {
         PageHeader {
             Layout.fillWidth: true
             title: "Bluetooth"
-            subtitle: !Bluetooth.enabled ? "Off" : (Bluetooth.connectedDevices.length ? Bluetooth.connectedDevices[0].name : (Bluetooth.isScanning ? "Scanning…" : "On"))
+            subtitle: !Bluetooth.enabled ? "Off" : (Bluetooth.connectedDevices.length ? Bluetooth.connectedDevices.map(d => d.name).join(", ") : (Bluetooth.isScanning ? "Scanning…" : "On"))
             onBack: stackView.pop()
+
+            // visible to other devices
+            IconButton {
+                icon: Bluetooth.discoverable ? "visibility" : "visibility_off"
+                toggled: Bluetooth.discoverable
+                onClicked: Bluetooth.toggleDiscoverable()
+            }
 
             IconButton {
                 icon: "sync"
                 toggled: Bluetooth.isScanning
-                onClicked: Bluetooth.toggleScan()
+                onClicked: {
+                    scanTimer.restart();
+                    if (!Bluetooth.isScanning)
+                        Bluetooth.startTracking();
+                    Bluetooth.toggleScan();
+                }
             }
 
             IconButton {
@@ -71,29 +80,70 @@ Item {
             }
         }
 
-        ListView {
-            id: list
-
-            model: Bluetooth.devices
+        Flickable {
             Layout.fillWidth: true
-            Layout.preferredHeight: Math.min(contentHeight, 5 * 59 - 3)
-            spacing: 3
+            Layout.preferredHeight: Math.min(lists.implicitHeight, 430)
+            contentHeight: lists.implicitHeight
             clip: true
             boundsBehavior: Flickable.StopAtBounds
+            visible: Bluetooth.enabled && Bluetooth.devices.length > 0
 
-            delegate: ListRow {
-                required property var modelData
-                required property int index
+            ColumnLayout {
+                id: lists
 
-                width: list.width
-                first: index === 0
-                last: index === list.count - 1
-                active: modelData.connected
-                title: modelData.name
-                subtitle: modelData.connected ? "Connected" : (modelData.paired ? "Paired" : "")
-                icon: deviceIcon(modelData.icon)
-                trailingText: modelData.batteryAvailable ? Math.round(modelData.battery * 100) + "%" : ""
-                onClicked: modelData.connected = !modelData.connected
+                width: parent.width
+                spacing: 3
+
+                StyledText {
+                    Layout.leftMargin: 6
+                    Layout.bottomMargin: 5
+                    visible: Bluetooth.savedDevices.length > 0
+                    text: "My devices"
+                    color: Appearance.mutedColor
+                    font.pixelSize: 12
+                    font.weight: Font.Medium
+                }
+
+                Repeater {
+                    model: Bluetooth.savedDevices
+
+                    delegate: BluetoothDeviceRow {
+                        required property var modelData
+                        required property int index
+
+                        Layout.fillWidth: true
+                        device: modelData
+                        menuHost: page
+                        first: index === 0
+                        last: index === Bluetooth.savedDevices.length - 1
+                    }
+                }
+
+                StyledText {
+                    Layout.leftMargin: 6
+                    Layout.topMargin: Bluetooth.savedDevices.length > 0 ? 12 : 0
+                    Layout.bottomMargin: 5
+                    visible: Bluetooth.nearbyDevices.length > 0
+                    text: "Available"
+                    color: Appearance.mutedColor
+                    font.pixelSize: 12
+                    font.weight: Font.Medium
+                }
+
+                Repeater {
+                    model: Bluetooth.nearbyDevices
+
+                    delegate: BluetoothDeviceRow {
+                        required property var modelData
+                        required property int index
+
+                        Layout.fillWidth: true
+                        device: modelData
+                        menuHost: page
+                        first: index === 0
+                        last: index === Bluetooth.nearbyDevices.length - 1
+                    }
+                }
             }
         }
 
@@ -101,7 +151,7 @@ Item {
             Layout.fillWidth: true
             Layout.topMargin: 12
             Layout.bottomMargin: 12
-            visible: list.count === 0
+            visible: !Bluetooth.enabled || Bluetooth.devices.length === 0
             horizontalAlignment: Text.AlignHCenter
             text: !Bluetooth.enabled ? "Bluetooth is off" : (Bluetooth.isScanning ? "Looking for devices…" : "No devices found")
             color: Appearance.mutedColor

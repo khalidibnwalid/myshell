@@ -11,6 +11,7 @@ Item {
     property var networkPageComponent
     property var bluetoothPageComponent
     property var batteryPageComponent
+    property var audioPageComponent
 
     implicitHeight: layout.implicitHeight + 32
 
@@ -40,7 +41,7 @@ Item {
             Layout.bottomMargin: 2
 
             StyledText {
-                text: Time.format("HH:mm")
+                text: Time.format("hh:mm AP")
                 font.pixelSize: 32
                 font.weight: Font.Bold
                 font.letterSpacing: -0.5
@@ -66,11 +67,61 @@ Item {
         }
 
         // --- Volume ---
-        PillSlider {
+        Item {
             Layout.fillWidth: true
-            icon: audio.mute || audio.volume === 0 ? "volume_off" : (audio.volume < 0.5 ? "volume_down" : "volume_up")
-            value: audio.volume
-            onDragged: v => audio.setVolume(v)
+            Layout.preferredHeight: 48
+
+            PillSlider {
+                id: volumeSlider
+
+                anchors.fill: parent
+                iconRightMargin: audio.volume > 0.85 && (volumeSlider.hovered || deviceButton.hovered) ? 50 : 14
+                icon: audio.mute || audio.volume === 0 ? "volume_off" : (audio.volume < 0.5 ? "volume_down" : "volume_up")
+                value: audio.volume
+                onDragged: v => audio.setVolume(v)
+            }
+
+            Rectangle {
+                id: deviceButton
+
+                property bool hovered: deviceArea.containsMouse
+
+                anchors.right: parent.right
+                anchors.rightMargin: 5
+                anchors.verticalCenter: parent.verticalCenter
+                width: 38
+                height: 38
+                radius: 19
+                color: hovered ? Appearance.surfaceHighColor : Appearance.surfaceColor
+                opacity: volumeSlider.hovered || hovered ? 1 : 0
+                Accessible.name: "Audio devices"
+
+                MaterialSymbol {
+                    anchors.centerIn: parent
+                    icon: "speaker"
+                    font.pixelSize: 19
+                    color: Appearance.fgColor
+                }
+
+                MouseArea {
+                    id: deviceArea
+
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: stackView.push(audioPageComponent, {
+                        "stackView": stackView
+                    })
+                }
+
+                Behavior on opacity {
+                    NumberAnimation { duration: Appearance.animFast }
+                }
+
+                Behavior on color {
+                    ColorAnimation { duration: Appearance.animFast }
+                }
+            }
         }
 
         // --- Media ---

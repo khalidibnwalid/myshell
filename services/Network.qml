@@ -41,6 +41,10 @@ Scope {
     readonly property AccessPoint active: networks.find(n => n.active) ?? null
     property bool wifiEnabled: true
     readonly property bool scanning: rescanProc.running
+    readonly property bool connecting: connectProc.running
+    property string connectingSsid: ""
+    property string connectionError: ""
+    signal connectionFinished(bool success, string ssid)
 
     function enableWifi(enabled: bool): void {
         const cmd = enabled ? "on" : "off";
@@ -57,8 +61,12 @@ Scope {
     }
 
     function connectToNetwork(ssid: string, password: string): void {
-        // TODO: Implement password
-        connectProc.exec(["nmcli", "conn", "up", ssid]);
+        connectingSsid = ssid;
+        connectionError = "";
+        const command = ["nmcli", "--wait", "20", "device", "wifi", "connect", ssid];
+        if (password.length > 0)
+            command.push("password", password);
+        connectProc.exec(command);
     }
 
     function disconnectFromNetwork(): void {
@@ -116,11 +124,20 @@ Scope {
     Process {
         id: connectProc
 
+        command: ["nmcli"]
         stdout: SplitParser {
             onRead: getNetworks.running = true
         }
         stderr: StdioCollector {
-            onStreamFinished: console.warn("Network connection error:", text)
+            id: connectError
+        }
+        onExited: (exitCode, exitStatus) => {
+            const ssid = root.connectingSsid;
+            root.connectingSsid = "";
+            root.connectionError = exitCode === 0 ? "" : (connectError.text.trim() || "Couldn't connect to this network.");
+            getNetworks.running = true;
+            root.connectionFinished(exitCode === 0, ssid);
+            connectProc.command = ["nmcli"];
         }
     }
 

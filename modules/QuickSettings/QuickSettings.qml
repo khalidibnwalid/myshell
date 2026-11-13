@@ -95,18 +95,23 @@ Scope {
                 id: stage
 
                 anchors.fill: parent
-                opacity: window.shown ? 1 : 0
+                opacity: root.open ? 1 : 0
 
-                // fades while sliding in from the bar side
                 transform: Translate {
-                    x: window.shown ? 0 : (window.barRight ? 72 : -72)
+                    x: window.shown ? 0 : (root.open ? (window.barRight ? 42 : -42) : 0)
 
                     Behavior on x {
                         NumberAnimation {
-                            duration: window.shown ? 300 : Appearance.animFast
-                            easing.type: Easing.BezierSpline
-                            easing.bezierCurve: window.shown ? Appearance.easeOut : Appearance.easeStandard
+                            duration: root.open ? 190 : 0
+                            easing.type: Easing.OutCubic
                         }
+                    }
+                }
+
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: root.open ? 0 : 110
+                        easing.type: Easing.OutCubic
                     }
                 }
 
@@ -144,7 +149,8 @@ Scope {
                                 "stackView": stackView,
                                 "networkPageComponent": networkPageComponent,
                                 "bluetoothPageComponent": bluetoothPageComponent,
-                                "batteryPageComponent": batteryPageComponent
+                                "batteryPageComponent": batteryPageComponent,
+                                "audioPageComponent": audioPageComponent
                             });
                     }
 
@@ -207,11 +213,6 @@ Scope {
                     }
                 }
 
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: window.shown ? 200 : Appearance.animFast
-                    }
-                }
             }
 
             Behavior on cardHeight {
@@ -240,6 +241,13 @@ Scope {
                 id: batteryPageComponent
 
                 BatteryPage {
+                }
+            }
+
+            Component {
+                id: audioPageComponent
+
+                AudioDevicePage {
                 }
             }
 
