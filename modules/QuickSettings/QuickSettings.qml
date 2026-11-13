@@ -4,6 +4,7 @@ import "../Notifications"
 import QtQuick
 import QtQuick.Controls
 import Quickshell
+import Quickshell.Hyprland
 
 Scope {
     id: root
@@ -29,7 +30,16 @@ Scope {
         interval: Appearance.animFast + 30
     }
 
+    // click anywhere else to dismiss; the bar stays usable so its buttons can toggle
+    HyprlandFocusGrab {
+        windows: [...panels.instances, ...WindowManager.barWindows]
+        active: root.open
+        onCleared: WindowManager.quickSettingsVisible = false
+    }
+
     Variants {
+        id: panels
+
         model: Quickshell.screens
 
         PanelWindow {

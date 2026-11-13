@@ -19,6 +19,8 @@ Required packages:
 - `brightnessctl` — controls display backlight brightness.
 - `xdg-utils` — provides `xdg-open` for opening files and web links.
 - `bc` — provides calculator results in the launcher.
+- `wl-clipboard` and `cliphist` — record the clipboard history shown by the clipboard menu.
+- `wtype` — pastes the picked clipboard item into the focused window.
 - `ttf-material-symbols-variable` — provides the interface icon font.
 - `adwaita-fonts` — provides the configured text font.
 - `adwaita-icon-theme` — supplies application and system icons.

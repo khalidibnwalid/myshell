@@ -25,6 +25,13 @@ Scope {
         }
     }
 
+    // click anywhere else to dismiss
+    HyprlandFocusGrab {
+        windows: lazyloader.item ? [...lazyloader.item.instances] : []
+        active: lazyloader.active && windows.length > 0
+        onCleared: lazyloader.active = false
+    }
+
     LazyLoader {
         id: lazyloader
         active: false

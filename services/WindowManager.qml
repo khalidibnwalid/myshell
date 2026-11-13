@@ -8,6 +8,9 @@ Singleton {
     property bool quickSettingsVisible: false
     property bool settingsVisible: false
     property bool searchVisible: false
+    property bool clipboardVisible: false
+    // the bar windows, so a panel's click-outside grab can leave the bar usable
+    property var barWindows: []
 
     signal toggleQuickSettingsVisible
     signal setQuickSettingsVisible(bool visible)

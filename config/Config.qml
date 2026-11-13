@@ -7,6 +7,7 @@ Singleton {
     readonly property alias layout: jsonAdapter.layout
     readonly property alias keyboard: jsonAdapter.keyboard
     readonly property alias search: jsonAdapter.search
+    readonly property alias clipboard: jsonAdapter.clipboard
 
     FileView {
         watchChanges: true
@@ -47,6 +48,10 @@ Singleton {
                 "defaultBang": "g",
                 "bangs": {
                 }
+            })
+            // clipboard menu: paste the picked item right away, or only copy it
+            property var clipboard: ({
+                "autoPaste": true
             })
         }
 

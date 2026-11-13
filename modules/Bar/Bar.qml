@@ -8,7 +8,15 @@ import Quickshell
 Scope {
     id: root
 
+    Binding {
+        target: WindowManager
+        property: "barWindows"
+        value: bars.instances
+    }
+
     Variants {
+        id: bars
+
         model: Quickshell.screens
 
         PanelWindow {

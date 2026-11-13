@@ -48,6 +48,12 @@
         }
       }
     },
+    "clipboard": {
+      "type": "object",
+      "properties": {
+        "autoPaste": { "type": "boolean", "description": "Paste the picked item into the focused window (needs wtype); false only copies it" }
+      }
+    },
     "keyboard": {
       "type": "object",
       "properties": {

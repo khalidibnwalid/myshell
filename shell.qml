@@ -1,6 +1,7 @@
 import Quickshell
 import Quickshell.Hyprland
 import "modules/Bar"
+import "modules/Clipboard"
 import "modules/Dock"
 import "modules/Notifications"
 import "modules/OSD"
@@ -26,6 +27,9 @@ Scope {
     }
 
     Search {
+    }
+
+    Clipboard {
     }
 
     VolumeOsd {

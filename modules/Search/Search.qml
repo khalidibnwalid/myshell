@@ -14,7 +14,16 @@ Scope {
         onPressed: Services.WindowManager.toggleSearchVisible()
     }
 
+    // click anywhere else to dismiss; the bar stays usable so its search button can toggle
+    HyprlandFocusGrab {
+        windows: [...searchWindows.instances, ...Services.WindowManager.barWindows]
+        active: Services.WindowManager.searchVisible
+        onCleared: Services.WindowManager.searchVisible = false
+    }
+
     Variants {
+        id: searchWindows
+
         model: Quickshell.screens
 
         PanelWindow {
