@@ -25,6 +25,10 @@ Scope {
             required property var modelData
 
             readonly property bool horizontal: Config.barHorizontal
+            // 0 while the bar has a background (45% and up), 1 once it is see-through: the groups of
+            // icons then sit on floating "islands" (like the clock) instead of bare wallpaper
+            readonly property real islandAmount: Appearance.islandAmount
+            readonly property int islandPadding: 7
 
             screen: modelData
             visible: true
@@ -47,7 +51,21 @@ Scope {
             }
 
             // start: search + workspaces
+            Rectangle {
+                x: startGroup.x - panelWindow.islandPadding
+                y: startGroup.y - panelWindow.islandPadding
+                width: startGroup.width + panelWindow.islandPadding * 2
+                height: startGroup.height + panelWindow.islandPadding * 2
+                radius: Math.min(width, height) / 2 > 24 ? 24 : Math.min(width, height) / 2
+                color: Qt.alpha(Appearance.bgColor, 0.5 * panelWindow.islandAmount)
+                border.width: 1
+                border.color: Qt.alpha(Appearance.fgColor, 0.1 * panelWindow.islandAmount)
+                visible: panelWindow.islandAmount > 0
+            }
+
             GridLayout {
+                id: startGroup
+
                 x: panelWindow.horizontal ? 8 : Math.round((parent.width - width) / 2)
                 y: panelWindow.horizontal ? Math.round((parent.height - height) / 2) : 8
                 columns: panelWindow.horizontal ? -1 : 1
@@ -67,7 +85,7 @@ Scope {
                         anchors.centerIn: parent
                         icon: "apps"
                         font.pixelSize: 20
-                        color: WindowManager.searchVisible ? Appearance.onAccentColor : Appearance.fgColor
+                        color: WindowManager.searchVisible ? Appearance.accentContrastColor : Appearance.fgColor
                     }
 
                     MouseArea {
@@ -105,7 +123,21 @@ Scope {
             }
 
             // end: tray + status icons
+            Rectangle {
+                x: endGroup.x - panelWindow.islandPadding
+                y: endGroup.y - panelWindow.islandPadding
+                width: endGroup.width + panelWindow.islandPadding * 2
+                height: endGroup.height + panelWindow.islandPadding * 2
+                radius: Math.min(width, height) / 2 > 24 ? 24 : Math.min(width, height) / 2
+                color: Qt.alpha(Appearance.bgColor, 0.5 * panelWindow.islandAmount)
+                border.width: 1
+                border.color: Qt.alpha(Appearance.fgColor, 0.1 * panelWindow.islandAmount)
+                visible: panelWindow.islandAmount > 0
+            }
+
             GridLayout {
+                id: endGroup
+
                 x: panelWindow.horizontal ? parent.width - width - 16 : Math.round((parent.width - width) / 2)
                 y: panelWindow.horizontal ? Math.round((parent.height - height) / 2) : parent.height - height - 16
                 columns: panelWindow.horizontal ? -1 : 1

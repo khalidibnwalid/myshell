@@ -14,7 +14,11 @@ Rectangle {
     implicitWidth: horizontal ? grid.implicitWidth + 28 : 40
     implicitHeight: horizontal ? 36 : grid.implicitHeight + 32
     radius: horizontal ? 18 : 20
-    color: clockArea.containsMouse ? Appearance.surfaceHighColor : Appearance.surfaceColor
+    // on a see-through bar it is an island like the other groups
+    readonly property real islandAmount: Appearance.islandAmount
+    color: clockArea.containsMouse ? Appearance.surfaceHighColor : (islandAmount > 0 ? Qt.alpha(Appearance.bgColor, 0.5 * islandAmount + 0.07 * (1 - islandAmount)) : Appearance.surfaceColor)
+    border.width: islandAmount > 0 ? 1 : 0
+    border.color: Qt.alpha(Appearance.fgColor, 0.1 * islandAmount)
 
     // click: quick settings, like the status icons
     MouseArea {
