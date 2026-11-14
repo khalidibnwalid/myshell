@@ -64,3 +64,7 @@ Choose a wallpaper in Settings → Appearance. The selected image is shared by t
 ### Settings window
 
 Open it from the Quick Settings footer, or bind a key to `qs ipc call settings toggle` (also `open`, `close`, and `page <name>`, e.g. `page appearance`). Everything changed there is written to `config.json`; Settings → About lists any missing command-line tools.
+
+### Keyboard layouts
+
+Settings → Keyboard edits the layouts, their variants and the switching shortcut. Apply changes them in the running Hyprland session and writes them to `~/.config/hypr/config/keyboard.conf`; the first Apply also adds `source = ~/.config/hypr/config/keyboard.conf` to `hyprland.conf` (after the window rules) so they are used on the next start. That file is overwritten by Settings, and it takes precedence over `kb_layout`, `kb_variant` and `kb_options` in `input.conf`.

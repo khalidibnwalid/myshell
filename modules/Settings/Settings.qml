@@ -57,7 +57,7 @@ ApplicationWindow {
             "name": "Keyboard",
             "icon": "keyboard",
             "group": "Device",
-            "keywords": "layout language input labels",
+            "keywords": "layout language input labels arabic english switch shortcut variant",
             "component": keyboardPage
         },
         {

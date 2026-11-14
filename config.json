@@ -2,9 +2,9 @@
     "appearance": {
         "accentColor": "#ebcb8b",
         "accentColorLight": "#ffdf9f",
-        "bgColor": "#0b0b0d",
+        "bgColor": "#1a120d",
         "borderColor": "#000000",
-        "fgColor": "#e5e1e7",
+        "fgColor": "#f0dfd7",
         "fontFamily": "Adwaita Sans",
         "highlightColor": "#000000",
         "opacity": 0.5,
@@ -50,13 +50,18 @@
     "layout": {
         "barPosition": "right"
     },
-    "monitors": {},
+    "monitors": {
+    },
     "notifications": {
         "dnd": false,
         "popupSeconds": 5
     },
+    "recentColors": [
+        "#1a140d"
+    ],
     "search": {
-        "bangs": {},
+        "bangs": {
+        },
         "browser": "helium-browser",
         "browserClass": "helium",
         "defaultBang": "g",
