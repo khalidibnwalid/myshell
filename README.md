@@ -68,3 +68,13 @@ Open it from the Quick Settings footer, or bind a key to `qs ipc call settings t
 ### Keyboard layouts
 
 Settings → Keyboard edits the layouts, their variants and the switching shortcut. Apply changes them in the running Hyprland session and writes them to `~/.config/hypr/config/keyboard.conf`; the first Apply also adds `source = ~/.config/hypr/config/keyboard.conf` to `hyprland.conf` (after the window rules) so they are used on the next start. That file is overwritten by Settings, and it takes precedence over `kb_layout`, `kb_variant` and `kb_options` in `input.conf`.
+
+### Autocomplete
+
+Settings → Autocomplete turns on word suggestions while typing in any app. The words for the keyboard layout in use show under the pointer, next to the text cursor, or in the corner of the window (your choice); `Tab` and `Shift + Tab` put the next or previous one into the text, `Escape` closes them and restores what was typed.
+
+- A small helper, `helpers/ime/qs-ime.c`, registers as the Wayland input method. It is built into `~/.cache/quickshell/ime` the first time the feature is turned on, which needs a C compiler, `wayland-scanner` and the `wayland`, `libxkbcommon` and `pango` headers (`base-devel`, `wayland`, `libxkbcommon` and `pango` on Arch).
+- Only one input method can run at a time, so it does not work next to fcitx5 or ibus.
+- Word lists (the 50,000 most frequent words per language, from the FrequencyWords project) are downloaded with `curl` into `~/.local/share/quickshell/autocomplete` the first time a layout's language is used.
+- Password fields are never read, and blocked apps (terminals by default) are left alone entirely. Nothing that is typed leaves the computer.
+- `qs ipc call autocomplete toggle` (also `enable`, `disable`, `status`) switches it from a key bind.

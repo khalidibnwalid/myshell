@@ -61,6 +61,14 @@ ApplicationWindow {
             "component": keyboardPage
         },
         {
+            "key": "autocomplete",
+            "name": "Autocomplete",
+            "icon": "spellcheck",
+            "group": "Device",
+            "keywords": "suggestions predictive text typing words completion arabic english dictionary input method",
+            "component": autocompletePage
+        },
+        {
             "key": "appearance",
             "name": "Appearance",
             "icon": "palette",
@@ -431,6 +439,13 @@ ApplicationWindow {
         id: keyboardPage
 
         KeyboardPage {
+        }
+    }
+
+    Component {
+        id: autocompletePage
+
+        AutocompletePage {
         }
     }
 

@@ -116,6 +116,18 @@
         }
       }
     },
+    "autocomplete": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean", "description": "Suggest words while typing in any app that supports input methods" },
+        "minChars": { "type": "integer", "minimum": 1, "maximum": 6, "description": "Letters typed before suggestions show" },
+        "maxSuggestions": { "type": "integer", "minimum": 1, "maximum": 9 },
+        "addSpace": { "type": "boolean", "description": "Put a space after a completed word" },
+        "position": { "type": "string", "enum": ["pointer", "caret", "window"], "description": "Where the suggestions appear" },
+        "learn": { "type": "boolean", "description": "Rank words you complete often first" },
+        "excludeApps": { "type": "string", "description": "Comma separated window classes where autocomplete stays off (terminals by default)" }
+      }
+    },
     "display": {
       "type": "object",
       "properties": {

@@ -15,6 +15,7 @@ Singleton {
     readonly property alias bar: jsonAdapter.bar
     readonly property alias notifications: jsonAdapter.notifications
     readonly property alias display: jsonAdapter.display
+    readonly property alias autocomplete: jsonAdapter.autocomplete
     readonly property alias monitors: jsonAdapter.monitors
     readonly property alias recentColors: jsonAdapter.recentColors
 
@@ -108,6 +109,25 @@ Singleton {
 
             dock: JsonObject {
                 property bool enabled: false
+            }
+
+            // word suggestions while typing in any app (see services/Autocomplete.qml)
+            property JsonObject autocomplete
+
+            autocomplete: JsonObject {
+                property bool enabled: false
+                // letters typed before suggestions show
+                property int minChars: 2
+                property int maxSuggestions: 5
+                // put a space after a completed word
+                property bool addSpace: false
+                // "pointer": under the mouse; "caret": next to the text cursor;
+                // "window": bottom corner of the focused window
+                property string position: "pointer"
+                // rank words you complete often first
+                property bool learn: true
+                // window classes to stay out of, comma separated (terminals by default)
+                property string excludeApps: "kitty, foot, alacritty, ghostty, wezterm, konsole, terminal, terminator, tilix, ptyxis, kgx, st-256color"
             }
 
             property JsonObject display

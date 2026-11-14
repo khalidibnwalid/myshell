@@ -1,6 +1,7 @@
 import Quickshell
 import Quickshell.Hyprland
 import QtQuick
+import "modules/Autocomplete"
 import "modules/Bar"
 import "modules/Clipboard"
 import "modules/Dock"
@@ -56,6 +57,9 @@ Scope {
     }
 
     MicOsd {
+    }
+
+    Suggestions {
     }
 
     StatusOsd {

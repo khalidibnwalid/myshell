@@ -1,18 +1,30 @@
 {
     "appearance": {
-        "accentColor": "#ebcb8b",
-        "accentColorLight": "#ffdf9f",
-        "bgColor": "#1a120d",
+        "accentColor": "#92cef5",
+        "accentColorLight": "#abdeff",
+        "bgColor": "#0f1417",
         "borderColor": "#000000",
-        "fgColor": "#f0dfd7",
+        "fgColor": "#dfe3e7",
         "fontFamily": "Adwaita Sans",
         "highlightColor": "#000000",
         "opacity": 0.5,
-        "wallpaper": "/home/khalid/Pictures/Wallpapers/cat.jpg",
+        "settingsOpacity": 0.79,
+        "wallpaper": "/home/khalid/Pictures/Wallpapers/clouds.jpg",
         "wallpaperDir": "~/Pictures/Wallpapers"
     },
+    "autocomplete": {
+        "addSpace": false,
+        "enabled": true,
+        "excludeApps": "kitty, foot, alacritty, ghostty, wezterm, konsole, terminal, terminator, tilix, ptyxis, kgx, st-256color",
+        "learn": true,
+        "maxSuggestions": 5,
+        "minChars": 2,
+        "position": "pointer"
+    },
     "bar": {
-        "clock24h": false
+        "clock24h": false,
+        "trayHidden": "blueman|nm-applet",
+        "trayVisible": 1
     },
     "capture": {
         "autoSave": false,
@@ -57,7 +69,18 @@
         "popupSeconds": 5
     },
     "recentColors": [
-        "#1a140d"
+        "#6794c3",
+        "#c2c2c2",
+        "#009cfa",
+        "#051a28",
+        "#92cef5",
+        "#000000",
+        "#009bff",
+        "#0d121a",
+        "#003352",
+        "#0076bc",
+        "#1c446d",
+        "#0080ff"
     ],
     "search": {
         "bangs": {
