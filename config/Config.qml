@@ -25,6 +25,15 @@ Singleton {
         jsonAdapter.recentColors = list.slice(0, 12);
     }
 
+    readonly property var trayHiddenList: String(jsonAdapter.bar.trayHidden || "").split("|").filter(x => x !== "")
+
+    function setTrayHidden(id, hidden) {
+        const list = trayHiddenList.filter(x => x !== id);
+        if (hidden)
+            list.push(id);
+        jsonAdapter.bar.trayHidden = list.join("|");
+    }
+
     function setMonitors(value) {
         jsonAdapter.monitors = value;
     }
@@ -49,7 +58,11 @@ Singleton {
         id: file
 
         watchChanges: true
-        onFileChanged: reload()
+        // our own write must not be read back: a stale write landing late would undo a newer change
+        onFileChanged: {
+            if (!selfWrite.running)
+                reload();
+        }
         // changes made in the Settings window are written back to config.json
         onAdapterUpdated: saveTimer.restart()
         path: Qt.resolvedUrl("../config.json")
@@ -70,6 +83,7 @@ Singleton {
                 property string highlightColor: "#54545f"
                 property string borderColor: "#000000"
                 property real opacity: 0.5
+                property real settingsOpacity: 1
                 property string fontFamily: "Adwaita Sans"
             }
 
@@ -117,6 +131,10 @@ Singleton {
 
             bar: JsonObject {
                 property bool clock24h: false
+                // tray icons shown in the bar before the rest fold behind the arrow
+                property int trayVisible: 2
+                // ids of tray apps that never show in the bar, separated by "|"
+                property string trayHidden: ""
             }
 
             property JsonObject notifications
@@ -161,7 +179,16 @@ Singleton {
         id: saveTimer
 
         interval: 400
-        onTriggered: file.writeAdapter()
+        onTriggered: {
+            selfWrite.restart();
+            file.writeAdapter();
+        }
+    }
+
+    Timer {
+        id: selfWrite
+
+        interval: 1000
     }
 
 }

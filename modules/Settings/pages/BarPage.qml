@@ -4,6 +4,7 @@ import "../../../services"
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Services.SystemTray
 
 SettingsPage {
     id: page
@@ -43,6 +44,62 @@ SettingsPage {
                 checked: Config.bar.clock24h
                 onToggled: on => Config.bar.clock24h = on
             }
+        }
+    }
+
+    SettingGroup {
+        title: "Tray"
+
+        SettingRow {
+            icon: "apps"
+            title: "Icons shown"
+            description: "How many tray icons stay in the bar; the rest fold behind the arrow"
+
+            StyledText {
+                Layout.preferredWidth: 24
+                horizontalAlignment: Text.AlignRight
+                text: Config.bar.trayVisible
+                font.weight: Font.Medium
+            }
+
+            IconButton {
+                enabled: Config.bar.trayVisible > 1
+                opacity: enabled ? 1 : 0.3
+                icon: "remove"
+                onClicked: Config.bar.trayVisible = Config.bar.trayVisible - 1
+            }
+
+            IconButton {
+                enabled: Config.bar.trayVisible < 12
+                opacity: enabled ? 1 : 0.3
+                icon: "add"
+                onClicked: Config.bar.trayVisible = Config.bar.trayVisible + 1
+            }
+        }
+
+        Repeater {
+            model: SystemTray.items
+
+            delegate: SettingRow {
+                id: trayRow
+
+                required property var modelData
+
+                image: modelData.icon
+                title: modelData.title || modelData.id
+                description: "Show this app in the bar"
+
+                ToggleSwitch {
+                    checked: Config.trayHiddenList.indexOf(trayRow.modelData.id) < 0
+                    onToggled: on => Config.setTrayHidden(trayRow.modelData.id, !on)
+                }
+            }
+        }
+
+        SettingRow {
+            visible: SystemTray.items.values.length === 0
+            title: "No tray apps running"
+            description: "Apps with a tray icon show up here, so you can hide the ones you do not want"
         }
     }
 

@@ -15,6 +15,9 @@ Rectangle {
     readonly property alias text: input.text
     readonly property alias inputItem: input
 
+    // true while the text holds keystrokes the user typed and the owner has not taken yet
+    property bool dirty: false
+
     signal committed(string text)
     signal edited(string text)
     signal accepted()
@@ -33,6 +36,7 @@ Rectangle {
 
     // show the value again, e.g. after a typed text was rejected or rounded
     function reset() {
+        dirty = false;
         input.text = root.value;
     }
 
@@ -44,7 +48,7 @@ Rectangle {
     border.color: Appearance.accentColor
     opacity: enabled ? 1 : 0.45
     onValueChanged: {
-        if (!input.activeFocus && input.text !== value)
+        if (!dirty && input.text !== value)
             input.text = value;
     }
     Component.onCompleted: input.text = value
@@ -77,11 +81,19 @@ Rectangle {
             // Tab moves on to the next field
             activeFocusOnTab: true
             echoMode: root.password ? TextInput.Password : TextInput.Normal
-            onTextEdited: root.edited(text)
+            onTextEdited: {
+                root.dirty = true;
+                root.edited(text);
+            }
             onAccepted: root.accepted()
             onEditingFinished: {
-                if (text !== root.value)
+                // untouched text is never committed: it may be stale
+                const typed = root.dirty;
+                root.dirty = false;
+                if (typed && text !== root.value)
                     root.committed(text);
+                else if (text !== root.value)
+                    input.text = root.value;
             }
 
             StyledText {

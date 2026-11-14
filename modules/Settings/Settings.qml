@@ -149,7 +149,8 @@ ApplicationWindow {
     minimumHeight: 440
     title: "Settings"
     visible: WindowManager.settingsVisible
-    color: Appearance.bgColor
+    // light themes get the same stronger tint as the panels, or the blur turns them dull grey
+    color: Qt.alpha(Appearance.bgColor, Appearance.isLight ? 1 - Math.pow(1 - Config.appearance.settingsOpacity, 2) : Config.appearance.settingsOpacity)
     onClosing: WindowManager.settingsVisible = false
     onVisibleChanged: {
         if (visible && WindowManager.settingsPage !== "") {

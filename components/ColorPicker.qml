@@ -25,6 +25,7 @@ Popup {
     property var swatches: []
     property var recents: []
     property bool keep: false
+    property bool appliedThisSession: false
 
     signal previewed(color c)
     signal applied(color c)
@@ -78,6 +79,7 @@ Popup {
         original = c;
         load(c);
         keep = false;
+        appliedThisSession = false;
         open();
     }
 
@@ -86,9 +88,11 @@ Popup {
     width: 332
     padding: 16
     modal: true
-    closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+    // while the eyedropper runs (and just after) the picking click must not count as
+    // a click outside, or the picker closes and reverts before the colour arrives
+    closePolicy: (dropper.running || dropGuard.running) ? Popup.NoAutoClose : (Popup.CloseOnEscape | Popup.CloseOnPressOutside)
     onClosed: {
-        if (!keep)
+        if (!keep && !appliedThisSession)
             cancelled();
     }
     // ready to type a hex code straight away
@@ -129,7 +133,11 @@ Popup {
     Process {
         id: dropper
 
-        command: ["hyprpicker"]
+        command: ["hyprpicker", "--no-fancy", "--quiet"]
+        onRunningChanged: {
+            if (!running)
+                dropGuard.restart();
+        }
 
         stdout: StdioCollector {
             onStreamFinished: {
@@ -138,6 +146,12 @@ Popup {
                     root.setFromColor(c);
             }
         }
+    }
+
+    Timer {
+        id: dropGuard
+
+        interval: 400
     }
 
     contentItem: ColumnLayout {
@@ -532,7 +546,10 @@ Popup {
                 icon: "check"
                 text: "Apply"
                 onClicked: {
+                    // If closing also raises cancelled, its rollback must keep this choice.
+                    root.original = root.value;
                     root.keep = true;
+                    root.appliedThisSession = true;
                     root.applied(root.value);
                     root.close();
                 }

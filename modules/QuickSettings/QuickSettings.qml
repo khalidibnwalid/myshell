@@ -169,7 +169,8 @@ Scope {
                     height: panelArea.height
                     // outer radius = inner radius (20) + padding (16)
                     radius: 36
-                    color: Appearance.panelColor
+                    // never more than 15% see-through, whatever the bar opacity is
+                    color: Qt.alpha(Appearance.bgColor, Math.max(0.35, Appearance.panelAlpha))
                     border.color: Appearance.hairlineColor
                     border.width: 1
                     Component.onCompleted: {

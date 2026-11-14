@@ -42,8 +42,8 @@ Item {
                 // length along the bar: the focused workspace is a longer pill
                 property real extent: focused ? 52 : 24
 
-                implicitWidth: root.horizontal ? extent : 40
-                implicitHeight: root.horizontal ? 40 : extent
+                implicitWidth: root.horizontal ? extent : 36
+                implicitHeight: root.horizontal ? 36 : extent
 
                 Behavior on extent {
                     NumberAnimation {

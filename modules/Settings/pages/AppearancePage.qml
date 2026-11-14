@@ -151,7 +151,10 @@ SettingsPage {
         recents: Config.recentColors || []
         // the theme follows while you pick; Cancel puts the old colour back
         onPreviewed: c => page.applyColor(page.pickTarget, c)
-        onApplied: c => Config.addRecentColor(c.toString())
+        onApplied: c => {
+            page.applyColor(page.pickTarget, c);
+            Config.addRecentColor(Qt.rgba(c.r, c.g, c.b, 1).toString());
+        }
         onCancelled: page.applyColor(page.pickTarget, colorPicker.original)
     }
 
@@ -254,7 +257,7 @@ SettingsPage {
     Process {
         id: pickerProc
 
-        command: ["hyprpicker"]
+        command: ["hyprpicker", "--no-fancy", "--quiet"]
 
         stdout: StdioCollector {
             onStreamFinished: {
@@ -773,6 +776,33 @@ SettingsPage {
                 // 0% is fully clear; from 1% up the desktop behind is blurred
                 value: Appearance.panelOpacity
                 onDragged: v => Config.appearance.opacity = Math.round(v * 100) / 100
+            }
+        }
+
+        SettingRow {
+            icon: "opacity"
+            title: "Settings transparency"
+            description: "How see-through the Settings window is"
+
+            IconButton {
+                visible: Math.abs(Config.appearance.settingsOpacity - 1) > 0.004
+                icon: "restart_alt"
+                onClicked: Config.appearance.settingsOpacity = 1
+            }
+
+            StyledText {
+                Layout.preferredWidth: 40
+                horizontalAlignment: Text.AlignRight
+                text: Math.round(Config.appearance.settingsOpacity * 100) + "%"
+                font.weight: Font.Medium
+            }
+
+            PillSlider {
+                implicitWidth: 260
+                implicitHeight: 36
+                icon: "opacity"
+                value: Config.appearance.settingsOpacity
+                onDragged: v => Config.appearance.settingsOpacity = Math.round(v * 100) / 100
             }
         }
 

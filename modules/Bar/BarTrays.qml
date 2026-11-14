@@ -12,9 +12,11 @@ GridLayout {
     id: root
 
     property var barWindow
-    property int maxVisible: 2
+    property int maxVisible: Math.max(1, Config.bar.trayVisible)
     property bool expanded: false
-    readonly property int count: SystemTray.items.values.length
+    // tray apps that are not hidden in the settings
+    readonly property var items: SystemTray.items.values.filter(i => Config.trayHiddenList.indexOf(i.id) < 0)
+    readonly property int count: items.length
     readonly property bool horizontal: Config.barHorizontal
 
     // a column on a side bar, a row on a top or bottom bar
@@ -68,7 +70,7 @@ GridLayout {
     }
 
     Repeater {
-        model: SystemTray.items
+        model: root.items
 
         delegate: Item {
             id: trayItem

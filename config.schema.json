@@ -45,6 +45,12 @@
           "type": "number",
           "minimum": 0,
           "maximum": 1
+        },
+        "settingsOpacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Transparency of the Settings window"
         }
       }
     },
@@ -137,6 +143,16 @@
         "clock24h": {
           "type": "boolean",
           "description": "Show a 24-hour clock in the bar, quick settings and lock screen"
+        },
+        "trayVisible": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 12,
+          "description": "How many tray icons show in the bar before the rest fold behind the arrow"
+        },
+        "trayHidden": {
+          "type": "string",
+          "description": "Ids of tray apps that never show in the bar, separated by |"
         }
       }
     },
