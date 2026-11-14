@@ -85,38 +85,39 @@ SettingsPage {
         visible: page.hasBattery
         title: "Battery"
 
-        SettingRow {
-            icon: "battery_full"
-            title: Math.round(Battery.percentage * 100) + "%"
-            description: page.batteryDetails()
+        SettingCard {
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 8
 
-            Meter {
-                implicitWidth: 220
-                value: Battery.percentage
-            }
-        }
+                RingGauge {
+                    Layout.fillWidth: true
+                    icon: Battery.stateString === "Charging" ? "bolt" : "battery_full"
+                    value: Battery.percentage
+                    valueText: Math.round(Battery.percentage * 100) + "%"
+                    label: "Charge"
+                    detail: page.batteryDetails()
+                }
 
-        SettingRow {
-            visible: !!page.device && page.device.healthSupported
-            icon: "favorite"
-            title: "Battery health"
-            description: "Capacity left compared with a new battery"
+                RingGauge {
+                    Layout.fillWidth: true
+                    visible: !!page.device && page.device.healthSupported
+                    icon: "favorite"
+                    value: page.device ? page.device.healthPercentage / 100 : 0
+                    valueText: page.device ? Math.round(page.device.healthPercentage) + "%" : ""
+                    label: "Health"
+                    detail: "Capacity vs. new"
+                }
 
-            StyledText {
-                text: page.device ? Math.round(page.device.healthPercentage) + "%" : ""
-                color: Appearance.mutedColor
-            }
-        }
-
-        SettingRow {
-            visible: !!page.device && Math.abs(page.device.changeRate) > 0.01
-            icon: "electric_bolt"
-            title: "Power draw"
-            description: "How fast the battery is charging or draining"
-
-            StyledText {
-                text: page.device ? Math.abs(page.device.changeRate).toFixed(1) + " W" : ""
-                color: Appearance.mutedColor
+                RingGauge {
+                    Layout.fillWidth: true
+                    visible: !!page.device && Math.abs(page.device.changeRate) > 0.01
+                    icon: "electric_bolt"
+                    value: page.device ? Math.min(1, Math.abs(page.device.changeRate) / 65) : 0
+                    valueText: page.device ? Math.abs(page.device.changeRate).toFixed(1) + " W" : ""
+                    label: "Power draw"
+                    detail: "Charging or draining"
+                }
             }
         }
     }
@@ -144,30 +145,36 @@ SettingsPage {
     SettingGroup {
         title: "Session"
 
-        Repeater {
-            model: page.sessionActions
+        GridLayout {
+            Layout.fillWidth: true
+            columns: 5
+            columnSpacing: 10
+            rowSpacing: 10
 
-            delegate: SettingRow {
-                id: action
+            Repeater {
+                model: page.sessionActions
 
-                required property var modelData
-                readonly property bool armed: page.confirming === modelData.key
+                delegate: BigTile {
+                    id: action
 
-                icon: modelData.icon
-                title: modelData.title
-                description: armed ? "Click again to confirm" : modelData.description
+                    required property var modelData
+                    readonly property bool armed: page.confirming === modelData.key
 
-                PillButton {
-                    toggled: action.armed
-                    text: action.armed ? "Confirm" : action.modelData.title
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: 1
+                    icon: modelData.icon
+                    title: modelData.title
+                    subtitle: armed ? "Click to confirm" : ""
+                    toggled: armed
+                    danger: modelData.confirm
                     onClicked: {
-                        if (action.modelData.confirm && !action.armed) {
-                            page.confirming = action.modelData.key;
+                        if (modelData.confirm && !armed) {
+                            page.confirming = modelData.key;
                             confirmTimer.restart();
                             return;
                         }
                         page.confirming = "";
-                        action.modelData.run();
+                        modelData.run();
                     }
                 }
             }

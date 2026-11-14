@@ -66,7 +66,7 @@ Scope {
             GridLayout {
                 id: startGroup
 
-                x: panelWindow.horizontal ? 8 : Math.round((parent.width - width) / 2)
+                x: panelWindow.horizontal ? 12 : Math.round((parent.width - width) / 2)
                 y: panelWindow.horizontal ? Math.round((parent.height - height) / 2) : 8
                 columns: panelWindow.horizontal ? -1 : 1
                 rowSpacing: 14
@@ -138,7 +138,7 @@ Scope {
             GridLayout {
                 id: endGroup
 
-                x: panelWindow.horizontal ? parent.width - width - 16 : Math.round((parent.width - width) / 2)
+                x: panelWindow.horizontal ? parent.width - width - 12 : Math.round((parent.width - width) / 2)
                 y: panelWindow.horizontal ? Math.round((parent.height - height) / 2) : parent.height - height - 16
                 columns: panelWindow.horizontal ? -1 : 1
                 rowSpacing: 10

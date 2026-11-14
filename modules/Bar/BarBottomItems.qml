@@ -39,8 +39,16 @@ GridLayout {
     // wifi / bluetooth / volume / battery -> open quick settings
     Item {
         Layout.alignment: Qt.AlignCenter
-        implicitWidth: statusColumn.implicitWidth
-        implicitHeight: statusColumn.implicitHeight
+        implicitWidth: statusColumn.implicitWidth + (root.horizontal ? 24 : 0)
+        implicitHeight: root.horizontal ? 36 : statusColumn.implicitHeight
+
+        // top and bottom bars: the status icons share one capsule
+        Rectangle {
+            anchors.fill: parent
+            visible: root.horizontal
+            radius: height / 2
+            color: Appearance.surfaceColor
+        }
 
         MouseArea {
             anchors.fill: parent
@@ -51,9 +59,11 @@ GridLayout {
 
         GridLayout {
             id: statusColumn
+
+            anchors.centerIn: parent
             columns: root.horizontal ? -1 : 1
             rowSpacing: 8
-            columnSpacing: 8
+            columnSpacing: root.horizontal ? 12 : 8
 
         MaterialSymbol {
             Layout.alignment: Qt.AlignCenter
@@ -112,10 +122,12 @@ GridLayout {
             }
         }
 
-        ColumnLayout {
+        GridLayout {
             visible: Battery.device.isLaptopBattery
             Layout.alignment: Qt.AlignCenter
-            spacing: -2
+            columns: root.horizontal ? 2 : 1
+            rowSpacing: -2
+            columnSpacing: 2
 
             MaterialSymbol {
                 Layout.alignment: Qt.AlignCenter
@@ -136,15 +148,26 @@ GridLayout {
         }
     }
 
-    MaterialSymbol {
+    Rectangle {
         Layout.alignment: Qt.AlignCenter
-        icon: "power_settings_new"
-        font.pixelSize: 22
-        color: Appearance.fgColor
+        implicitWidth: root.horizontal ? 36 : 22
+        implicitHeight: root.horizontal ? 36 : 22
+        radius: height / 2
+        color: root.horizontal && powerArea.containsMouse ? Appearance.surfaceHighColor : (root.horizontal ? Appearance.surfaceColor : "transparent")
+
+        MaterialSymbol {
+            anchors.centerIn: parent
+            icon: "power_settings_new"
+            font.pixelSize: 22
+            color: Appearance.fgColor
+        }
 
         MouseArea {
+            id: powerArea
+
             anchors.fill: parent
             anchors.margins: -4
+            hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
             onClicked: WindowManager.toggleQuickSettingsVisible()
         }

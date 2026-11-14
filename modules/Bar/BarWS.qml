@@ -15,8 +15,18 @@ Item {
 
     readonly property bool horizontal: Config.barHorizontal
 
-    implicitWidth: column.implicitWidth
+    implicitWidth: column.implicitWidth + (horizontal ? 12 : 0)
     implicitHeight: column.implicitHeight
+
+    // top and bottom bars: the workspaces sit in a capsule like the clock
+    Rectangle {
+        anchors.centerIn: parent
+        width: column.implicitWidth + 12
+        height: 36
+        radius: 18
+        visible: root.horizontal
+        color: Appearance.surfaceColor
+    }
 
     // one line of workspaces along the bar
     GridLayout {
@@ -57,7 +67,7 @@ Item {
                 Rectangle {
                     anchors.centerIn: parent
                     width: root.horizontal ? parent.width - 4 : 28
-                    height: root.horizontal ? 28 : parent.height - 4
+                    height: root.horizontal ? 26 : parent.height - 4
                     radius: 14
                     color: Appearance.accentColor
                     opacity: ws.focused ? 1 : 0

@@ -43,6 +43,63 @@ Singleton {
         return fits.sort((a, b) => a - b);
     }
 
+    function logicalSize(m) {
+        const t = Number((m.lastIpcObject || {}).transform || 0);
+        const w = m.width / m.scale;
+        const h = m.height / m.scale;
+        return t % 2 === 1 ? { "w": h, "h": w } : { "w": w, "h": h };
+    }
+
+    // where a dragged display lands: against the nearest edge of another one, aligned when close
+    function snap(monitor, x, y, monitors) {
+        const me = logicalSize(monitor);
+        const keep = 64;
+        const near = 40;
+        const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+        let best = null;
+        for (const other of monitors) {
+            if (other.name === monitor.name)
+                continue;
+            const o = logicalSize(other);
+            const sideY = clamp(y, other.y - me.h + keep, other.y + o.h - keep);
+            const sideX = clamp(x, other.x - me.w + keep, other.x + o.w - keep);
+            const options = [
+                { "x": other.x + o.w, "y": sideY },
+                { "x": other.x - me.w, "y": sideY },
+                { "x": sideX, "y": other.y + o.h },
+                { "x": sideX, "y": other.y - me.h }
+            ];
+            for (const c of options) {
+                if (Math.abs(c.y - other.y) < near)
+                    c.y = other.y;
+                else if (Math.abs(c.y + me.h - (other.y + o.h)) < near)
+                    c.y = other.y + o.h - me.h;
+                if (Math.abs(c.x - other.x) < near)
+                    c.x = other.x;
+                else if (Math.abs(c.x + me.w - (other.x + o.w)) < near)
+                    c.x = other.x + o.w - me.w;
+                const d = Math.hypot(c.x - x, c.y - y);
+                if (!best || d < best.d)
+                    best = { "x": Math.round(c.x), "y": Math.round(c.y), "d": d };
+            }
+        }
+        return best || { "x": monitor.x, "y": monitor.y };
+    }
+
+    // place a display and remember it
+    function move(monitor, x, y) {
+        const mode = currentMode(monitor);
+        const position = Math.round(x) + "x" + Math.round(y);
+        send(monitor.name, mode, monitor.scale, position);
+        const next = JSON.parse(JSON.stringify(saved));
+        next[monitor.name] = Object.assign({}, next[monitor.name] || {}, {
+            "mode": next[monitor.name]?.mode || mode,
+            "scale": next[monitor.name]?.scale || monitor.scale,
+            "position": position
+        });
+        Config.setMonitors(next);
+    }
+
     function send(name, mode, scale, position) {
         Quickshell.execDetached(["hyprctl", "keyword", "monitor", name + "," + String(mode).replace("Hz", "") + "," + position + "," + scale]);
         refreshTimer.restart();
@@ -75,7 +132,7 @@ Singleton {
         if (!pending)
             return;
         const next = JSON.parse(JSON.stringify(saved));
-        next[pending.name] = pending.next;
+        next[pending.name] = Object.assign({}, next[pending.name] || {}, pending.next);
         Config.setMonitors(next);
         pending = null;
         countdown.stop();
@@ -106,7 +163,7 @@ Singleton {
         for (const name of Object.keys(saved)) {
             const entry = saved[name];
             if (entry && entry.mode && entry.scale)
-                send(name, entry.mode, entry.scale, "auto");
+                send(name, entry.mode, entry.scale, entry.position || "auto");
         }
     }
 

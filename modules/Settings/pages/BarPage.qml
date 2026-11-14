@@ -25,13 +25,39 @@ SettingsPage {
             title: "Position"
             description: "Which edge of the screen the bar sits on; panels and pop-ups follow it"
 
-            Segmented {
-                model: ["left", "right", "top", "bottom"].map(side => ({
-                    "label": side.charAt(0).toUpperCase() + side.slice(1),
-                    "value": side
-                }))
-                value: Config.barPosition
-                onSelected: side => Config.layout.barPosition = side
+            Repeater {
+                model: [
+                    {
+                        "side": "left",
+                        "icon": "dock_to_right",
+                        "turn": 0
+                    },
+                    {
+                        "side": "top",
+                        "icon": "dock_to_bottom",
+                        "turn": 180
+                    },
+                    {
+                        "side": "bottom",
+                        "icon": "dock_to_bottom",
+                        "turn": 0
+                    },
+                    {
+                        "side": "right",
+                        "icon": "dock_to_left",
+                        "turn": 0
+                    }
+                ]
+
+                delegate: IconButton {
+                    required property var modelData
+
+                    icon: modelData.icon
+                    iconFill: 1
+                    rotation: modelData.turn
+                    toggled: Config.barPosition === modelData.side
+                    onClicked: Config.layout.barPosition = modelData.side
+                }
             }
         }
 

@@ -4,6 +4,8 @@ import Quickshell.Io
 pragma Singleton
 
 Singleton {
+    id: root
+
     readonly property alias appearance: jsonAdapter.appearance
     readonly property alias layout: jsonAdapter.layout
     readonly property alias keyboard: jsonAdapter.keyboard
@@ -55,17 +57,132 @@ Singleton {
         jsonAdapter[section] = copy;
     }
 
+    // --- config.json is the hand-written base; what the Settings window changes
+    // is stored as a difference in config.overrides.json (git-ignored, generated) ---
+    readonly property var objectSections: ["appearance", "layout", "capture", "dock", "autocomplete", "display", "bar", "notifications", "idle"]
+    readonly property var plainSections: ["keyboard", "search", "clipboard"]
+    readonly property var wholeValues: ["monitors", "recentColors"]
+    property var baseData: ({})
+    property var overrides: ({})
+    property string overridesText: ""
+    // false while the base is loading or the overrides are being applied, so that is not mistaken for a user change
+    property bool ready: false
+
+    function stable(v) {
+        if (Array.isArray(v))
+            return "[" + v.map(stable).join(",") + "]";
+        if (v !== null && typeof v === "object")
+            return "{" + Object.keys(v).sort().map(k => JSON.stringify(k) + ":" + stable(v[k])).join(",") + "}";
+        return JSON.stringify(v);
+    }
+
+    function snapshot() {
+        const out = {};
+        for (const name of objectSections) {
+            const src = jsonAdapter[name];
+            const section = {};
+            for (const key of Object.keys(src)) {
+                if (key === "objectName" || key.endsWith("Changed"))
+                    continue;
+                section[key] = src[key];
+            }
+            out[name] = section;
+        }
+        for (const name of plainSections)
+            out[name] = JSON.parse(JSON.stringify(jsonAdapter[name] || {}));
+        for (const name of wholeValues)
+            out[name] = JSON.parse(JSON.stringify(jsonAdapter[name]));
+        return out;
+    }
+
+    // everything that differs from config.json
+    function diff() {
+        const snap = snapshot();
+        const out = {};
+        for (const name in snap) {
+            const base = baseData[name];
+            if (wholeValues.indexOf(name) >= 0) {
+                if (stable(snap[name]) !== stable(base))
+                    out[name] = snap[name];
+                continue;
+            }
+            for (const key in snap[name]) {
+                if (stable(snap[name][key]) !== stable((base || {})[key])) {
+                    out[name] = out[name] || {};
+                    out[name][key] = snap[name][key];
+                }
+            }
+        }
+        return out;
+    }
+
+    function applyOverrides() {
+        ready = false;
+        for (const name in overrides) {
+            const values = overrides[name];
+            if (wholeValues.indexOf(name) >= 0) {
+                jsonAdapter[name] = values;
+            } else if (plainSections.indexOf(name) >= 0) {
+                const copy = JSON.parse(JSON.stringify(jsonAdapter[name] || {}));
+                Object.assign(copy, values);
+                jsonAdapter[name] = copy;
+            } else if (objectSections.indexOf(name) >= 0) {
+                for (const key in values) {
+                    if (key in jsonAdapter[name])
+                        jsonAdapter[name][key] = values[key];
+                }
+            }
+        }
+        readyTimer.restart();
+    }
+
+    function saveOverrides() {
+        overrides = diff();
+        const text = JSON.stringify(overrides, null, 4) + "\n";
+        if (text !== overridesText) {
+            overridesText = text;
+            overridesFile.setText(text);
+        }
+    }
+
+    Component.onCompleted: {
+        try {
+            overridesText = overridesFile.text();
+            overrides = JSON.parse(overridesText);
+        } catch (e) {
+            overrides = ({});
+        }
+    }
+
+    FileView {
+        id: overridesFile
+
+        path: Qt.resolvedUrl("../config.overrides.json")
+        blockLoading: true
+        printErrors: false
+    }
+
     FileView {
         id: file
 
         watchChanges: true
-        // our own write must not be read back: a stale write landing late would undo a newer change
         onFileChanged: {
-            if (!selfWrite.running)
-                reload();
+            root.ready = false;
+            reload();
         }
-        // changes made in the Settings window are written back to config.json
-        onAdapterUpdated: saveTimer.restart()
+        onLoaded: {
+            try {
+                root.baseData = JSON.parse(file.text());
+            } catch (e) {
+                root.baseData = ({});
+            }
+            root.applyOverrides();
+        }
+        // changes made in the Settings window go to config.overrides.json
+        onAdapterUpdated: {
+            if (root.ready)
+                saveTimer.restart();
+        }
         path: Qt.resolvedUrl("../config.json")
 
         JsonAdapter {
@@ -199,16 +316,14 @@ Singleton {
         id: saveTimer
 
         interval: 400
-        onTriggered: {
-            selfWrite.restart();
-            file.writeAdapter();
-        }
+        onTriggered: root.saveOverrides()
     }
 
     Timer {
-        id: selfWrite
+        id: readyTimer
 
-        interval: 1000
+        interval: 300
+        onTriggered: root.ready = true
     }
 
 }

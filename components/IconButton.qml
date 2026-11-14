@@ -7,6 +7,7 @@ Item {
     property string icon: ""
     property color color: Appearance.fgColor
     property int iconSize: 22
+    property real iconFill: 0
     property int size: 36
     property bool toggled: false
     property color accentColor: Appearance.accentColor
@@ -38,6 +39,7 @@ Item {
     MaterialSymbol {
         anchors.centerIn: parent
         icon: root.icon
+        fill: root.iconFill
         font.pixelSize: root.iconSize
         color: root.toggled ? root.accentColor : root.color
         opacity: mouseArea.containsMouse || root.toggled ? 1 : 0.5

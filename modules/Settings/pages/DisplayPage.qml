@@ -16,8 +16,34 @@ SettingsPage {
     // an unconfirmed change does not outlive the page
     Component.onDestruction: Displays.revert()
 
+    // the display whose settings are shown below
+    property string selectedName: ""
+    readonly property var monitorList: Hyprland.monitors.values
+    readonly property string activeName: monitorList.some(m => m.name === selectedName) ? selectedName : (monitorList[0]?.name ?? "")
+
     Backlight {
         id: backlight
+    }
+
+    SettingGroup {
+        visible: page.monitorList.length > 0
+        title: "Arrange"
+
+        SettingCard {
+            DisplayMap {
+                Layout.fillWidth: true
+                monitors: page.monitorList
+                selected: page.activeName
+                onPicked: name => page.selectedName = name
+            }
+
+            StyledText {
+                Layout.fillWidth: true
+                text: page.monitorList.length > 1 ? "Select a display to change its settings. Drag displays to rearrange them." : "Select a display to change its settings."
+                color: Appearance.mutedColor
+                font.pixelSize: 12
+            }
+        }
     }
 
     SettingGroup {
@@ -48,10 +74,12 @@ SettingsPage {
         delegate: SettingGroup {
             id: monitorGroup
 
+            visible: modelData.name === page.activeName
+
             required property var modelData
             readonly property string mode: Displays.currentMode(modelData)
 
-            title: modelData.name + (modelData.description ? "  ·  " + modelData.description : "")
+            title: (page.monitorList.indexOf(modelData) + 1) + "  ·  " + modelData.name + (modelData.description ? "  ·  " + modelData.description : "")
 
             SettingRow {
                 icon: "aspect_ratio"
