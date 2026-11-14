@@ -5,6 +5,7 @@ import QtQuick
 import QtQuick.Controls
 import Quickshell
 import Quickshell.Hyprland
+import Quickshell.Io
 
 Scope {
     id: root
@@ -14,6 +15,23 @@ Scope {
     readonly property bool isActuallyOpen: open || closeTimer.running
     readonly property int panelWidth: 412
     readonly property int gap: 12
+
+    // qs ipc call quicksettings toggle | open | close
+    IpcHandler {
+        function toggle(): void {
+            WindowManager.quickSettingsVisible = !WindowManager.quickSettingsVisible;
+        }
+
+        function open(): void {
+            WindowManager.quickSettingsVisible = true;
+        }
+
+        function close(): void {
+            WindowManager.quickSettingsVisible = false;
+        }
+
+        target: "quicksettings"
+    }
 
     Connections {
         function onQuickSettingsVisibleChanged() {

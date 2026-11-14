@@ -51,6 +51,8 @@ Scope {
                 implicitWidth: contentGrid.implicitWidth + padding * 2
                 implicitHeight: contentGrid.implicitHeight + padding * 2
                 WlrLayershell.layer: WlrLayer.Overlay
+                // its own name, so Hyprland can pop this window in and out (see windowrules.conf)
+                WlrLayershell.namespace: "quickshell-workspaces"
                 color: "transparent"
 
                 Rectangle {
@@ -289,7 +291,7 @@ Scope {
                                 StyledText {
                                     anchors.centerIn: parent
                                     text: workspaceContainer.workspaceId
-                                    color: workspace?.focused ? Appearance.onAccentColor : Appearance.fgColor
+                                    color: workspace?.focused ? Appearance.accentContrastColor : Appearance.fgColor
                                     font.pixelSize: 12
                                     font.weight: Font.Bold
                                 }

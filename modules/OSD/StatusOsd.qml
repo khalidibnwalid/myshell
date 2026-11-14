@@ -7,7 +7,7 @@ import Quickshell.Services.Pipewire
 import Quickshell.Services.UPower
 
 // One message pill for state changes that have no level to show:
-// microphone and screen sharing in use, keyboard layout, charger,
+// microphone in use, keyboard layout, charger,
 // power profile, do not disturb. Every one is event-driven; nothing is polled.
 Scope {
     id: root
@@ -82,18 +82,6 @@ Scope {
 
     PwObjectTracker {
         objects: root.recorders
-    }
-
-    // --- screen sharing: Hyprland reports when a screencast starts or stops ---
-    Connections {
-        function onRawEvent(event) {
-            if (event.name !== "screencast")
-                return;
-            const on = event.data.split(",")[0] === "1";
-            root.show(on ? "screen_share" : "stop_screen_share", on ? "Screen sharing on" : "Screen sharing off", "", on);
-        }
-
-        target: Hyprland
     }
 
     // --- charger plugged in or pulled out, power profile ---
