@@ -15,7 +15,7 @@ Rectangle {
     readonly property bool active: device.connected
     readonly property bool busy: Bluetooth.isBusy(device)
     readonly property bool menuOpen: Bluetooth.contextMenuAddress === device.address
-    readonly property color contentColor: active ? Appearance.onAccentColor : Appearance.fgColor
+    readonly property color contentColor: active ? Appearance.accentContrastColor : Appearance.fgColor
     readonly property int outerTop: first ? 20 : 6
     readonly property int outerBottom: last ? 20 : 6
 

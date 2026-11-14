@@ -46,7 +46,7 @@ Rectangle {
                     text: option.isObject ? option.modelData.label : String(option.modelData)
                     font.pixelSize: 13
                     font.weight: Font.Medium
-                    color: option.current ? Appearance.onAccentColor : Appearance.fgColor
+                    color: option.current ? Appearance.accentContrastColor : Appearance.fgColor
                 }
 
                 MouseArea {

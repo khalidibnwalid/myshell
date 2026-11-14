@@ -74,7 +74,7 @@ PanelWindow {
                 text: Math.round(root.level * 100)
                 font.pixelSize: 14
                 font.weight: Font.DemiBold
-                color: root.level > 0.86 ? Appearance.onAccentColor : Appearance.mutedColor
+                color: root.level > 0.86 ? Appearance.accentContrastColor : Appearance.mutedColor
             }
 
             MaterialSymbol {
@@ -83,7 +83,7 @@ PanelWindow {
                 anchors.horizontalCenter: parent.horizontalCenter
                 icon: root.icon
                 font.pixelSize: 24
-                color: Appearance.onAccentColor
+                color: Appearance.accentContrastColor
             }
         }
 

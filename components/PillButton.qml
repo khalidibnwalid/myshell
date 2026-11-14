@@ -9,7 +9,7 @@ Rectangle {
     property string text
     property string icon
     property bool toggled: false
-    readonly property color contentColor: toggled ? Appearance.onAccentColor : Appearance.fgColor
+    readonly property color contentColor: toggled ? Appearance.accentContrastColor : Appearance.fgColor
 
     signal clicked()
 

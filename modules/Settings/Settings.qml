@@ -264,7 +264,7 @@ ApplicationWindow {
                             required property var modelData
                             required property int index
                             readonly property bool current: root.currentKey === modelData.key
-                            readonly property color contentColor: current ? Appearance.onAccentColor : Appearance.fgColor
+                            readonly property color contentColor: current ? Appearance.accentContrastColor : Appearance.fgColor
                             // group heading above the first page of each group (not while searching)
                             readonly property bool startsGroup: root.query.trim() === "" && (index === 0 || root.shownPages[index - 1].group !== modelData.group)
 

@@ -103,7 +103,7 @@ PanelWindow {
 
                     required property var modelData
                     readonly property bool current: modelData.index === Keyboard.activeIndex
-                    readonly property color contentColor: current ? Appearance.onAccentColor : Appearance.fgColor
+                    readonly property color contentColor: current ? Appearance.accentContrastColor : Appearance.fgColor
 
                     Layout.fillWidth: true
                     implicitHeight: 40

@@ -16,7 +16,7 @@ Rectangle {
     property bool first: false
     property bool last: false
     property bool interactive: true
-    readonly property color contentColor: active ? Appearance.onAccentColor : Appearance.fgColor
+    readonly property color contentColor: active ? Appearance.accentContrastColor : Appearance.fgColor
     readonly property bool hovered: interactive && mouseArea.containsMouse
 
     signal clicked()

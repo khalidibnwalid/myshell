@@ -112,7 +112,7 @@ Item {
                     placeholderTextColor: Appearance.mutedColor
                     color: Appearance.fgColor
                     selectionColor: Appearance.accentColor
-                    selectedTextColor: Appearance.onAccentColor
+                    selectedTextColor: Appearance.accentContrastColor
                     font.family: Appearance.fontFamily
                     font.pixelSize: 15
                     echoMode: revealPassword.checked ? TextInput.Normal : TextInput.Password

@@ -35,7 +35,7 @@ Item {
         width: size + (area.pressed ? 4 : 0)
         height: size
         radius: height / 2
-        color: root.checked ? Appearance.onAccentColor : Appearance.mutedColor
+        color: root.checked ? Appearance.accentContrastColor : Appearance.mutedColor
 
         Behavior on x {
             NumberAnimation {

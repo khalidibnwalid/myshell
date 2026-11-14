@@ -319,7 +319,7 @@ Item {
                         anchors.centerIn: parent
                         icon: "arrow_forward"
                         font.pixelSize: 20
-                        color: Appearance.onAccentColor
+                        color: Appearance.accentContrastColor
                     }
 
                     MouseArea {

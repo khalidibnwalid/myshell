@@ -60,7 +60,7 @@ Item {
                 anchors.rightMargin: root.iconRightMargin
                 icon: root.icon
                 font.pixelSize: 20
-                color: Appearance.onAccentColor
+                color: Appearance.accentContrastColor
             }
         }
     }

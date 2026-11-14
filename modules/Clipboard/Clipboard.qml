@@ -210,7 +210,7 @@ Scope {
                             font.family: Appearance.fontFamily
                             font.pixelSize: 15
                             selectionColor: Appearance.accentColor
-                            selectedTextColor: Appearance.onAccentColor
+                            selectedTextColor: Appearance.accentContrastColor
                             selectByMouse: true
                             background: null
                             onTextChanged: window.rebuild(false)

@@ -71,7 +71,7 @@ Item {
                     StyledText {
                         anchors.centerIn: parent
                         text: ws.workspaceId
-                        color: Appearance.onAccentColor
+                        color: Appearance.accentContrastColor
                         font.pixelSize: 14
                         font.weight: Font.Bold
                     }

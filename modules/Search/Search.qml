@@ -232,7 +232,7 @@ Scope {
                             font.pixelSize: 19
                             font.weight: Font.Medium
                             selectionColor: Appearance.accentColor
-                            selectedTextColor: Appearance.onAccentColor
+                            selectedTextColor: Appearance.accentContrastColor
                             selectByMouse: true
                             background: null
                             Keys.onPressed: event => {

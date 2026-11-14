@@ -53,7 +53,7 @@ Item {
                     anchors.rightMargin: 16
                     visible: parent.width > 80
                     text: Math.round(Battery.percentage * 100) + "%"
-                    color: Appearance.onAccentColor
+                    color: Appearance.accentContrastColor
                     font.weight: Font.DemiBold
                 }
 
@@ -64,7 +64,7 @@ Item {
                     icon: Battery.iconName
                     fill: Battery.percentage
                     font.pixelSize: 20
-                    color: Appearance.onAccentColor
+                    color: Appearance.accentContrastColor
                 }
             }
         }

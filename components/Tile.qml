@@ -10,7 +10,7 @@ Rectangle {
     property string icon
     property real iconFill: 0
     property bool toggled: false
-    readonly property color contentColor: toggled ? Appearance.onAccentColor : Appearance.fgColor
+    readonly property color contentColor: toggled ? Appearance.accentContrastColor : Appearance.fgColor
 
     signal clicked()
 

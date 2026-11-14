@@ -125,7 +125,7 @@ Rectangle {
                         text: model.day
                         font.pixelSize: 11
                         font.weight: model.today ? Font.Bold : Font.Normal
-                        color: model.today ? Appearance.onAccentColor : Appearance.fgColor
+                        color: model.today ? Appearance.accentContrastColor : Appearance.fgColor
                     }
 
                     MouseArea {
