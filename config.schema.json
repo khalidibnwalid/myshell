@@ -43,7 +43,7 @@
         },
         "opacity": {
           "type": "number",
-          "minimum": 0.35,
+          "minimum": 0,
           "maximum": 1
         }
       }
@@ -224,6 +224,11 @@
           }
         }
       }
+    },
+    "recentColors": {
+      "type": "array",
+      "items": { "type": "string", "format": "color" },
+      "description": "Colours picked in Settings, newest first"
     },
     "monitors": {
       "type": "object",

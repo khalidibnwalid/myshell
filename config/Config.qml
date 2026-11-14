@@ -16,6 +16,14 @@ Singleton {
     readonly property alias notifications: jsonAdapter.notifications
     readonly property alias display: jsonAdapter.display
     readonly property alias monitors: jsonAdapter.monitors
+    readonly property alias recentColors: jsonAdapter.recentColors
+
+    // colours chosen with the colour picker, newest first
+    function addRecentColor(hex) {
+        const value = String(hex).toLowerCase();
+        const list = [value].concat((jsonAdapter.recentColors || []).filter(c => c !== value));
+        jsonAdapter.recentColors = list.slice(0, 12);
+    }
 
     function setMonitors(value) {
         jsonAdapter.monitors = value;
@@ -102,6 +110,8 @@ Singleton {
             // crashes Quickshell when the file is read back.
             property var monitors: ({
             })
+            // kept at the top level for the same reason as `monitors`
+            property var recentColors: []
 
             property JsonObject bar
 

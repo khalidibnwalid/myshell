@@ -27,6 +27,15 @@ Rectangle {
         input.forceActiveFocus();
     }
 
+    function selectAll() {
+        input.selectAll();
+    }
+
+    // show the value again, e.g. after a typed text was rejected or rounded
+    function reset() {
+        input.text = root.value;
+    }
+
     implicitWidth: 220
     implicitHeight: 36
     radius: height / 2
@@ -61,10 +70,12 @@ Rectangle {
             clip: true
             color: Appearance.fgColor
             selectionColor: Appearance.accentColor
-            selectedTextColor: Appearance.onAccentColor
+            selectedTextColor: Appearance.accentContrastColor
             font.family: Appearance.fontFamily
             font.pixelSize: 13
             selectByMouse: true
+            // Tab moves on to the next field
+            activeFocusOnTab: true
             echoMode: root.password ? TextInput.Password : TextInput.Normal
             onTextEdited: root.edited(text)
             onAccepted: root.accepted()
