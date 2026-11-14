@@ -13,13 +13,13 @@
         "wallpaperDir": "~/Pictures/Wallpapers"
     },
     "autocomplete": {
-        "addSpace": false,
+        "addSpace": true,
         "enabled": true,
         "excludeApps": "kitty, foot, alacritty, ghostty, wezterm, konsole, terminal, terminator, tilix, ptyxis, kgx, st-256color",
         "learn": true,
         "maxSuggestions": 5,
-        "minChars": 2,
-        "position": "pointer"
+        "minChars": 1,
+        "position": "caret"
     },
     "bar": {
         "clock24h": false,

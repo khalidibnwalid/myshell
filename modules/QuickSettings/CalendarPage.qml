@@ -26,8 +26,6 @@ Item {
 
         CalendarWidget {
             Layout.fillWidth: true
-            Layout.preferredHeight: 280
-            Layout.maximumHeight: 280
         }
     }
 }
