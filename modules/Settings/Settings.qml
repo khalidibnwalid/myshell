@@ -61,6 +61,15 @@ ApplicationWindow {
             "component": keyboardPage
         },
         {
+            "key": "hyprland",
+            "name": "Hyprland",
+            "icon": "window",
+            "logo": true,
+            "group": "Device",
+            "keywords": "window manager compositor border gaps rounding blur shadow opacity animations input touchpad cursor layout dwindle master workspace gestures lua conf",
+            "component": hyprlandPage
+        },
+        {
             "key": "autocomplete",
             "name": "Autocomplete",
             "icon": "spellcheck",
@@ -305,9 +314,17 @@ ApplicationWindow {
                                     spacing: 12
 
                                     MaterialSymbol {
+                                        visible: navEntry.modelData.logo !== true
                                         icon: navEntry.modelData.icon
                                         fill: navEntry.current ? 1 : 0
                                         font.pixelSize: 20
+                                        color: navEntry.contentColor
+                                    }
+
+                                    // a page with its own logo (Hyprland)
+                                    HyprlandLogo {
+                                        visible: navEntry.modelData.logo === true
+                                        size: 20
                                         color: navEntry.contentColor
                                     }
 
@@ -448,6 +465,13 @@ ApplicationWindow {
         id: keyboardPage
 
         KeyboardPage {
+        }
+    }
+
+    Component {
+        id: hyprlandPage
+
+        HyprlandPage {
         }
     }
 

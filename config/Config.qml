@@ -9,6 +9,7 @@ Singleton {
     readonly property alias appearance: jsonAdapter.appearance
     readonly property alias layout: jsonAdapter.layout
     readonly property alias keyboard: jsonAdapter.keyboard
+    readonly property alias hyprland: jsonAdapter.hyprland
     readonly property alias search: jsonAdapter.search
     readonly property alias clipboard: jsonAdapter.clipboard
     readonly property alias capture: jsonAdapter.capture
@@ -60,7 +61,7 @@ Singleton {
     // --- config.json is the hand-written base; what the Settings window changes
     // is stored as a difference in config.overrides.json (git-ignored, generated) ---
     readonly property var objectSections: ["appearance", "layout", "capture", "dock", "autocomplete", "display", "bar", "notifications", "idle"]
-    readonly property var plainSections: ["keyboard", "search", "clipboard"]
+    readonly property var plainSections: ["keyboard", "hyprland", "search", "clipboard"]
     readonly property var wholeValues: ["monitors", "recentColors"]
     property var baseData: ({})
     property var overrides: ({})
@@ -292,6 +293,14 @@ Singleton {
 
             property var keyboard: ({
                 "layouts": {
+                }
+            })
+            // Hyprland options changed in Settings (see services/HyprSettings.qml):
+            // "values" maps an option name ("general:gaps_in") to the value written
+            property var hyprland: ({
+                "enabled": true,
+                "accentBorder": true,
+                "values": {
                 }
             })
             // web search: browser command, the bang used for plain queries, extra bangs

@@ -242,6 +242,14 @@
         }
       }
     },
+    "hyprland": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean", "description": "Write the Hyprland options changed in Settings. Off leaves Hyprland entirely to the hand-written config" },
+        "accentBorder": { "type": "boolean", "description": "The active window border takes the shell's accent colour" },
+        "values": { "type": "object", "description": "Hyprland options changed in Settings, by name (for example general:gaps_in)" }
+      }
+    },
     "keyboard": {
       "type": "object",
       "properties": {

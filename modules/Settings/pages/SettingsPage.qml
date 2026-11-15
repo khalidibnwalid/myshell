@@ -13,6 +13,8 @@ Flickable {
     property string subtitle
     default property alias content: body.data
     property alias headerActions: actions.data
+    // something before the title (a logo)
+    property alias leading: leadingBox.data
 
     contentHeight: column.implicitHeight + 56
     clip: true
@@ -32,6 +34,16 @@ Flickable {
         RowLayout {
             Layout.fillWidth: true
             spacing: 10
+
+            Item {
+                id: leadingBox
+
+                Layout.alignment: Qt.AlignVCenter
+                Layout.rightMargin: 4
+                visible: children.length > 0
+                implicitWidth: childrenRect.width
+                implicitHeight: childrenRect.height
+            }
 
             ColumnLayout {
                 Layout.fillWidth: true

@@ -21,6 +21,8 @@ Scope {
         // these two apply their saved settings on their own once created
         Services.NightLight.refresh();
         Services.Displays.applySaved();
+        // reads the Hyprland options and keeps the window borders on the accent colour
+        Services.HyprSettings.refresh();
     }
 
     Dock {

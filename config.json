@@ -48,6 +48,11 @@
         "lockAfterMinutes": 5,
         "screenOffAfterMinutes": 10
     },
+    "hyprland": {
+        "enabled": true,
+        "accentBorder": true,
+        "values": {}
+    },
     "keyboard": {
         "layouts": {
             "Arabic": "عربي",
