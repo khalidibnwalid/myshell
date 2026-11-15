@@ -63,6 +63,27 @@ SettingsPage {
         return found ? found.label : "";
     }
 
+    // the words for the levels of the backlight: Off, Low, High (or Low, Medium, High)
+    function lightLevels() {
+        const max = KeyboardLight.maxLevel;
+        const names = max === 1 ? ["Off", "On"] : (max === 2 ? ["Off", "Low", "High"] : ["Off", "Low", "Medium", "High"]);
+        const list = names.map((label, value) => ({
+                    "label": label,
+                    "value": value
+                }));
+        // follows the ambient light sensor, when there is one
+        if (KeyboardLight.luxAvailable)
+            list.push({
+                "label": "Auto (shell)",
+                "value": -1
+            });
+        return list;
+    }
+
+    function idleLabel(seconds) {
+        return seconds >= 60 ? (seconds / 60) + (seconds === 60 ? " minute" : " minutes") : seconds + " seconds";
+    }
+
     function switchLabel(option) {
         const found = Keyboard.switchOptions.find(o => o.value === option);
         return found ? found.label : option;
@@ -71,6 +92,7 @@ SettingsPage {
     title: "Keyboard"
     subtitle: Keyboard.fullLayoutName !== "" ? Keyboard.fullLayoutName + "  ·  " + Keyboard.layouts.length + (Keyboard.layouts.length === 1 ? " layout" : " layouts") : ""
     Component.onCompleted: {
+        KeyboardLight.refresh();
         Keyboard.refresh();
         sync();
     }
@@ -234,6 +256,101 @@ SettingsPage {
             PillButton {
                 text: "Switch"
                 onClicked: Keyboard.nextLayout()
+            }
+        }
+    }
+
+    // --- the light under the keys, on laptops that have one ---
+    SettingGroup {
+        visible: KeyboardLight.available
+        title: "Backlight"
+
+        SettingRow {
+            icon: "keyboard"
+            title: "Brightness"
+            description: KeyboardLight.auto ? "Auto (shell), follows the room" + (KeyboardLight.lux >= 0 ? " · the room is at " + Math.round(KeyboardLight.lux) + " lux" : "") : (KeyboardLight.untouched ? "Left to the laptop: its own auto mode, or off. Pick a level to take over." : (KeyboardLight.level === 0 ? "Off" : "Level " + KeyboardLight.level + " of " + KeyboardLight.maxLevel) + "  ·  Fn+Space hands it back to the laptop's auto mode")
+
+            Segmented {
+                visible: KeyboardLight.maxLevel <= 3
+                model: page.lightLevels()
+                value: KeyboardLight.auto ? -1 : (KeyboardLight.untouched ? -2 : KeyboardLight.level)
+                onSelected: v => v < 0 ? KeyboardLight.setAuto(true) : KeyboardLight.setManual(v)
+            }
+
+            PillSlider {
+                visible: KeyboardLight.maxLevel > 3
+                implicitWidth: 220
+                implicitHeight: 32
+                icon: "keyboard"
+                value: KeyboardLight.maxLevel > 0 ? KeyboardLight.level / KeyboardLight.maxLevel : 0
+                onDragged: v => KeyboardLight.setManual(v * KeyboardLight.maxLevel)
+            }
+        }
+
+        SettingRow {
+            visible: KeyboardLight.auto
+            icon: "light_mode"
+            title: "Switch on in rooms darker than"
+            description: "Read from the ambient light sensor next to the camera. Brighter again turns it off, with some margin so it doesn't flicker."
+
+            Dropdown {
+                implicitWidth: 170
+                model: [
+                    {
+                        "label": "A dark room",
+                        "value": 5
+                    },
+                    {
+                        "label": "Dim (default)",
+                        "value": 20
+                    },
+                    {
+                        "label": "Normal indoors",
+                        "value": 60
+                    },
+                    {
+                        "label": "Fairly bright",
+                        "value": 150
+                    }
+                ]
+                value: KeyboardLight.autoLux
+                onSelected: v => KeyboardLight.setAutoLux(v)
+            }
+        }
+
+        SettingRow {
+            icon: "bedtime"
+            title: "Turn off when idle"
+            description: KeyboardLight.idleSeconds > 0 ? "Off after " + page.idleLabel(KeyboardLight.idleSeconds) + " without typing, on again at the next key" : "Keep it on at all times"
+
+            Dropdown {
+                visible: KeyboardLight.idleSeconds > 0
+                implicitWidth: 120
+                model: [
+                    {
+                        "label": "10 seconds",
+                        "value": 10
+                    },
+                    {
+                        "label": "30 seconds",
+                        "value": 30
+                    },
+                    {
+                        "label": "1 minute",
+                        "value": 60
+                    },
+                    {
+                        "label": "5 minutes",
+                        "value": 300
+                    }
+                ]
+                value: KeyboardLight.idleSeconds
+                onSelected: v => KeyboardLight.setIdleSeconds(v)
+            }
+
+            ToggleSwitch {
+                checked: KeyboardLight.idleSeconds > 0
+                onToggled: on => KeyboardLight.setIdleSeconds(on ? 30 : 0)
             }
         }
     }

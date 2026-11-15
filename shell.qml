@@ -23,6 +23,8 @@ Scope {
         Services.Displays.applySaved();
         // reads the Hyprland options and keeps the window borders on the accent colour
         Services.HyprSettings.refresh();
+        // the keyboard light's switch-off when idle
+        Services.KeyboardLight.refresh();
     }
 
     Dock {
