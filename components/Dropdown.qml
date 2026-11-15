@@ -31,6 +31,15 @@ Rectangle {
         return "";
     }
 
+    // the picture of the chosen item, when the items have one (a logo)
+    readonly property string currentImage: {
+        for (const item of model) {
+            if (valueOf(item) === value)
+                return isObject(item) && item.image ? String(item.image) : "";
+        }
+        return "";
+    }
+
     signal selected(var value)
 
     function isObject(item) {
@@ -64,6 +73,15 @@ Rectangle {
             icon: root.icon
             font.pixelSize: 18
             color: Appearance.fgColor
+        }
+
+        Image {
+            visible: root.currentImage !== "" && root.caption === "" && status === Image.Ready
+            Layout.preferredWidth: 20
+            Layout.preferredHeight: 20
+            source: root.caption === "" ? root.currentImage : ""
+            sourceSize: Qt.size(40, 40)
+            fillMode: Image.PreserveAspectFit
         }
 
         StyledText {
@@ -168,6 +186,16 @@ Rectangle {
                         anchors.leftMargin: 12
                         anchors.rightMargin: 12
                         spacing: 8
+
+                        // the logo of the item, when it has one
+                        Image {
+                            visible: status === Image.Ready
+                            Layout.preferredWidth: 24
+                            Layout.preferredHeight: 24
+                            source: root.isObject(option.modelData) && option.modelData.image ? option.modelData.image : ""
+                            sourceSize: Qt.size(48, 48)
+                            fillMode: Image.PreserveAspectFit
+                        }
 
                         StyledText {
                             Layout.fillWidth: true

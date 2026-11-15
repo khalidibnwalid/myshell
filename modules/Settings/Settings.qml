@@ -145,6 +145,22 @@ ApplicationWindow {
             "component": capturePage
         },
         {
+            "key": "startup",
+            "name": "Startup apps",
+            "icon": "rocket_launch",
+            "group": "System",
+            "keywords": "startup autostart login boot start apps programs session launch",
+            "component": startupPage
+        },
+        {
+            "key": "defaults",
+            "name": "Default apps",
+            "icon": "open_in_new",
+            "group": "System",
+            "keywords": "default apps browser file manager email mime open with images video music pdf text associations",
+            "component": defaultAppsPage
+        },
+        {
             "key": "system",
             "name": "System",
             "icon": "memory",
@@ -512,6 +528,20 @@ ApplicationWindow {
         id: storagePage
 
         StoragePage {
+        }
+    }
+
+    Component {
+        id: startupPage
+
+        StartupPage {
+        }
+    }
+
+    Component {
+        id: defaultAppsPage
+
+        DefaultAppsPage {
         }
     }
 

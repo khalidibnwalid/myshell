@@ -26,7 +26,14 @@ SettingsPage {
         "hyprsunset": "night light",
         "matugen": "colours from the wallpaper",
         "sensors": "temperatures",
-        "lspci": "graphics information"
+        "lspci": "graphics information",
+        "gio": "default apps and file previews in the launcher",
+        "xdg-mime": "changing default apps",
+        "busctl": "results from apps in the launcher",
+        "python3": "recent files, VS Code and browser history in the launcher",
+        "ffmpegthumbnailer": "album covers and video frames in the launcher",
+        "udisksctl": "mounting and ejecting drives",
+        "lpstat": "printers"
     })
     property var missing: []
     property bool checked: false
