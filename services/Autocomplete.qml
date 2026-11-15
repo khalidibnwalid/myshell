@@ -26,7 +26,7 @@ Singleton {
     readonly property string cacheDir: (Quickshell.env("XDG_CACHE_HOME") || home + "/.cache") + "/quickshell/ime"
     readonly property string dataDir: (Quickshell.env("XDG_DATA_HOME") || home + "/.local/share") + "/quickshell/autocomplete"
     readonly property string stateDir: (Quickshell.env("XDG_STATE_HOME") || home + "/.local/state") + "/quickshell"
-    readonly property string listUrl: "https://raw.githubusercontent.com/hermitdave/FrequencyWords/master/content/2018/%1/%1_50k.txt"
+    readonly property string listUrl: "https://raw.githubusercontent.com/hermitdave/FrequencyWords/master/content/2018/%1/%1_full.txt"
 
     // "off", "building", "starting", "ready", "unavailable" (another input method runs),
     // "unsupported" (compositor), "failed" (build or helper error)
@@ -122,7 +122,7 @@ Singleton {
     }
 
     function listPath(lang) {
-        return dataDir + "/" + lang + ".txt";
+        return dataDir + "/" + lang + "_200k.txt";
     }
 
     // loads the word list of a language, downloading it first when it is not there yet
@@ -137,8 +137,9 @@ Singleton {
             "lang": lang
         });
         // prints "ok" and the words (most frequent first), or "fail"
-        const fetch = "mkdir -p \"$1\" && { [ -s \"$2\" ] && [ \"$4\" != force ] || { curl -fsSL --max-time 90 -o \"$2.part\" \"$3\" && mv \"$2.part\" \"$2\"; }; }";
-        proc.command = ["sh", "-c", "if " + fetch + "; then echo ok; cut -d' ' -f1 \"$2\"; else rm -f \"$2.part\"; echo fail; fi", "sh", dataDir, listPath(lang), listUrl.arg(lang), forceDownload ? "force" : ""];
+        // the full list is big and noisy: keep the 200 000 most frequent words that were seen at least 15 times
+        const fetch = "mkdir -p \"$1\" && { [ -s \"$2\" ] && [ \"$4\" != force ] || { curl -fsSL --max-time 300 -o \"$2.full\" \"$3\" && awk 'NR <= 200000 && $2 >= 15' \"$2.full\" > \"$2.part\" && mv \"$2.part\" \"$2\" && rm -f \"$2.full\"; }; }";
+        proc.command = ["sh", "-c", "if " + fetch + "; then echo ok; cut -d' ' -f1 \"$2\"; else rm -f \"$2.part\" \"$2.full\"; echo fail; fi", "sh", dataDir, listPath(lang), listUrl.arg(lang), forceDownload ? "force" : ""];
         proc.running = true;
         // a download takes a moment; a list that is already on disk loads at once
         downloadCheck.createObject(root, {
@@ -200,6 +201,8 @@ Singleton {
     property bool visible: false
     // what was typed of the current word, and its language
     property string prefix: ""
+    // the word before it (lower case), which the suggestions are tuned to
+    property string previousWord: ""
     property string wordLanguage: ""
     // the text that the last Tab put in place of the prefix ("" = none)
     property string applied: ""
@@ -285,7 +288,7 @@ Singleton {
         return bytes;
     }
 
-    function lookup(lang, typed) {
+    function lookup(lang, typed, previous) {
         const dict = dictionaries[lang];
         if (!dict)
             return [];
@@ -304,9 +307,15 @@ Singleton {
                 found.push(text);
             }
         };
-        // words completed before come first, most used first
+        // words completed before come first, most used first. Learned entries are single
+        // words, or "previous word" + " " + "word" for what followed that word before.
         const mine = Config.autocomplete.learn ? (learned[lang] || {}) : {};
-        Object.keys(mine).filter(w => w.length > lower.length && w.toLowerCase().startsWith(lower)).sort((a, b) => mine[b] - mine[a]).slice(0, limit).forEach(add);
+        const keys = Object.keys(mine);
+        if (previous !== "") {
+            const lead = previous + " ";
+            keys.filter(k => k.startsWith(lead)).map(k => k.substring(lead.length)).filter(w => w.length > lower.length && w.toLowerCase().startsWith(lower)).sort((a, b) => mine[lead + b] - mine[lead + a]).slice(0, limit).forEach(add);
+        }
+        keys.filter(k => k.indexOf(" ") < 0 && k.length > lower.length && k.toLowerCase().startsWith(lower)).sort((a, b) => mine[b] - mine[a]).slice(0, limit).forEach(add);
         for (let i = 0; i < bucket.length && found.length < limit; i++) {
             const word = bucket[i];
             if (word.length > lower.length && word.toLowerCase().startsWith(lower))
@@ -329,6 +338,10 @@ Singleton {
             const all = Object.assign({}, learned);
             const mine = Object.assign({}, all[wordLanguage] || {});
             mine[word] = (mine[word] || 0) + 1;
+            if (previousWord !== "") {
+                const pair = previousWord + " " + word.toLowerCase();
+                mine[pair] = (mine[pair] || 0) + 1;
+            }
             all[wordLanguage] = mine;
             learned = all;
             saveLearned.restart();
@@ -360,6 +373,9 @@ Singleton {
         finishCycle();
         const m = text.match(wordAtEnd);
         const word = m ? m[0] : "";
+        const before = m ? text.substring(0, m.index) : text;
+        const prev = before.match(new RegExp("([" + letters + "]+)[\\s,;:]*$"));
+        previousWord = prev ? prev[1].toLowerCase() : "";
         if (word === "") {
             dismissed = false;
             prefix = "";
@@ -388,7 +404,7 @@ Singleton {
             hide();
             return;
         }
-        const found = lookup(lang, word);
+        const found = lookup(lang, word, previousWord);
         if (found.length === 0) {
             hide();
             return;

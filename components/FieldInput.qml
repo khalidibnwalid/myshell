@@ -69,6 +69,8 @@ Rectangle {
         TextInput {
             id: input
 
+            inputMethodHints: Qt.ImhSensitiveData // no word autocomplete in these fields
+
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignVCenter
             clip: true

@@ -12,6 +12,8 @@ Rectangle {
     property string subtitle
     property string trailingText
     property string trailingIcon
+    // room kept free on the right for a control placed over the row
+    property real trailingSpace: 0
     property bool active: false
     property bool first: false
     property bool last: false
@@ -31,7 +33,7 @@ Rectangle {
     RowLayout {
         anchors.fill: parent
         anchors.leftMargin: 18
-        anchors.rightMargin: 18
+        anchors.rightMargin: 18 + root.trailingSpace
         spacing: 14
 
         MaterialSymbol {

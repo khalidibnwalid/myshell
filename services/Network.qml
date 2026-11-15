@@ -23,6 +23,13 @@ Scope {
         return "signal_wifi_0_bar";
     }
 
+    // Wi-Fi networks NetworkManager already has a password for
+    property var savedSsids: []
+
+    function isSaved(ssid: string): bool {
+        return savedSsids.indexOf(ssid) >= 0;
+    }
+
     function getStatusIcon(strength) {
         if (strength > 75)
             return "signal_wifi_4_bar";
@@ -73,6 +80,13 @@ Scope {
         if (active) {
             disconnectProc.exec(["nmcli", "connection", "down", active.ssid]);
         }
+    }
+
+    // disconnect and drop the saved password
+    function forgetNetwork(ssid: string): void {
+        const name = ssid || (active ? active.ssid : "");
+        if (name !== "")
+            forgetProc.exec(["nmcli", "connection", "delete", "id", name]);
     }
 
     function getWifiStatus(): void {
@@ -136,6 +150,7 @@ Scope {
             root.connectingSsid = "";
             root.connectionError = exitCode === 0 ? "" : (connectError.text.trim() || "Couldn't connect to this network.");
             getNetworks.running = true;
+            savedProc.running = true;
             root.connectionFinished(exitCode === 0, ssid);
             connectProc.command = ["nmcli"];
         }
@@ -146,6 +161,32 @@ Scope {
 
         stdout: SplitParser {
             onRead: getNetworks.running = true
+        }
+    }
+
+    Process {
+        id: forgetProc
+
+        onExited: {
+            savedProc.running = true;
+            getNetworks.running = true;
+        }
+    }
+
+    Process {
+        id: savedProc
+
+        running: true
+        command: ["nmcli", "-t", "-f", "NAME,TYPE", "connection", "show"]
+        environment: ({
+                LANG: "C.UTF-8",
+                LC_ALL: "C.UTF-8"
+            })
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const PLACEHOLDER = "STRINGWHICHHOPEFULLYWONTBEUSED";
+                root.savedSsids = text.trim().split("\n").map(l => l.replace(/\\:/g, PLACEHOLDER).split(":")).filter(f => f[1] === "802-11-wireless").map(f => f[0].replace(new RegExp(PLACEHOLDER, "g"), ":"));
+            }
         }
     }
 

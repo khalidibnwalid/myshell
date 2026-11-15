@@ -203,6 +203,9 @@ Scope {
                         TextField {
                             id: searchField
 
+                            // keeps word autocomplete (and its Tab) out of the search
+                            inputMethodHints: Qt.ImhSensitiveData
+
                             Layout.fillWidth: true
                             color: Appearance.fgColor
                             placeholderText: "Search clipboard"

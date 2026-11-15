@@ -175,7 +175,7 @@ SettingsPage {
 
             PillButton {
                 text: "Forget"
-                onClicked: Quickshell.execDetached(["nmcli", "connection", "delete", "id", Network.active.ssid])
+                onClicked: Network.forgetNetwork()
             }
 
             PillButton {
@@ -254,7 +254,8 @@ SettingsPage {
                 active: page.joiningSsid === modelData.ssid
                 onClicked: {
                     page.cancelJoin();
-                    if (modelData.isSecure) {
+                    // a network that is already saved connects without asking again
+                    if (modelData.isSecure && !Network.isSaved(modelData.ssid)) {
                         page.joiningSsid = modelData.ssid;
                         page.contentY = 0;
                         password.focusInput();

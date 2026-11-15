@@ -14,7 +14,7 @@
     },
     "autocomplete": {
         "addSpace": true,
-        "enabled": true,
+        "enabled": false,
         "excludeApps": "kitty, foot, alacritty, ghostty, wezterm, konsole, terminal, terminator, tilix, ptyxis, kgx, st-256color",
         "learn": true,
         "maxSuggestions": 5,

@@ -104,6 +104,38 @@ SettingsPage {
     subtitle: "Word suggestions while you type, in every app"
 
     headerActions: [
+        Rectangle {
+            readonly property color tone: "#f0b429"
+
+            Layout.alignment: Qt.AlignVCenter
+            implicitWidth: badgeRow.implicitWidth + 20
+            implicitHeight: 26
+            radius: 13
+            color: Qt.alpha(tone, 0.18)
+            border.width: 1
+            border.color: Qt.alpha(tone, 0.6)
+
+            RowLayout {
+                id: badgeRow
+
+                anchors.centerIn: parent
+                spacing: 5
+
+                MaterialSymbol {
+                    icon: "science"
+                    font.pixelSize: 14
+                    color: parent.parent.tone
+                }
+
+                StyledText {
+                    text: "EXPERIMENTAL"
+                    font.pixelSize: 11
+                    font.weight: Font.Bold
+                    font.letterSpacing: 0.8
+                    color: parent.parent.tone
+                }
+            }
+        },
         ToggleSwitch {
             checked: page.on
             onToggled: enabled => Config.autocomplete.enabled = enabled
@@ -111,6 +143,12 @@ SettingsPage {
     ]
 
     SettingGroup {
+        SettingRow {
+            icon: "science"
+            title: "Experimental"
+            description: "Suggestions are basic (words that start with your letters) and can be wrong or miss words. Off by default."
+        }
+
         SettingRow {
             icon: Autocomplete.status === "ready" ? "check_circle" : (page.broken ? "error" : "spellcheck")
             title: page.statusTitle()

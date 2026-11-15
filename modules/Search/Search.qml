@@ -202,6 +202,9 @@ Scope {
                         TextField {
                             id: searchField
 
+                            // keeps word autocomplete (and its Tab) out of the search
+                            inputMethodHints: Qt.ImhSensitiveData
+
                             // inline bang completion: "!y" shows a ghost "t", Tab accepts it
                             readonly property string completion: cursorPosition === length ? Services.Search.bangCompletion(text) : ""
 

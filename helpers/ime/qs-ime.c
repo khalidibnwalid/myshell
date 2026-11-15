@@ -592,6 +592,12 @@ static bool ends_with(const char *text, size_t len, const char *tail, size_t tai
     return tail_len <= len && memcmp(text + len - tail_len, tail, tail_len) == 0;
 }
 
+// the cursor is inside a word (a letter follows it): suggesting then would start a new word
+static bool inside_word(const char *text, size_t cursor) {
+    unsigned char c = (unsigned char) text[cursor];
+    return c >= 0x80 || (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == '_';
+}
+
 static void im_done(void *data, struct zwp_input_method_v2 *m) {
     done_count++;
 
@@ -654,7 +660,7 @@ static void im_done(void *data, struct zwp_input_method_v2 *m) {
             send_text("", 0);
         } else {
             typed_set(before, before_len);
-            send_text(typed, typed_len);
+            send_text(inside_word(pending_text, cursor) ? "" : typed, inside_word(pending_text, cursor) ? 0 : typed_len);
         }
         return;
     }
@@ -666,7 +672,10 @@ static void im_done(void *data, struct zwp_input_method_v2 *m) {
             typed_reset();
         else
             typed_set(before, before_len);
-        send_text(typed, typed_len);
+        if (!selection && inside_word(pending_text, cursor))
+            send_text("", 0);
+        else
+            send_text(typed, typed_len);
     }
 }
 

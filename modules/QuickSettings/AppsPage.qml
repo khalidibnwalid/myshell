@@ -64,6 +64,9 @@ Item {
 
                 TextField {
                     id: searchField
+
+                    // keeps word autocomplete (and its Tab) out of the search
+                    inputMethodHints: Qt.ImhSensitiveData
                     Layout.fillWidth: true
                     Layout.minimumWidth: 0
                     onTextChanged: root.query = text

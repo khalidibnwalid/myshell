@@ -64,6 +64,7 @@ ApplicationWindow {
             "key": "autocomplete",
             "name": "Autocomplete",
             "icon": "spellcheck",
+            "experimental": true,
             "group": "Device",
             "keywords": "suggestions predictive text typing words completion arabic english dictionary input method",
             "component": autocompletePage
@@ -316,6 +317,14 @@ ApplicationWindow {
                                         elide: Text.ElideRight
                                         font.weight: Font.Medium
                                         color: navEntry.contentColor
+                                    }
+
+                                    // marks a page whose feature is still experimental
+                                    MaterialSymbol {
+                                        visible: navEntry.modelData.experimental === true
+                                        icon: "science"
+                                        font.pixelSize: 17
+                                        color: navEntry.current ? navEntry.contentColor : Appearance.mutedColor
                                     }
                                 }
 
