@@ -16,6 +16,12 @@ Item {
         return term === "" || app.name.toLowerCase().includes(term) || (app.description || "").toLowerCase().includes(term);
     }).sort((a, b) => a.name.localeCompare(b.name))
 
+    // opens an app and puts the panel away, like opening Settings does
+    function launch(app) {
+        app.execute();
+        Services.WindowManager.quickSettingsVisible = false;
+    }
+
     function appIconSource(icon) {
         if (!icon)
             return "";
@@ -70,6 +76,11 @@ Item {
                     Layout.fillWidth: true
                     Layout.minimumWidth: 0
                     onTextChanged: root.query = text
+                    // Enter opens the first match
+                    onAccepted: {
+                        if (root.filteredApps.length > 0)
+                            root.launch(root.filteredApps[0]);
+                    }
                     placeholderText: "Search apps"
                     placeholderTextColor: Appearance.mutedColor
                     color: Appearance.fgColor
@@ -188,10 +199,7 @@ Item {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        modelData.execute();
-                        WindowManager.quickSettingsVisible = false;
-                    }
+                    onClicked: root.launch(modelData)
                 }
             }
         }

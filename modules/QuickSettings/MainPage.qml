@@ -338,7 +338,10 @@ Item {
                         {
                             "icon": "settings",
                             "name": "Settings",
-                            "action": () => WindowManager.toggleSettingsVisible()
+                            "action": () => {
+                                WindowManager.quickSettingsVisible = false;
+                                WindowManager.toggleSettingsVisible();
+                            }
                         },
                         {
                             "icon": "restart_alt",

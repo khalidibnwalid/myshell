@@ -133,6 +133,13 @@ Singleton {
         stdout: StdioCollector {
             onStreamFinished: {
                 const output = text;
+                const fields = {};
+                for (const line of output.split(/\r?\n/)) {
+                    const at = line.indexOf(":");
+                    if (at > 0)
+                        fields[line.slice(0, at).trim()] = line.slice(at + 1).trim();
+                }
+                root.cpuFields = fields;
                 const threads = Number(root.field(output, "CPU(s)"));
                 const coresPerSocket = Number(root.field(output, "Core(s) per socket"));
                 const sockets = Number(root.field(output, "Socket(s)"));
@@ -174,6 +181,7 @@ Singleton {
                     const cpuValues = [];
                     root.readTemperatures(JSON.parse(text), values);
                     root.readCpuTemperatures(JSON.parse(text), cpuValues, false);
+                    root.sensorChips = root.readChips(JSON.parse(text));
                     root.temperature = values.length ? Math.max(...values) : -1;
                     root.cpuTemperature = cpuValues.length ? Math.max(...cpuValues) : -1;
                 } catch (error) {
@@ -239,6 +247,338 @@ Singleton {
                 root.gpuName = devices.length
                     ? devices.join(" · ")
                     : (text.trim() ? "No graphics controller reported" : "Unavailable (pciutils is not installed)");
+            }
+        }
+    }
+
+    // --- the detailed view ----------------------------------------------------
+    // every field lscpu reports
+    property var cpuFields: ({})
+    // per thread: usage 0–1, current and highest speed in MHz; the threads of the
+    // efficiency cores on a CPU with two kinds
+    property var coreUsage: []
+    property var coreFreq: []
+    property var coreMaxFreq: []
+    property var efficiencyThreads: []
+    property var coreSamples: ({})
+    // the physical core each thread belongs to
+    property var threadCore: []
+
+    // the physical cores: [{ id, label, threads, efficiency, usage, freq, temp }]; temp is -1 when unknown
+    readonly property var cores: {
+        const byId = {};
+        const order = [];
+        for (let t = 0; t < coreUsage.length; t++) {
+            const id = threadCore[t] !== undefined ? threadCore[t] : t;
+            if (!byId[id]) {
+                byId[id] = {
+                    "id": id,
+                    "threads": []
+                };
+                order.push(id);
+            }
+            byId[id].threads.push(t);
+        }
+        const chip = sensorChips.find(c => c.name === "Processor");
+        let performance = 0;
+        let efficiency = 0;
+        return order.sort((a, b) => a - b).map(id => {
+            const core = byId[id];
+            const eff = efficiencyThreads.length > 0 && efficiencyThreads.indexOf(core.threads[0]) >= 0;
+            const mean = list => list.reduce((x, y) => x + y, 0) / list.length;
+            const sensor = chip ? chip.items.find(i => i.label === "Core " + id) : null;
+            return {
+                "id": id,
+                "label": efficiencyThreads.length > 0 ? (eff ? "E" + efficiency++ : "P" + performance++) : String(order.indexOf(id)),
+                "threads": core.threads,
+                "efficiency": eff,
+                "usage": mean(core.threads.map(t => coreUsage[t] || 0)),
+                "freq": mean(core.threads.map(t => coreFreq[t] || 0)),
+                "temp": sensor ? sensor.value : -1
+            };
+        });
+    }
+    // /proc/meminfo in bytes, by name
+    property var memInfo: ({})
+    // [{ name, type, size, used, priority }] in bytes
+    property var swaps: []
+    // [{ name, driver, busy, vramUsed, vramTotal, temp, power, clock, memClock, fan, pstate }], -1 = unknown
+    property var gpus: []
+    // [{ name, model, size, kind }]
+    property var disks: []
+    // [{ source, fstype, size, used, available, mounts: [] }]
+    property var filesystems: []
+    // [{ name, adapter, items: [{ label, value }] }]
+    property var sensorChips: []
+    property var machine: ({})
+    property string loadAverage: ""
+    property int processCount: 0
+
+    readonly property real swapTotal: (memInfo.SwapTotal || 0)
+    readonly property real swapUsed: Math.max(0, (memInfo.SwapTotal || 0) - (memInfo.SwapFree || 0))
+    readonly property var swapNote: swaps.length === 0 ? "No swap is set up" : ""
+
+    function formatMhz(mhz) {
+        if (!Number.isFinite(mhz) || mhz <= 0)
+            return "—";
+        return mhz >= 1000 ? (mhz / 1000).toFixed(2) + " GHz" : Math.round(mhz) + " MHz";
+    }
+
+    // "12-19,22" -> [12, 13, …, 19, 22]
+    function parseRanges(text) {
+        const out = [];
+        for (const part of String(text || "").trim().split(",")) {
+            if (part === "")
+                continue;
+            const range = part.split("-").map(Number);
+            if (range.some(isNaN))
+                continue;
+            for (let i = range[0]; i <= (range[1] ?? range[0]); i++)
+                out.push(i);
+        }
+        return out;
+    }
+
+    function chipName(chip) {
+        const names = [[/^coretemp|^k10temp|^zenpower/, "Processor"], [/^nvme/, "NVMe drive"], [/^iwlwifi|^mt7|^ath|^rtw/, "Wi-Fi"], [/^acpitz/, "Motherboard"], [/^BAT/, "Battery"], [/^amdgpu|^nouveau|^i915/, "Graphics"], [/^nvidia/, "NVIDIA graphics"], [/^pch_/, "Chipset"], [/^thinkpad|^dell|^asus|^hp/, "Laptop"]];
+        for (const pair of names) {
+            if (pair[0].test(chip))
+                return pair[1];
+        }
+        return chip.replace(/-(isa|pci|virtual|acpi)-.*$/, "");
+    }
+
+    function readChips(data) {
+        const out = [];
+        for (const chip of Object.keys(data || {})) {
+            const body = data[chip];
+            if (!body || typeof body !== "object")
+                continue;
+            const items = [];
+            for (const feature of Object.keys(body)) {
+                const f = body[feature];
+                if (!f || typeof f !== "object")
+                    continue;
+                const key = Object.keys(f).find(k => /^temp\d+_input$/.test(k));
+                if (key && typeof f[key] === "number")
+                    items.push({
+                        "label": feature,
+                        "value": f[key]
+                    });
+            }
+            if (items.length > 0)
+                out.push({
+                    "name": chipName(chip),
+                    "adapter": body.Adapter || "",
+                    "items": items
+                });
+        }
+        return out;
+    }
+
+    // the numbers that change every moment: cores, memory, graphics, temperatures
+    function refreshDetailsLive() {
+        coresProc.running = true;
+        memDetailProc.running = true;
+        gpuDetailProc.running = true;
+        temperatureProc.running = true;
+        liveProc.running = true;
+        machineProc.running = true;
+    }
+
+    // what hardly changes: the processor, the drives
+    function refreshDetailsStatic() {
+        cpuProc.running = true;
+        storageProc.running = true;
+    }
+
+    Process {
+        id: coresProc
+        command: ["sh", "-c", "awk '/^cpu[0-9]/ {print \"stat\", substr($1,4), $2, $3, $4, $5, $6, $7, $8}' /proc/stat; for d in /sys/devices/system/cpu/cpu[0-9]*; do n=${d##*cpu}; f=$(cat $d/cpufreq/scaling_cur_freq 2>/dev/null); m=$(cat $d/cpufreq/cpuinfo_max_freq 2>/dev/null); c=$(cat $d/topology/core_id 2>/dev/null); echo \"freq $n ${f:-0} ${m:-0}\"; echo \"core $n ${c:-$n}\"; done; echo \"atom $(cat /sys/devices/cpu_atom/cpus 2>/dev/null)\""]
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const usage = root.coreUsage.slice();
+                const freq = root.coreFreq.slice();
+                const maxFreq = root.coreMaxFreq.slice();
+                const samples = Object.assign({}, root.coreSamples);
+                const ids = root.threadCore.slice();
+                for (const line of text.split(/\r?\n/)) {
+                    const f = line.trim().split(/\s+/);
+                    if (f[0] === "stat") {
+                        const n = Number(f[1]);
+                        const ticks = f.slice(2).map(Number);
+                        const total = ticks.reduce((a, b) => a + b, 0);
+                        const idle = ticks[3] + (ticks[4] || 0);
+                        const last = samples[n];
+                        if (last && total > last.total)
+                            usage[n] = Math.max(0, Math.min(1, 1 - (idle - last.idle) / (total - last.total)));
+                        else if (usage[n] === undefined)
+                            usage[n] = 0;
+                        samples[n] = {
+                            "total": total,
+                            "idle": idle
+                        };
+                    } else if (f[0] === "freq") {
+                        const n = Number(f[1]);
+                        freq[n] = Number(f[2]) / 1000;
+                        maxFreq[n] = Number(f[3]) / 1000;
+                    } else if (f[0] === "core") {
+                        ids[Number(f[1])] = Number(f[2]);
+                    } else if (f[0] === "atom") {
+                        root.efficiencyThreads = root.parseRanges(f.slice(1).join(","));
+                    }
+                }
+                root.coreSamples = samples;
+                root.threadCore = ids;
+                root.coreUsage = usage;
+                root.coreFreq = freq;
+                root.coreMaxFreq = maxFreq;
+            }
+        }
+    }
+
+    Process {
+        id: memDetailProc
+        command: ["sh", "-c", "cat /proc/meminfo; echo ---; cat /proc/swaps"]
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const info = {};
+                const swapList = [];
+                let inSwaps = false;
+                for (const line of text.split(/\r?\n/)) {
+                    if (line === "---") {
+                        inSwaps = true;
+                        continue;
+                    }
+                    if (!inSwaps) {
+                        const m = line.match(/^(\w+)(?:\(\w+\))?:\s+(\d+)/);
+                        if (m)
+                            info[m[1]] = Number(m[2]) * 1024;
+                    } else if (line.startsWith("/")) {
+                        const f = line.trim().split(/\s+/);
+                        if (f.length >= 5)
+                            swapList.push({
+                                "name": f[0],
+                                "type": f[1],
+                                "size": Number(f[2]) * 1024,
+                                "used": Number(f[3]) * 1024,
+                                "priority": Number(f[4])
+                            });
+                    }
+                }
+                root.memInfo = info;
+                root.swaps = swapList;
+            }
+        }
+    }
+
+    Process {
+        id: gpuDetailProc
+        command: [Quickshell.shellDir + "/scripts/gpu-info.sh"]
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const num = v => (v === undefined || v === "-" || v === "" || isNaN(Number(v))) ? -1 : Number(v);
+                const list = [];
+                for (const line of text.split(/\r?\n/)) {
+                    const f = line.split("\t");
+                    if (f[0] !== "gpu" || f.length < 12)
+                        continue;
+                    list.push({
+                        "name": f[1],
+                        "driver": f[2],
+                        "busy": num(f[3]),
+                        "vramUsed": num(f[4]),
+                        "vramTotal": num(f[5]),
+                        "temp": num(f[6]),
+                        "power": num(f[7]),
+                        "clock": num(f[8]),
+                        "memClock": num(f[9]),
+                        "fan": num(f[10]),
+                        "pstate": f[11] === "-" ? "" : f[11]
+                    });
+                }
+                root.gpus = list;
+            }
+        }
+    }
+
+    Process {
+        id: storageProc
+        command: ["sh", "-c", "lsblk -d -b -n -P -o NAME,MODEL,SIZE,TYPE,ROTA,TRAN 2>/dev/null; echo ---; df -B1 -x tmpfs -x devtmpfs -x efivarfs -x squashfs -x overlay --output=source,fstype,size,used,avail,target 2>/dev/null"]
+        environment: ({ "LC_ALL": "C" })
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const driveList = [];
+                const bySource = {};
+                const order = [];
+                let inFs = false;
+                for (const line of text.split(/\r?\n/)) {
+                    if (line === "---") {
+                        inFs = true;
+                        continue;
+                    }
+                    if (!inFs) {
+                        const kv = {};
+                        const pair = /(\w+)="([^"]*)"/g;
+                        let m;
+                        while ((m = pair.exec(line)) !== null)
+                            kv[m[1]] = m[2];
+                        if (!kv.NAME || /^(zram|loop|ram)/.test(kv.NAME))
+                            continue;
+                        const kind = kv.TRAN === "nvme" ? "NVMe SSD" : (kv.TRAN === "usb" ? "USB drive" : (kv.ROTA === "1" ? "Hard disk" : "SSD"));
+                        driveList.push({
+                            "name": kv.NAME,
+                            "model": kv.MODEL.trim(),
+                            "size": Number(kv.SIZE),
+                            "kind": kind
+                        });
+                    } else if (line.startsWith("/")) {
+                        const f = line.trim().split(/\s+/);
+                        if (f.length < 6)
+                            continue;
+                        const target = f.slice(5).join(" ");
+                        if (!bySource[f[0]]) {
+                            bySource[f[0]] = {
+                                "source": f[0],
+                                "fstype": f[1],
+                                "size": Number(f[2]),
+                                "used": Number(f[3]),
+                                "available": Number(f[4]),
+                                "mounts": []
+                            };
+                            order.push(f[0]);
+                        }
+                        bySource[f[0]].mounts.push(target);
+                    }
+                }
+                root.disks = driveList;
+                root.filesystems = order.map(k => bySource[k]);
+            }
+        }
+    }
+
+    Process {
+        id: machineProc
+        command: ["sh", "-c", "for f in sys_vendor product_name product_version board_name bios_version bios_date; do echo \"$f=$(cat /sys/class/dmi/id/$f 2>/dev/null)\"; done; cat /proc/loadavg; ls /proc | grep -c '^[0-9]'"]
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const info = {};
+                const lines = text.trim().split(/\r?\n/);
+                for (const line of lines) {
+                    const at = line.indexOf("=");
+                    if (at > 0 && /^[a-z_]+$/.test(line.slice(0, at)))
+                        info[line.slice(0, at)] = line.slice(at + 1).trim();
+                }
+                root.machine = info;
+                const load = lines.find(l => /^\d+\.\d+ \d+\.\d+ \d+\.\d+/.test(l));
+                root.loadAverage = load ? load.split(" ").slice(0, 3).join(" · ") : "";
+                const count = Number(lines[lines.length - 1]);
+                root.processCount = Number.isFinite(count) ? count : 0;
             }
         }
     }

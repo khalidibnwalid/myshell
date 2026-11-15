@@ -6,6 +6,7 @@ Rectangle {
     id: root
 
     property real value: 0
+    property color fillColor: Appearance.accentColor
 
     implicitWidth: 160
     implicitHeight: 8
@@ -16,7 +17,7 @@ Rectangle {
         height: parent.height
         width: Math.max(height, parent.width * Math.max(0, Math.min(1, root.value)))
         radius: height / 2
-        color: Appearance.accentColor
+        color: root.fillColor
 
         Behavior on width {
             NumberAnimation {
