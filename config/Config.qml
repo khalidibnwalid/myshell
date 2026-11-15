@@ -45,7 +45,9 @@ Singleton {
     // --- where the bar is, for everything that lines up with it ---
     readonly property string barPosition: ["left", "right", "top", "bottom"].indexOf(layout.barPosition) >= 0 ? layout.barPosition : "right"
     readonly property bool barHorizontal: barPosition === "top" || barPosition === "bottom"
-    // thickness of the bar
+    // Thickness of the bar, and so the room it takes: the distance from the screen edge to the first
+    // window. Every bar style keeps margin + shape + margin equal to this, so changing the style
+    // never moves the windows (the floating styles leave Appearance.barEdgeMargin to the screen edge and fill the rest).
     readonly property int barSize: 50
     // side panels (quick settings, toasts, OSD) sit on the right unless the bar is on the left
     readonly property bool panelRight: barPosition !== "left"
@@ -204,6 +206,8 @@ Singleton {
                 property real opacity: 0.5
                 property real settingsOpacity: 1
                 property string fontFamily: "Adwaita Sans"
+                // the look of the bar: classic, capsule, islands or inset (see modules/Bar/Bar.qml)
+                property string barStyle: "classic"
             }
 
             property JsonObject layout

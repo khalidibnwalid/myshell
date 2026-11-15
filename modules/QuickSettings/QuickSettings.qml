@@ -65,6 +65,9 @@ Scope {
 
             required property var modelData
             readonly property bool barRight: Config.panelRight
+            // The panel follows the bar: it hangs from the top edge under a top bar, and rises from
+            // the bottom edge for the other bars (a side bar's status icons are at its bottom).
+            readonly property bool fromTop: Config.barPosition === "top"
             readonly property bool hasNotifications: NotificationService.count > 0
             // start the entrance only once the surface is really on screen, so no frame of it is lost
             readonly property bool shown: root.open && backingWindowVisible
@@ -84,13 +87,15 @@ Scope {
             anchors {
                 right: barRight
                 left: !barRight
-                bottom: true
+                top: window.fromTop
+                bottom: !window.fromTop
             }
 
             margins {
                 right: 10
                 left: 10
-                bottom: 10
+                top: window.fromTop ? 10 : 0
+                bottom: window.fromTop ? 0 : 10
             }
 
             // only the two cards take input, the rest of the window is click-through
@@ -105,7 +110,7 @@ Scope {
             Item {
                 id: panelArea
 
-                y: parent.height - height
+                y: window.fromTop ? 0 : parent.height - height
                 width: root.panelWidth
                 height: window.cardHeight
             }
@@ -113,8 +118,8 @@ Scope {
             Item {
                 id: notifArea
 
-                // stacked on top of the quick settings card
-                y: panelArea.y - root.gap - height
+                // stacked on the quick settings card: above it, or below it when the panel hangs from the top
+                y: window.fromTop ? panelArea.y + panelArea.height + root.gap : panelArea.y - root.gap - height
                 width: window.hasNotifications ? root.panelWidth : 0
                 height: Math.min(notifications.implicitHeight, notifications.maxHeight)
             }
@@ -126,10 +131,19 @@ Scope {
                 anchors.fill: parent
                 opacity: root.open ? 1 : 0
 
+                // it slides in from the bar's side: sideways for a side bar, up or down for the others
                 transform: Translate {
-                    x: window.shown ? 0 : (root.open ? (window.barRight ? 42 : -42) : 0)
+                    x: Config.barHorizontal || window.shown ? 0 : (root.open ? (window.barRight ? 42 : -42) : 0)
+                    y: !Config.barHorizontal || window.shown ? 0 : (root.open ? (window.fromTop ? -42 : 42) : 0)
 
                     Behavior on x {
+                        NumberAnimation {
+                            duration: root.open ? 190 : 0
+                            easing.type: Easing.OutCubic
+                        }
+                    }
+
+                    Behavior on y {
                         NumberAnimation {
                             duration: root.open ? 190 : 0
                             easing.type: Easing.OutCubic
@@ -151,7 +165,7 @@ Scope {
                     y: notifArea.y
                     width: root.panelWidth
                     height: notifArea.height
-                    maxHeight: Math.max(120, panelArea.y - root.gap)
+                    maxHeight: Math.max(120, window.fromTop ? window.height - panelArea.height - root.gap : panelArea.y - root.gap)
                     visible: opacity > 0
                     opacity: window.hasNotifications ? 1 : 0
 

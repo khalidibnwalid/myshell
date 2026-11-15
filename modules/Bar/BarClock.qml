@@ -11,13 +11,19 @@ Rectangle {
 
     readonly property bool horizontal: Config.barHorizontal
 
-    implicitWidth: horizontal ? grid.implicitWidth + 28 : 40
-    implicitHeight: horizontal ? 36 : grid.implicitHeight + 32
-    radius: horizontal ? 18 : 20
+    // the clock sits flat on a capsule or an inset bar, and is an island of its own on Islands
+    readonly property bool flat: Appearance.barStyle === "capsule" || Appearance.barStyle === "inset"
+    // the Islands style: as wide as the other islands (the bar minus its margins)
+    readonly property bool island: Appearance.barStyle === "islands"
+    // the shape's thickness across the bar: the room minus the gap to the screen edge
+    readonly property int thick: Config.barSize - Appearance.barEdgeMargin - Appearance.barInnerMargin
+    implicitWidth: island && !horizontal ? thick : (horizontal ? grid.implicitWidth + 28 : 40)
+    implicitHeight: island && horizontal ? thick : (horizontal ? 36 : grid.implicitHeight + 32)
+    radius: horizontal ? implicitHeight / 2 : Math.min(20, implicitWidth / 2)
     // on a see-through bar it is an island like the other groups
-    readonly property real islandAmount: Appearance.islandAmount
-    color: clockArea.containsMouse ? Appearance.surfaceHighColor : (islandAmount > 0 ? Qt.alpha(Appearance.bgColor, 0.5 * islandAmount + 0.07 * (1 - islandAmount)) : Appearance.surfaceColor)
-    border.width: islandAmount > 0 ? 1 : 0
+    readonly property real islandAmount: Appearance.barIslandAmount
+    color: clockArea.containsMouse ? Appearance.surfaceHighColor : (flat ? "transparent" : (islandAmount > 0 ? Qt.alpha(Appearance.bgColor, 0.5 * islandAmount + 0.07 * (1 - islandAmount)) : Appearance.surfaceColor))
+    border.width: islandAmount > 0 && !flat ? 1 : 0
     border.color: Qt.alpha(Appearance.fgColor, 0.1 * islandAmount)
 
     // click: quick settings, like the status icons

@@ -26,6 +26,10 @@ description: How code in this Quickshell config is structured and what to avoid.
 - Our output goes only to `~/.config/hypr/config/quickshell.conf` and `quickshell.lua`, included last. The user's own hypr files are never edited except the one `source`/`dofile` line added by `scripts/apply-*.sh`.
 - Apply live with `hyprctl --batch "keyword a v ; keyword b w"`; a reset or removal needs `hyprctl reload`.
 
+## The bar
+- `Config.barSize` (50) is the room the bar takes: the distance from the screen edge to the first window (the layer's exclusive zone). Every bar style (`Appearance.barStyle`: classic, capsule, islands, inset) keeps gap + shape equal to it (`Appearance.barEdgeMargin` is 4 on the floating styles and `barInnerMargin` is 0, so the shape is 46 wide and grows toward the windows; centre content on the shape with the shift in `Bar.qml`). Never change the window size to restyle the bar; verify with `hyprctl monitors -j` (`reserved`) and `hyprctl layers -j` after any bar change.
+- The Inset style's rounded screen corners are two small non-reserving, click-through layer windows per screen (`modules/Bar/BarCorner.qml`). A `Variants` delegate must be a window or `Scope`; a `Repeater` cannot create windows.
+
 ## QML engine limits here (old JS engine)
 - No `Array.prototype.flatMap`, no `String.matchAll` (use a loop with `regex.exec`), no `Qt.fontFamilies()` per delegate (cache it).
 - `property color color` clashes on a `Rectangle`; use another name (`fillColor`). Avoid a property called `state` on an Item/Singleton (use `byCategory`).

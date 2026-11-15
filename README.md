@@ -87,6 +87,10 @@ Open it from the Quick Settings footer, or bind a key to `qs ipc call settings t
 
 Settings → Keyboard edits the layouts, their variants and the switching shortcut. Apply changes them in the running Hyprland session and writes them to `~/.config/hypr/config/keyboard.conf`; the first Apply also adds `source = ~/.config/hypr/config/keyboard.conf` to `hyprland.conf` (after the window rules) so they are used on the next start. That file is overwritten by Settings, and it takes precedence over `kb_layout`, `kb_variant` and `kb_options` in `input.conf`. On a laptop with a keyboard backlight it also sets the light's level and can turn it off when idle; until you pick a level the laptop's own auto mode is left alone.
 
+### Bar styles
+
+Settings → Appearance → Bar picks the look of the bar: Classic (one strip), Capsule (one rounded shape floating a little off the edge), Islands (workspaces, clock and status each in their own shape) or Inset (a solid bar with the desktop as a rounded sheet beside it). The bar can be on any edge. Every style takes the same room at the screen edge (50 px), so windows never move when the style changes: Capsule and Islands leave a 4 px gap to the screen edge and their shape fills the other 46 px.
+
 ### Hyprland
 
 Settings → Hyprland lists every option of the installed Hyprland, with its description, range and choices, taken from `hyprctl descriptions`. Changes apply at once and are written to `~/.config/hypr/config/quickshell.conf` (and `quickshell.lua` for the Lua format); the first change adds `source = ~/.config/hypr/config/quickshell.conf` to `hyprland.conf` (or a `dofile` to `hyprland.lua`), after your own files so the values you change win. Your own files are never edited: reset one value, reset all, or switch the page to read-only to leave Hyprland to them. The active border and the border of grouped windows follow the accent colour (it can be turned off).

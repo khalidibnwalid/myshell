@@ -62,6 +62,20 @@ SettingsPage {
         }
 
         SettingRow {
+            icon: "style"
+            title: "Look"
+            description: "The bar takes the same room in every style, so windows never move"
+        }
+
+        SettingCard {
+            BarStylePicker {
+                Layout.fillWidth: true
+                value: Appearance.barStyle
+                onPicked: id => Config.appearance.barStyle = id
+            }
+        }
+
+        SettingRow {
             icon: "schedule"
             title: "24-hour clock"
             description: "In the bar, quick settings and on the lock screen · now " + Time.format(Config.bar.clock24h ? "HH:mm" : "hh:mm AP")

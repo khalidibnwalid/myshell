@@ -41,6 +41,11 @@
         "fontFamily": {
           "type": "string"
         },
+        "barStyle": {
+          "type": "string",
+          "enum": ["classic", "capsule", "islands", "inset"],
+          "description": "Look of the bar: the full strip, a floating capsule, three islands, or a solid bar with rounded screen corners"
+        },
         "opacity": {
           "type": "number",
           "minimum": 0,

@@ -20,6 +20,18 @@ JsonObject {
     // 0 from 45% panel opacity up; fades in to 1 at 20% and below. The bar's icon groups
     // then sit on floating islands instead of the bar background.
     readonly property real islandAmount: Math.max(0, Math.min(1, (0.45 - panelOpacity) / 0.25))
+    // the look of the bar
+    readonly property string barStyle: ["classic", "capsule", "islands", "inset"].indexOf(Config.appearance.barStyle) >= 0 ? Config.appearance.barStyle : "classic"
+    // The floating styles (Capsule, Islands) keep a gap between their shape and the screen edge,
+    // and none on the side of the windows: gap + shape = Config.barSize, the same room the classic
+    // bar takes, so the shape is as wide as the room allows. Along the bar's length the gap is the
+    // same at both ends.
+    readonly property int barEdgeMargin: barStyle === "capsule" || barStyle === "islands" ? 4 : 0
+    readonly property int barInnerMargin: 0
+    // how much of the bar's groups sit on their own island: always for Islands, by transparency for Classic
+    readonly property real barIslandAmount: barStyle === "islands" ? 1 : (barStyle === "classic" ? islandAmount : 0)
+    // the radius of the rounded screen corners of the Inset style
+    readonly property int barCorner: 18
     readonly property color hairlineColor: Qt.alpha(fgColor, 0.08)
     // Surfaces are overlays so they stay translucent on top of a panel
     readonly property color surfaceColor: Qt.alpha(fgColor, 0.07)
