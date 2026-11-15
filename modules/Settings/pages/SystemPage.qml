@@ -10,6 +10,15 @@ SettingsPage {
     // Summary is the short look; Detailed adds every reading the computer offers
     property bool detailed: false
     readonly property color hot: "#f2b8b5"
+    readonly property var driverIcons: ({
+            "Graphics": "developer_board",
+            "Network": "lan",
+            "Audio": "speaker",
+            "Storage": "hard_drive",
+            "Bluetooth": "bluetooth",
+            "USB": "usb",
+            "Other": "memory"
+        })
 
     function pct(v) {
         return Math.round(Math.max(0, v) * 100) + "%";
@@ -59,6 +68,7 @@ SettingsPage {
     }
     onDetailedChanged: {
         if (detailed) {
+            Drivers.refresh();
             SystemInfo.refreshDetailsStatic();
             SystemInfo.refreshDetailsLive();
         }
@@ -140,6 +150,7 @@ SettingsPage {
                 }
 
                 RingGauge {
+                    visible: SystemInfo.temperature >= 0
                     Layout.fillWidth: true
                     Layout.preferredWidth: 1
                     icon: "thermostat"
@@ -289,12 +300,6 @@ SettingsPage {
             note: SystemInfo.swaps.map(w => (w.name.indexOf("zram") >= 0 ? "zram (compressed memory)" : w.name) + " " + page.gb(w.used) + " of " + page.gb(w.size)).join("  ·  ") + "  ·  higher priority first"
         }
 
-        SettingRow {
-            visible: SystemInfo.swaps.length === 0
-            icon: "swap_horiz"
-            title: "No swap"
-            description: "No swap file, partition or zram device is in use"
-        }
     }
 
     Repeater {
@@ -406,6 +411,43 @@ SettingsPage {
                     color: page.tempColor(sensorRow.modelData.value)
                 }
             }
+        }
+    }
+
+    SettingGroup {
+        visible: page.detailed
+        title: "Drivers"
+
+        Repeater {
+            model: Drivers.devices
+
+            delegate: SettingRow {
+                required property var modelData
+
+                icon: page.driverIcons[modelData.kind] || "memory"
+                title: modelData.name
+                description: modelData.kind + "  ·  " + (modelData.driver !== "" ? "driver " + modelData.driver : "no driver loaded")
+            }
+        }
+
+        SettingRow {
+            visible: Drivers.hasChwd && Drivers.profiles.length > 0
+            icon: "deployed_code"
+            title: "Hardware profile"
+            description: Drivers.profiles.map(p => p.name).join(", ") + "  ·  to change: sudo chwd -i <profile>"
+        }
+
+        SettingRow {
+            icon: "memory"
+            title: "Kernel and firmware"
+            description: ["Linux " + Drivers.kernel, Drivers.moduleCount + " modules loaded", Drivers.nvidiaVersion !== "" ? "NVIDIA " + Drivers.nvidiaVersion : "", Drivers.microcode !== "" ? "microcode " + Drivers.microcode : ""].filter(x => x).join("  ·  ")
+        }
+
+        SettingRow {
+            visible: Drivers.hasFirmwareTool
+            icon: "system_update"
+            title: "Firmware updates"
+            description: "Check from a terminal: fwupdmgr refresh && fwupdmgr get-updates"
         }
     }
 

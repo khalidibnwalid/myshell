@@ -25,6 +25,7 @@ ApplicationWindow {
             "name": "Bluetooth",
             "icon": "bluetooth",
             "group": "Connections",
+            "available": Bluetooth.available,
             "keywords": "devices pair headphones discoverable",
             "component": bluetoothPage
         },
@@ -61,12 +62,29 @@ ApplicationWindow {
             "component": keyboardPage
         },
         {
+            "key": "printers",
+            "name": "Printers",
+            "icon": "print",
+            "group": "Device",
+            "available": Printers.printers.length > 0 || Printers.scanners.length > 0,
+            "keywords": "printer scanner print scan cups queue ink toner test page default sane",
+            "component": printersPage
+        },
+        {
+            "key": "storage",
+            "name": "Storage",
+            "icon": "hard_drive",
+            "group": "Device",
+            "keywords": "drive disk usb flash sd card mount unmount eject partition nvme ssd health smart",
+            "component": storagePage
+        },
+        {
             "key": "hyprland",
             "name": "Hyprland",
             "icon": "window",
             "logo": true,
             "group": "Device",
-            "keywords": "window manager compositor border gaps rounding blur shadow opacity animations input touchpad cursor layout dwindle master workspace gestures lua conf",
+            "keywords": "mouse touchpad trackpad tablet pen touch screen gestures swipe scroll sensitivity window manager compositor border gaps rounding blur shadow opacity animations input touchpad cursor layout dwindle master workspace gestures lua conf",
             "component": hyprlandPage
         },
         {
@@ -147,9 +165,11 @@ ApplicationWindow {
     property string query: ""
     readonly property var shownPages: {
         const q = query.trim().toLowerCase();
+        // pages for hardware this computer does not have are left out
+        const present = pages.filter(p => p.available !== false);
         if (q === "")
-            return pages;
-        return pages.filter(p => (p.name + " " + p.keywords).toLowerCase().includes(q));
+            return present;
+        return present.filter(p => (p.name + " " + p.keywords).toLowerCase().includes(q));
     }
 
     function showPage(name) {
@@ -465,6 +485,20 @@ ApplicationWindow {
         id: keyboardPage
 
         KeyboardPage {
+        }
+    }
+
+    Component {
+        id: printersPage
+
+        PrintersPage {
+        }
+    }
+
+    Component {
+        id: storagePage
+
+        StoragePage {
         }
     }
 

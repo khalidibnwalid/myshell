@@ -160,6 +160,7 @@ SettingsPage {
     }
 
     SettingGroup {
+        visible: NightLight.available
         title: "Night light"
 
         actions: [

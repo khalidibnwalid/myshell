@@ -89,6 +89,7 @@ SettingsPage {
     }
 
     SettingGroup {
+        visible: page.wired.length > 0
         title: "Wired"
 
         Repeater {
@@ -108,13 +109,6 @@ SettingsPage {
                     font.pixelSize: 12
                 }
             }
-        }
-
-        SettingRow {
-            visible: page.wired.length === 0
-            icon: "cable"
-            title: "No wired adapter"
-            description: "Plug in an Ethernet adapter or dock to see it here"
         }
     }
 
