@@ -161,6 +161,19 @@ ApplicationWindow {
             "component": aboutPage
         }
     ]
+    // the launcher finds these pages
+    Binding {
+        target: WindowManager
+        property: "settingsIndex"
+        value: root.pages.filter(p => p.available !== false).map(p => ({
+                    "key": p.key,
+                    "name": p.name,
+                    "icon": p.icon,
+                    "group": p.group,
+                    "keywords": p.keywords
+                }))
+    }
+
     property string currentKey: "wifi"
     property string query: ""
     readonly property var shownPages: {

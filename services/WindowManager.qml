@@ -11,6 +11,11 @@ Singleton {
     property bool settingsVisible: false
     // page the Settings window should show next time it opens ("" keeps the current one)
     property string settingsPage: ""
+    // text to put in that page's search box when it opens (used by the launcher's results)
+    property string settingsQuery: ""
+    // the pages of the Settings window that exist on this computer, for the launcher:
+    // [{ key, name, icon, group, keywords }]
+    property var settingsIndex: []
     property bool searchVisible: false
     property bool clipboardVisible: false
     property int idlePauseRemainingSeconds: 0
@@ -38,7 +43,8 @@ Singleton {
     // handled by the Idle module, which owns the lock screen
     signal lockRequested
 
-    function openSettings(page) {
+    function openSettings(page, query) {
+        settingsQuery = query || "";
         settingsPage = page || "";
         settingsVisible = true;
     }

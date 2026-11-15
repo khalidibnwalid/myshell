@@ -50,6 +50,14 @@ SettingsPage {
                 }));
     }
 
+    // opened from the launcher with a search: show the matches
+    Component.onCompleted: {
+        if (WindowManager.settingsQuery !== "") {
+            query = WindowManager.settingsQuery;
+            WindowManager.settingsQuery = "";
+        }
+    }
+
     // scroll the tab bar so the open tab shows
     onCategoryChanged: Qt.callLater(() => {
         const index = HyprSettings.categories.findIndex(c => c.id === category);

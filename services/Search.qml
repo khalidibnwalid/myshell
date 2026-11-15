@@ -62,6 +62,8 @@ Singleton {
     // background `find`, so typing never waits on the disk.
     property var appResults: []
     property var fileResults: []
+    // pages of the Settings window (and Hyprland options) that match
+    property var settingsResults: []
     property string fileQuery: ""
     property int generation: 0
 
@@ -178,16 +180,183 @@ Singleton {
     }
 
     function publish() {
-        searchService.searchFinished([...appResults.slice(0, 5), ...fileResults.slice(0, 4), ...webResults]);
+        const list = [...appResults.slice(0, 5)];
+        for (const item of orderItems) {
+            if (item.id === "settings")
+                list.push(...settingsResults);
+            else if (item.id === "files")
+                list.push(...fileResults.slice(0, fileOptions.limit));
+            else if (item.id === "web")
+                list.push(...webResults);
+            else
+                list.push(...providerResults.filter(r => r.providerId === item.id));
+        }
+        searchService.searchFinished(list);
     }
+
+    // Settings pages whose name, section or keywords match, then a few Hyprland options.
+    // Picking one opens the Settings window on it.
+    function findSettings(query, raw) {
+        const pages = source("settings") ? (WindowManager.settingsIndex || []) : [];
+        const found = [];
+        for (const p of pages) {
+            const name = p.name.toLowerCase();
+            let score = 0;
+            if (name === query)
+                score = 100;
+            else if (name.startsWith(query))
+                score = 60;
+            else if (name.split(/[ &]+/).some(w => w.startsWith(query)))
+                score = 45;
+            else if (name.includes(query))
+                score = 30;
+            else if (query.length >= 3 && String(p.keywords).toLowerCase().split(" ").some(w => w.startsWith(query)))
+                score = 15;
+            if (score > 0)
+                found.push({
+                    "score": score,
+                    "row": {
+                        "id": "settings:" + p.key,
+                        "name": p.name,
+                        "description": "Settings  ·  " + p.group,
+                        "icon": p.icon,
+                        "type": "settings",
+                        "execute": () => WindowManager.openSettings(p.key)
+                    }
+                });
+        }
+        found.sort((a, b) => b.score - a.score);
+        const rows = found.slice(0, 3).map(f => f.row);
+        if (source("hyprland") && source("settings") && query.length >= 3 && !isPathSearch(query)) {
+            const options = HyprSettings.search(raw).filter(o => o.title.toLowerCase().includes(query) || o.name.toLowerCase().includes(query)).slice(0, 2);
+            for (const o of options)
+                rows.push({
+                    "id": "hypr:" + o.name,
+                    "name": o.title,
+                    "description": "Hyprland  ·  " + o.name,
+                    "icon": HyprSettings.iconFor(o),
+                    "type": "settings",
+                    "execute": () => WindowManager.openSettings("hyprland", o.title)
+                });
+        }
+        return rows;
+    }
+
+    // The groups of results the launcher lists, in the order set in Settings → Launcher
+    // (drag to sort). Apps are not in it: they are always the tiles at the top.
+    readonly property var orderItems: {
+        const items = [
+            {
+                "id": "settings",
+                "title": "Settings",
+                "description": "The Settings app, its pages and Hyprland options",
+                "icon": "settings"
+            }
+        ];
+        for (const c of SearchProviders.builtinSources.concat(SearchProviders.customSources))
+            items.push({
+                "id": c.id,
+                "title": c.name,
+                "description": c.description,
+                "icon": c.icon,
+                "image": SearchProviders.iconForSource(c)
+            });
+        for (const p of SearchProviders.providers)
+            items.push({
+                "id": p.id,
+                "title": p.name,
+                "description": "Search provider",
+                "icon": "apps",
+                "image": p.icon
+            });
+        items.push({
+            "id": "files",
+            "title": "Files and folders",
+            "description": "Found in your home folder",
+            "icon": "folder"
+        });
+        items.push({
+            "id": "web",
+            "title": "Web search",
+            "description": "Search the web or open an address",
+            "icon": "travel_explore"
+        });
+        const byId = {};
+        for (const i of items)
+            byId[i.id] = i;
+        const out = [];
+        for (const id of (Config.search?.order ?? [])) {
+            if (byId[id]) {
+                out.push(byId[id]);
+                delete byId[id];
+            }
+        }
+        for (const i of items) {
+            if (byId[i.id])
+                out.push(i);
+        }
+        return out;
+    }
+
+    function setOrder(ids) {
+        Config.setIn("search", "order", ids);
+        Qt.callLater(publish);
+    }
+
+    // How files are looked up (Settings → Launcher → Files and folders). The defaults are
+    // what the launcher always did: the home folder, 5 levels deep, no hidden files,
+    // leaving out node_modules and vendor, 4 results.
+    readonly property var fileOptions: {
+        const o = Config.search?.files ?? ({});
+        return {
+            "roots": o.roots ?? ["~"],
+            "ignore": o.ignore ?? ["node_modules", "vendor"],
+            "hidden": o.hidden ?? false,
+            "depth": o.depth ?? 5,
+            "limit": o.limit ?? 4
+        };
+    }
+
+    function expandHome(path) {
+        const home = Quickshell.env("HOME");
+        return path === "~" ? home : (path.startsWith("~/") ? home + path.slice(1) : path);
+    }
+
+    function setFileOptions(change) {
+        Config.setIn("search", "files", Object.assign({}, fileOptions, change));
+    }
+
+    function resetFileOptions() {
+        Config.setIn("search", "files", {});
+    }
+
+    // is this source of results switched on in Settings → Launcher
+    function source(name) {
+        return Config.search?.sources?.[name] ?? true;
+    }
+
+    // results offered by apps (search providers) arrive a moment after the query
+    Connections {
+        function onChanged() {
+            searchService.providerResults = SearchProviders.results;
+            searchService.publish();
+        }
+
+        target: SearchProviders
+    }
+
+    property var providerResults: []
 
     function performSearch(query) {
         const raw = query.trim();
         query = raw.toLowerCase();
         generation++;
         fileTimer.stop();
+        SearchProviders.search(query === "" ? "" : raw);
+        providerResults = [];
         if (query === "") {
             appResults = [];
+            settingsResults = [];
             fileResults = [];
             webResults = [];
             searchService.searchFinished([]);
@@ -197,6 +366,7 @@ Singleton {
         const banged = bangResults(raw);
         if (banged) {
             appResults = [];
+            settingsResults = [];
             fileResults = [];
             webResults = banged;
             publish();
@@ -204,6 +374,13 @@ Singleton {
         }
 
         if (isCalculator(query)) {
+            // a sum is answered here, with bc; the other sources stay out of it
+            SearchProviders.search("");
+            providerResults = [];
+            appResults = [];
+            settingsResults = [];
+            fileResults = [];
+            webResults = [];
             let cmd = ["sh", "-c", "echo \"$1\" | bc -l | sed 's/\\.[0-9]*00$//;s/\\.$//'", "sh", query];
             proc.execSingle(cmd, "Result", "calculate");
             return;
@@ -221,6 +398,22 @@ Singleton {
             item.totalScore = matchScore + (matchScore > 0 ? usageScore : 0);
             return item;
         }).filter(item => item.totalScore > 0).sort((a, b) => b.totalScore - a.totalScore).slice(0, 5);
+        if (!source("apps"))
+            appResults = [];
+        // Settings is an app of its own: it is found as "settings", "preferences"…
+        if (query.length >= 2 && source("settings") && ["settings", "preferences", "options", "configuration"].some(w => w.startsWith(query)))
+            appResults = [{
+                "id": "quickshell-settings",
+                "name": "Settings",
+                "description": "Change how the shell and the computer work",
+                // a Material symbol: this is our own app, not one from the icon theme
+                "symbol": "settings",
+                "icon": "settings",
+                "type": "app",
+                "execute": () => WindowManager.openSettings("")
+            }].concat(appResults.filter(a => a.name !== "Settings")).slice(0, 5);
+
+        settingsResults = findSettings(query, raw);
 
         // last row: open the address, or search the web with the default bang
         if (isUrl(raw)) {
@@ -237,33 +430,64 @@ Singleton {
             const row = isPathSearch(query) ? null : webRow(Config.search?.defaultBang || "g", raw, false);
             webResults = row ? [row] : [];
         }
+        if (!source("web"))
+            webResults = [];
 
         // keep the file rows that still match while the new lookup runs, so the list does not flicker
         const plain = !isPathSearch(query);
-        fileResults = plain ? fileResults.filter(f => f.name.toLowerCase().includes(query)) : [];
+        fileResults = plain && source("files") ? fileResults.filter(f => f.name.toLowerCase().includes(query)) : [];
         publish();
 
-        if (!plain || query.length >= 2) {
+        if (source("files") && (!plain || query.length >= 2)) {
             fileQuery = query;
             fileTimer.restart();
         }
     }
 
+    // the Material symbol for a kind of file
+    function symbolFor(mime, name) {
+        if (mime.startsWith("audio/"))
+            return "audio_file";
+        if (mime.startsWith("video/"))
+            return "video_file";
+        if (mime.startsWith("image/"))
+            return "image";
+        if (mime === "application/pdf")
+            return "picture_as_pdf";
+        if (/zip|tar|rar|7z|compress|archive|gzip/.test(mime))
+            return "folder_zip";
+        if (/json|javascript|xml|x-shellscript|x-python|x-c|x-rust|x-java|html|css|x-ruby|x-php/.test(mime) || /\.(qml|go|rs|ts|tsx|jsx|lua|sh|py|c|cpp|h|java|rb|php)$/i.test(name))
+            return "code";
+        return "description";
+    }
+
     function searchFiles(query) {
+        const opts = fileOptions;
         let filter = query;
-        let searchPath = Quickshell.env("HOME");
+        let roots = opts.roots.map(expandHome);
         if (query.startsWith("~")) filter = query.substring(1);
         else if (query.startsWith("/")) {
+            // a typed path looks in that folder only
             let lastSlash = query.lastIndexOf("/");
-            searchPath = query.substring(0, lastSlash || 1);
+            roots = [query.substring(0, lastSlash || 1)];
             filter = query.substring(lastSlash + 1);
         }
 
-        // path and pattern are passed as arguments, never pasted into the script
+        // Everything is passed as arguments, never pasted into the script: the filter, the
+        // depth, whether hidden files count, the folders to leave out and the folders to
+        // look in (one per line). Each found file also gets a picture to preview, when it
+        // has one: the thumbnail the file manager made, the image itself, or the cover of
+        // audio and video (made once, kept in the cache, for the first few only).
+        // Lines come back as: type, path, preview, mime.
         const findCmd = [
             "sh", "-c",
-            "find \"$1\" -maxdepth 5 -iname \"*$2*\" -not -path '*/.*' -not -path '*/node_modules/*' -not -path '*/vendor/*' -printf '%y|%p\\n' 2>/dev/null | head -n 12",
-            "sh", searchPath, filter
+            FilePreview.setup +
+            "depth=$1; filter=$2; hide=$3; ign=$4; roots=$5; set --; " +
+            "while IFS= read -r n; do [ -n \"$n\" ] || continue; case \"$n\" in /*) set -- \"$@\" -not -path \"$n\" -not -path \"$n/*\";; *) set -- \"$@\" -not -path \"*/$n\" -not -path \"*/$n/*\";; esac; done <<EOF\n$ign\nEOF\n" +
+            "[ \"$hide\" = 1 ] || set -- \"$@\" -not -path '*/.*'; " +
+            "printf '%s\\n' \"$roots\" | while IFS= read -r r; do [ -d \"$r\" ] && find \"$r\" -maxdepth \"$depth\" -iname \"*$filter*\" \"$@\" -printf '%y\\t%p\\n' 2>/dev/null; done | head -n 12 | " +
+            FilePreview.loop,
+            "sh", String(opts.depth), filter, opts.hidden ? "1" : "0", opts.ignore.join("\n"), roots.join("\n")
         ];
         const gen = generation;
 
@@ -273,8 +497,9 @@ Singleton {
                 return;
             const results = [];
             for (let i = 0; i < rawLines.length; i++) {
-                const isDir = rawLines[i].charAt(0) === "d";
-                const path = rawLines[i].substring(2);
+                const f = rawLines[i].split("\t");
+                const isDir = f[0] === "d";
+                const path = f[1];
                 if (!path) continue;
 
                 const name = path.split("/").filter(Boolean).pop() || path;
@@ -282,9 +507,10 @@ Singleton {
                     "id": path,
                     "name": name,
                     "description": path,
-                    "image": isDir ? "folder" : "",
+                    // a picture of the file itself (a thumbnail, the image, an album cover), if there is one
+                    "preview": f[2] || "",
                     "type": isDir ? "folder" : "file",
-                    "icon": isDir ? "folder" : "description",
+                    "icon": isDir ? "folder" : searchService.symbolFor(f[3] || "", name),
                     "execute": () => Quickshell.execDetached(["xdg-open", path])
                 });
             }

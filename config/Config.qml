@@ -309,6 +309,24 @@ Singleton {
                 "browserClass": "helium",
                 "privateFlag": "--incognito",
                 "defaultBang": "g",
+                // where launcher results come from; a missing key means on
+                "sources": {
+                    "apps": true,
+                    "settings": true,
+                    "hyprland": true,
+                    "files": true,
+                    "web": true
+                },
+                // apps that offer results (search providers), by id: false = switched off
+                "providers": {
+                },
+                // how files are looked up: { roots, ignore, hidden, depth, limit }; missing = the defaults
+                "files": {
+                },
+                // the order of the groups of results (drag to sort in Settings → Launcher)
+                "order": [],
+                // scripts that print result rows, added in Settings → Launcher
+                "commandSources": [],
                 "bangs": {
                 }
             })

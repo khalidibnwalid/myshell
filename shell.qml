@@ -23,6 +23,8 @@ Scope {
         Services.Displays.applySaved();
         // reads the Hyprland options and keeps the window borders on the accent colour
         Services.HyprSettings.refresh();
+        // the gear icon of the Settings window
+        Quickshell.execDetached([Quickshell.shellDir + "/scripts/install-settings-icon.sh", Quickshell.shellDir]);
         // the keyboard light's switch-off when idle
         Services.KeyboardLight.refresh();
     }

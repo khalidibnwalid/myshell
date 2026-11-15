@@ -3,6 +3,7 @@ import "../../components"
 import "../../services" as Services
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Effects
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Hyprland
@@ -340,8 +341,19 @@ Scope {
                                         visible: tileImg.status !== Image.Ready
                                         color: Appearance.surfaceHighColor
 
+                                        // our own features carry a Material symbol, not a system app icon
+                                        MaterialSymbol {
+                                            anchors.centerIn: parent
+                                            visible: !!tile.modelData?.symbol
+                                            icon: tile.modelData?.symbol || ""
+                                            fill: 1
+                                            font.pixelSize: 26
+                                            color: Appearance.accentColor
+                                        }
+
                                         StyledText {
                                             anchors.centerIn: parent
+                                            visible: !tile.modelData?.symbol
                                             text: panelWindow.initials(tile.modelData?.name)
                                             color: Appearance.fgColor
                                             font.pixelSize: 15
@@ -400,7 +412,9 @@ Scope {
                             readonly property int flatIndex: panelWindow.tileResults.length + index
                             readonly property bool selected: panelWindow.currentIndex === flatIndex
                             // apps and web results carry a real icon
-                            readonly property bool hasImage: (modelData?.type === "app" || modelData?.type === "web") && !!modelData?.image
+                            // a picture of the file itself: a thumbnail, the image, an album cover
+                            readonly property bool preview: (modelData?.type === "file" || modelData?.type === "provider") && !!modelData?.preview
+                            readonly property bool hasImage: (modelData?.type === "app" || modelData?.type === "web" || modelData?.type === "provider") && !!modelData?.image
 
                             Layout.fillWidth: true
                             Layout.preferredHeight: 58
@@ -425,8 +439,38 @@ Scope {
                                 Rectangle {
                                     Layout.preferredWidth: 36
                                     Layout.preferredHeight: 36
-                                    radius: 18
+                                    radius: row.preview && previewImg.status === Image.Ready ? 10 : 18
                                     color: Appearance.surfaceHighColor
+
+                                    // the file's own picture, rounded
+                                    Item {
+                                        anchors.fill: parent
+                                        visible: row.preview && previewImg.status === Image.Ready
+
+                                        Image {
+                                            id: previewImg
+
+                                            anchors.fill: parent
+                                            asynchronous: true
+                                            source: row.preview ? panelWindow.iconSource(row.modelData?.preview) : ""
+                                            sourceSize: Qt.size(96, 96)
+                                            fillMode: Image.PreserveAspectCrop
+                                            layer.enabled: true
+                                            layer.effect: MultiEffect {
+                                                maskEnabled: true
+                                                maskSource: previewMask
+                                            }
+                                        }
+
+                                        Rectangle {
+                                            id: previewMask
+
+                                            anchors.fill: parent
+                                            radius: 10
+                                            visible: false
+                                            layer.enabled: true
+                                        }
+                                    }
 
                                     Image {
                                         id: rowImg
@@ -434,7 +478,7 @@ Scope {
                                         anchors.centerIn: parent
                                         width: 20
                                         height: 20
-                                        visible: status === Image.Ready && row.hasImage
+                                        visible: status === Image.Ready && row.hasImage && !(row.preview && previewImg.status === Image.Ready)
                                         source: row.hasImage ? panelWindow.iconSource(row.modelData?.image) : ""
                                         sourceSize: Qt.size(48, 48)
                                         fillMode: Image.PreserveAspectFit
@@ -442,8 +486,8 @@ Scope {
 
                                     MaterialSymbol {
                                         anchors.centerIn: parent
-                                        visible: !rowImg.visible
-                                        icon: row.modelData?.type === "folder" ? "folder" : (row.modelData?.type === "file" ? "description" : (row.modelData?.icon || "apps"))
+                                        visible: !rowImg.visible && !(row.preview && previewImg.status === Image.Ready)
+                                        icon: row.modelData?.type === "folder" ? "folder" : (row.modelData?.icon || "apps")
                                         font.pixelSize: 18
                                         color: Appearance.fgColor
                                     }
