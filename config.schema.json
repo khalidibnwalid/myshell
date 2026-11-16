@@ -252,6 +252,7 @@
       "properties": {
         "enabled": { "type": "boolean", "description": "Write the Hyprland options changed in Settings. Off leaves Hyprland entirely to the hand-written config" },
         "accentBorder": { "type": "boolean", "description": "The active window border takes the shell's accent colour" },
+        "blurLayers": { "type": "boolean", "description": "Hyprland blurs what is behind the bar and panels (layer rules for the shell's windows)" },
         "values": { "type": "object", "description": "Hyprland options changed in Settings, by name (for example general:gaps_in)" }
       }
     },

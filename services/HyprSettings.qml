@@ -14,11 +14,11 @@ import Quickshell.Io
 // hand-written hyprland.conf sets. Only what is changed here is stored (in
 // config.overrides.json, as Config.hyprland.values) and written to
 //
-//   ~/.config/hypr/config/quickshell.conf   (hyprlang, the format 0.56 still reads)
+//   ~/.config/hypr/config/quickshell.conf   (hyprlang, the format 0.56 and older read)
 //   ~/.config/hypr/config/quickshell.lua    (the Lua format that replaces it in 0.57)
 //
 // scripts/apply-hyprland.sh makes the main config include them. A change is applied to
-// the running session at once (hyprctl keyword); "reset" removes it from the file and
+// the running session at once (hyprctl keyword, or eval on a Lua config); "reset" removes it from the file and
 // reloads, which brings back what the hand-written config says.
 Singleton {
     id: root
@@ -42,6 +42,8 @@ Singleton {
     // off: nothing is written, Hyprland is left to the hand-written config
     readonly property bool enabled: Config.hyprland?.enabled ?? true
     readonly property bool accentBorder: enabled && (Config.hyprland?.accentBorder ?? true)
+    // Hyprland blurs what is behind the shell's windows (layer rules, written with the options)
+    readonly property bool blurLayers: enabled && (Config.hyprland?.blurLayers ?? true)
     readonly property color accent: Appearance.accentColor
     readonly property var accentKeys: ["general:col.active_border", "group:col.border_active"]
     // the format of the main config in use: "lua" or "hyprlang"
@@ -338,7 +340,8 @@ Singleton {
 
     // the value of an option as hyprctl getoption prints it
     function fromLive(entry) {
-        for (const type of ["int", "float", "str", "custom"]) {
+        // 0.57 reports booleans as "bool", gaps as "css" and colours as "gradient"
+        for (const type of ["bool", "int", "float", "str", "custom", "css", "gradient"]) {
             if (!(type in entry))
                 continue;
             let v = entry[type];
@@ -540,11 +543,17 @@ Singleton {
             lines.push("");
             lines.push("windowrule = match:float 1, match:workspace w[fv1-10], border_color " + fromColor(accent));
         }
+        if (blurLayers) {
+            lines.push("");
+            lines.push("layerrule = match:namespace ^quickshell$, blur on, ignore_alpha 0.01, no_anim on");
+            lines.push("layerrule = match:namespace ^quickshell-workspaces$, blur on, ignore_alpha 0.01, animation popin 80%");
+        }
         return lines.join("\n") + "\n";
     }
 
-    function luaText(values) {
-        const lines = ["-- Written by the quickshell Settings (Hyprland page); changes made here are overwritten.", "-- Reset a value there to hand it back to the files above.", "hl.config({"];
+    // the hl.config({ ... }) call for some values, as lines
+    function luaConfig(values) {
+        const lines = ["hl.config({"];
         const emit = (node, indent) => {
             const pad = "    ".repeat(indent);
             for (const key of Object.keys(node)) {
@@ -560,9 +569,38 @@ Singleton {
         };
         emit(tree(values, true), 1);
         lines.push("})");
+        return lines;
+    }
+
+    function luaText(values) {
+        const lines = ["-- Written by the quickshell Settings (Hyprland page); changes made here are overwritten.", "-- Reset a value there to hand it back to the files above."].concat(luaConfig(values));
         if (accentBorder)
             lines.push("", "hl.window_rule({ name = \"quickshell-accent-border\", match = { float = true, workspace = \"w[fv1-10]\" }, border_color = \"" + fromColor(accent) + "\" })");
+        if (blurLayers) {
+            lines.push("");
+            lines.push("hl.layer_rule({ name = \"quickshell-blur\", match = { namespace = \"^quickshell$\" }, blur = true, ignore_alpha = 0.01, no_anim = true })");
+            lines.push("hl.layer_rule({ name = \"quickshell-workspaces-blur\", match = { namespace = \"^quickshell-workspaces$\" }, blur = true, ignore_alpha = 0.01, animation = \"popin 80%\" })");
+        }
         return lines.join("\n") + "\n";
+    }
+
+    // changes to the running session. A Lua config (0.57) has no `hyprctl keyword`, the
+    // values go through `hyprctl eval`; a hyprlang one still takes keyword.
+    function applyLive(values) {
+        const names = Object.keys(values);
+        if (names.length === 0)
+            return;
+        if (format === "lua")
+            Quickshell.execDetached(["hyprctl", "eval", luaConfig(values).join(" ")]);
+        else
+            Quickshell.execDetached(["hyprctl", "--batch", names.map(n => "keyword " + n + " " + confValue(n, values[n])).join(" ; ")]);
+    }
+
+    function accentValues() {
+        const out = {};
+        for (const k of accentKeys)
+            out[k] = fromColor(accent);
+        return out;
     }
 
     property bool needsReload: false
@@ -633,6 +671,12 @@ Singleton {
         writeTimer.restart();
     }
 
+    function setBlurLayers(on) {
+        Config.setIn("hyprland", "blurLayers", on);
+        needsReload = true;
+        writeTimer.restart();
+    }
+
     function setAccentBorder(on) {
         Config.setIn("hyprland", "accentBorder", on);
         needsReload = true;
@@ -645,12 +689,9 @@ Singleton {
 
         interval: 60
         onTriggered: {
-            const names = Object.keys(root.pending);
-            if (names.length === 0)
-                return;
-            const batch = names.map(n => "keyword " + n + " " + root.confValue(n, root.pending[n])).join(" ; ");
+            const values = root.pending;
             root.pending = ({});
-            Quickshell.execDetached(["hyprctl", "--batch", batch]);
+            root.applyLive(values);
         }
     }
 
@@ -681,8 +722,7 @@ Singleton {
     // the accent changed: the borders follow
     onAccentChanged: {
         if (accentBorder && loaded) {
-            const batch = accentKeys.map(k => "keyword " + k + " " + fromColor(accent)).join(" ; ");
-            Quickshell.execDetached(["hyprctl", "--batch", batch]);
+            applyLive(accentValues());
             // the rule for floating windows only changes with a reload
             needsReload = true;
             writeTimer.restart();
@@ -721,7 +761,7 @@ Singleton {
         if (loaded && firstWrite) {
             firstWrite = false;
             if (accentBorder)
-                Quickshell.execDetached(["hyprctl", "--batch", accentKeys.map(k => "keyword " + k + " " + fromColor(accent)).join(" ; ")]);
+                applyLive(accentValues());
             writeTimer.restart();
         }
     }

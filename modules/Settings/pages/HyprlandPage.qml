@@ -294,6 +294,18 @@ SettingsPage {
                 onToggled: enabled => HyprSettings.setAccentBorder(enabled)
             }
         }
+
+        SettingRow {
+            icon: "blur_on"
+            title: "Blur behind the bar and panels"
+            description: "Hyprland blurs what is behind the shell's windows, so the see-through bar and panels look frosted. Amount and passes are under Decoration → Blur."
+
+            ToggleSwitch {
+                enabled: HyprSettings.enabled
+                checked: Config.hyprland?.blurLayers ?? true
+                onToggled: enabled => HyprSettings.setBlurLayers(enabled)
+            }
+        }
     }
 
     StyledText {

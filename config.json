@@ -51,6 +51,7 @@
     "hyprland": {
         "enabled": true,
         "accentBorder": true,
+        "blurLayers": true,
         "values": {}
     },
     "keyboard": {

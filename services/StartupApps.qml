@@ -163,13 +163,15 @@ Singleton {
     Process {
         id: hyprProc
 
-        command: ["sh", "-c", "grep -rHE '^[[:space:]]*exec(-once)?[[:space:]]*=' \"${XDG_CONFIG_HOME:-$HOME/.config}/hypr\" --include='*.conf' 2>/dev/null"]
+        command: ["sh", "-c", "grep -rHE '^[[:space:]]*(exec(-once)?[[:space:]]*=|hl\\.exec_cmd\\()' \"${XDG_CONFIG_HOME:-$HOME/.config}/hypr\" --include='*.conf' --include='*.lua' 2>/dev/null"]
 
         stdout: StdioCollector {
             onStreamFinished: {
                 const list = [];
                 for (const line of text.split(/\r?\n/)) {
-                    const m = line.match(/^(.*?\.conf):\s*exec(?:-once)?\s*=\s*(.*)$/);
+                    // hyprlang: exec-once = cmd      Lua: hl.exec_cmd("cmd")
+                    const lua = line.match(/^(.*?\.lua):\s*hl\.exec_cmd\(\s*"((?:[^"\\]|\\.)*)"/);
+                    const m = lua ? [null, lua[1], lua[2].replace(/\\(.)/g, "$1")] : line.match(/^(.*?\.conf):\s*exec(?:-once)?\s*=\s*(.*)$/);
                     if (!m)
                         continue;
                     // the trailing " &" is only there to detach it

@@ -304,6 +304,7 @@ Singleton {
             property var hyprland: ({
                 "enabled": true,
                 "accentBorder": true,
+                "blurLayers": true,
                 "values": {
                 }
             })

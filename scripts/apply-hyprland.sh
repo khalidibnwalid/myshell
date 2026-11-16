@@ -13,6 +13,7 @@ if [ -f "$conf" ] && ! grep -qF 'config/quickshell.conf' "$conf"; then
 fi
 
 lua="$dir/hyprland.lua"
-if [ -f "$lua" ] && ! grep -qF 'config/quickshell.lua' "$lua"; then
+# already included by hand, as dofile(".../quickshell.lua") or load("quickshell")
+if [ -f "$lua" ] && ! grep -Eq 'quickshell(\.lua)?"' "$lua"; then
     printf '\n-- Hyprland settings made in the quickshell Settings window (kept last so they win)\ndofile("%s/config/quickshell.lua")\n' "$dir" >> "$lua"
 fi

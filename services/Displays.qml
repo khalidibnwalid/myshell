@@ -5,7 +5,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Hyprland
 
-// Monitor mode and scale. A change is applied through `hyprctl keyword monitor`,
+// Monitor mode and scale. A change is applied through `hyprctl keyword monitor` (`hyprctl eval hl.monitor` on a Lua config),
 // kept only after it is confirmed, and then re-applied whenever the shell starts.
 Singleton {
     id: root
@@ -101,7 +101,9 @@ Singleton {
     }
 
     function send(name, mode, scale, position) {
-        Quickshell.execDetached(["hyprctl", "keyword", "monitor", name + "," + String(mode).replace("Hz", "") + "," + position + "," + scale]);
+        const modeText = String(mode).replace("Hz", "");
+        // a Lua config (0.57) has no `hyprctl keyword`; a hyprlang one has no `eval`
+        Quickshell.execDetached(["sh", "-c", "if [ -f \"$1/hyprland.lua\" ]; then hyprctl eval \"hl.monitor({ output = $2, mode = $3, position = $4, scale = $5 })\"; else hyprctl keyword monitor \"$6\"; fi", "sh", Keyboard.hyprDir, JSON.stringify(name), JSON.stringify(modeText), JSON.stringify(String(position)), String(Number(scale)), name + "," + modeText + "," + position + "," + scale]);
         refreshTimer.restart();
     }
 
