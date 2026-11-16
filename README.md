@@ -92,6 +92,10 @@ A small notes app in `apps/Notepad/`: a list of notes on the left (pinned first,
 - It lists itself as an app for plain text and Markdown files, so it appears in Settings → Default apps → Text and code; pick it there to make it the default for text files.
 - It opens as a floating window like Settings; the rule for that is in the Hyprland window rules (`class = "dev.noctalia.noctalia-qs", title = "^(Notepad)$"`).
 
+### Camera message
+
+When the laptop's camera switch cuts or restores the camera, the shell shows "Camera on" or "Camera off". The switch disconnects the camera from USB, and `udevadm monitor` (from `systemd`) reports that, so nothing is polled and no key bind is needed.
+
 ### Keyboard layouts
 
 Settings → Keyboard edits the layouts, their variants and the switching shortcut. Apply changes them in the running Hyprland session and writes them to `~/.config/hypr/config/keyboard.conf`; the first Apply also adds `source = ~/.config/hypr/config/keyboard.conf` to `hyprland.conf` (after the window rules) so they are used on the next start. That file is overwritten by Settings, and it takes precedence over `kb_layout`, `kb_variant` and `kb_options` in `input.conf`. On a laptop with a keyboard backlight it also sets the light's level and can turn it off when idle; until you pick a level the laptop's own auto mode is left alone.

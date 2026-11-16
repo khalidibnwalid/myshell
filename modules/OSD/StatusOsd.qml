@@ -3,12 +3,13 @@ import "../../services/"
 import QtQuick
 import Quickshell
 import Quickshell.Hyprland
+import Quickshell.Io
 import Quickshell.Services.Pipewire
 import Quickshell.Services.UPower
 
 // One message pill for state changes that have no level to show:
 // microphone in use, keyboard layout, charger,
-// power profile, do not disturb. Every one is event-driven; nothing is polled.
+// power profile, do not disturb, camera on or off. Every one is event-driven; nothing is polled.
 Scope {
     id: root
 
@@ -112,6 +113,44 @@ Scope {
         }
 
         target: NotificationService
+    }
+
+    // --- camera: the laptop's camera switch disconnects and reconnects the camera on USB.
+    // udev announces both, so no key or polling is needed. One switch makes several
+    // events (one per video node), so the state is read once they settle. ---
+    Process {
+        id: cameraWatch
+
+        command: ["udevadm", "monitor", "--udev", "--subsystem-match=video4linux"]
+        running: true
+        stdout: SplitParser {
+            onRead: line => {
+                if (/\s(add|remove)\s/.test(line))
+                    cameraSettle.restart();
+            }
+        }
+    }
+
+    Timer {
+        id: cameraSettle
+
+        interval: 500
+        onTriggered: cameraState.running = true
+    }
+
+    Process {
+        id: cameraState
+
+        // any camera node left means the camera is on
+        command: ["sh", "-c", "ls /sys/class/video4linux 2>/dev/null | head -c1"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                if (text.trim() !== "")
+                    root.show("videocam", "Camera on", "", true);
+                else
+                    root.show("videocam_off", "Camera off", "", false);
+            }
+        }
     }
 
     OsdToast {
