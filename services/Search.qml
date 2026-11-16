@@ -400,18 +400,33 @@ Singleton {
         }).filter(item => item.totalScore > 0).sort((a, b) => b.totalScore - a.totalScore).slice(0, 5);
         if (!source("apps"))
             appResults = [];
-        // Settings is an app of its own: it is found as "settings", "preferences"…
+        // Settings and Notepad are apps of our own: found as "settings", "preferences", "notes"…
+        const own = [];
         if (query.length >= 2 && source("settings") && ["settings", "preferences", "options", "configuration"].some(w => w.startsWith(query)))
-            appResults = [{
+            own.push({
                 "id": "quickshell-settings",
                 "name": "Settings",
                 "description": "Change how the shell and the computer work",
-                // a Material symbol: this is our own app, not one from the icon theme
+                // the same icon the dock shows; the symbol is only the fallback
+                "image": Quickshell.shellDir + "/assets/settings.svg",
                 "symbol": "settings",
                 "icon": "settings",
                 "type": "app",
                 "execute": () => WindowManager.openSettings("")
-            }].concat(appResults.filter(a => a.name !== "Settings")).slice(0, 5);
+            });
+        if (query.length >= 2 && source("apps") && ["notepad", "notes", "note", "memo", "text editor"].some(w => w.startsWith(query)))
+            own.push({
+                "id": "quickshell-notepad",
+                "name": "Notepad",
+                "description": "Quick notes, saved as you type",
+                "image": Quickshell.shellDir + "/apps/Notepad/notepad.svg",
+                "symbol": "edit_note",
+                "icon": "edit_note",
+                "type": "app",
+                "execute": () => WindowManager.openNotepad()
+            });
+        if (own.length > 0)
+            appResults = own.concat(appResults.filter(a => !own.some(o => o.name === a.name))).slice(0, 5);
 
         settingsResults = findSettings(query, raw);
 

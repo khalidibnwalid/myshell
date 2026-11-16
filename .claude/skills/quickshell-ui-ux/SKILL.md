@@ -11,9 +11,9 @@ description: The user's UI/UX preferences for the Settings window, launcher and 
 - Give an unavailable tool a note in README and `AboutPage` tools, not a row on the page.
 
 ## Icons
-- Our own features use Material symbols (`MaterialSymbol`), never an icon looked up from the system theme.
+- Our own features use Material symbols (`MaterialSymbol`), never an icon looked up from the system theme. The exception is our own apps (Settings, Notepad): the launcher shows the same SVG as the dock (`assets/<app>.svg`), the symbol only as fallback.
 - A result or row from another app shows that app's real icon (VS Code for its projects, the browser for its history, a provider app's own icon). A source that no app owns (recent files, your own commands, calculator) uses a symbol.
-- The window/dock icon is the one exception: a real file (`assets/settings.svg`, installed by `scripts/install-settings-icon.sh`).
+- The window/dock icon is the one exception: a real file (`assets/settings.svg`, installed by `scripts/install-app-icons.sh`).
 - Dropdown items can carry a logo via `image`; use it for app pickers.
 - Previews: files in launcher results show a thumbnail, the image itself, or an album cover/video frame; other files a symbol matching their type.
 

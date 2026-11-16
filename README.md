@@ -83,6 +83,15 @@ Choose a wallpaper in Settings → Appearance. The selected image is shared by t
 
 Open it from the Quick Settings footer, or bind a key to `qs ipc call settings toggle` (also `open`, `close`, and `page <name>`, e.g. `page appearance`). Changes you make there are kept in `config.overrides.json` (generated and git-ignored), so the hand-written `config.json` stays the base; Settings → About lists any missing command-line tools.
 
+### Notepad
+
+A small notes app in `apps/Notepad/`: a list of notes on the left (pinned first, then the latest; drag its edge to change the width, hover a note for an `x` that deletes it, drag a note to put it where you want; pinned notes stay first and new notes start at the top), the editor on the right, a search box, and open, save, copy, pin and delete under the editor. Notes are saved as you type in `~/.local/share/quickshell/notepad/notes.json`; the first line is the title.
+
+- Open it with `qs ipc call notepad toggle` (also `open`, `close`, `create` for a new note, `openFile <path>`), or bind `bind = $mainMod, N, global, quickshell:notepad`. It is also in the launcher and the dock.
+- `Ctrl + N` makes a note, `Ctrl + F` searches, `Ctrl + B` folds the list away, `Ctrl + Shift + V` switches between Edit (write) and View (the note shown as Markdown: headings, lists, code, tables, links), `Ctrl + O` opens a text file as a note, `Ctrl + S` saves the note to the file it came from (or asks where), `Ctrl + Shift + S` always asks. Opening a file does not change it until you save.
+- It lists itself as an app for plain text and Markdown files, so it appears in Settings → Default apps → Text and code; pick it there to make it the default for text files.
+- It opens as a floating window like Settings; the rule for that is in the Hyprland window rules (`class = "dev.noctalia.noctalia-qs", title = "^(Notepad)$"`).
+
 ### Keyboard layouts
 
 Settings → Keyboard edits the layouts, their variants and the switching shortcut. Apply changes them in the running Hyprland session and writes them to `~/.config/hypr/config/keyboard.conf`; the first Apply also adds `source = ~/.config/hypr/config/keyboard.conf` to `hyprland.conf` (after the window rules) so they are used on the next start. That file is overwritten by Settings, and it takes precedence over `kb_layout`, `kb_variant` and `kb_options` in `input.conf`. On a laptop with a keyboard backlight it also sets the light's level and can turn it off when idle; until you pick a level the laptop's own auto mode is left alone.

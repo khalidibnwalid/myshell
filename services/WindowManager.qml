@@ -18,6 +18,7 @@ Singleton {
     property var settingsIndex: []
     property bool searchVisible: false
     property bool clipboardVisible: false
+    property bool notepadVisible: false
     property int idlePauseRemainingSeconds: 0
     // the bar windows, so a panel's click-outside grab can leave the bar usable
     property var barWindows: []
@@ -42,6 +43,15 @@ Singleton {
     signal toggleSearchVisible
     // handled by the Idle module, which owns the lock screen
     signal lockRequested
+    // the Notepad window is already open: bring it to the front
+    signal notepadRaiseRequested
+
+    function openNotepad() {
+        if (notepadVisible)
+            notepadRaiseRequested();
+        else
+            notepadVisible = true;
+    }
 
     function openSettings(page, query) {
         settingsQuery = query || "";

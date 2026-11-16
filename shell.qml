@@ -6,6 +6,7 @@ import "modules/Bar"
 import "modules/Clipboard"
 import "modules/Dock"
 import "modules/Idle"
+import "apps/Notepad"
 import "modules/Notifications"
 import "modules/OSD"
 import "modules/QuickSettings"
@@ -23,8 +24,8 @@ Scope {
         Services.Displays.applySaved();
         // reads the Hyprland options and keeps the window borders on the accent colour
         Services.HyprSettings.refresh();
-        // the gear icon of the Settings window
-        Quickshell.execDetached([Quickshell.shellDir + "/scripts/install-settings-icon.sh", Quickshell.shellDir]);
+        // the icons and desktop entries of the Settings window and of Notepad
+        Quickshell.execDetached([Quickshell.shellDir + "/scripts/install-app-icons.sh", Quickshell.shellDir]);
         // the keyboard light's switch-off when idle
         Services.KeyboardLight.refresh();
     }
@@ -51,6 +52,9 @@ Scope {
     }
 
     Clipboard {
+    }
+
+    Notepad {
     }
 
     ScreenTools {

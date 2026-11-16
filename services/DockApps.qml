@@ -32,7 +32,7 @@ Singleton {
             };
         }
         for (const t of Hyprland.toplevels.values) {
-            const cls = windowClass(t);
+            const cls = windowClass(t) === "" ? "" : windowId(t);
             if (cls === "")
                 continue;
             const entry = DesktopEntries.heuristicLookup(cls);
@@ -53,6 +53,15 @@ Singleton {
     // dock order: pins first, then the other running apps in the order they were opened
     readonly property var order: pins.concat(Object.keys(apps).filter(id => !apps[id].pinned))
     readonly property int pinnedCount: pins.length
+
+    // The shell's own windows share one app id, so Notepad is told apart by its title and has
+    // its own desktop entry (installed by scripts/install-app-icons.sh).
+    function windowId(toplevel) {
+        const cls = windowClass(toplevel);
+        if (toplevel.title === "Notepad" && (cls.endsWith("noctalia-qs") || cls === "quickshell"))
+            return "quickshell-notepad";
+        return cls;
+    }
 
     function windowClass(toplevel) {
         return toplevel.wayland?.appId || toplevel.lastIpcObject?.class || "";

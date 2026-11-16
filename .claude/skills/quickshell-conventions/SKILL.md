@@ -6,7 +6,7 @@ description: How code in this Quickshell config is structured and what to avoid.
 # Quickshell config: code conventions
 
 ## Layout
-- `shell.qml` starts the modules. `modules/<Area>/` hold windows and pages, `components/` the reusable QML, `services/` the singletons that read or change the system, `config/` the config singleton and theme (`Appearance`), `scripts/` only for things that cannot be inline, `helpers/` compiled helpers, `assets/` images shipped with the repo.
+- `shell.qml` starts the modules and apps. `modules/<Area>/` hold windows and pages of the shell, `apps/<App>/` hold small apps of their own (window, service, icon, launch script together; see `quickshell-add-app`), `components/` the reusable QML, `services/` the singletons that read or change the system, `config/` the config singleton and theme (`Appearance`), `scripts/` only for things that cannot be inline, `helpers/` compiled helpers, `assets/` images shipped with the repo.
 - A singleton that nothing references at startup is created lazily. If it must work without its page being open (borders, keyboard light idle, launcher index), call `Services.X.refresh()` from `shell.qml`'s `Component.onCompleted`.
 
 ## Services
