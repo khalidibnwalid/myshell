@@ -30,7 +30,7 @@ Scope {
         if (open)
             Services.WindowManager.clipboardVisible = false;
         else
-            cursorProc.running = true;
+            targetProc.running = true;
     }
 
     function show(x, y) {
@@ -61,6 +61,23 @@ Scope {
         onPressed: {
             root.startInEmoji = true;
             root.toggle();
+        }
+    }
+
+    // the window to paste into: the one focused before the menu opens
+    Process {
+        id: targetProc
+
+        command: ["hyprctl", "activewindow", "-j"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    Services.Clipboard.target = JSON.parse(text).address || "";
+                } catch (e) {
+                    Services.Clipboard.target = "";
+                }
+                cursorProc.running = true;
+            }
         }
     }
 

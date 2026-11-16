@@ -108,18 +108,34 @@ Singleton {
         + "*[Kk]itty*|*foot*|*[Aa]lacritty*|*ghostty*|*wezterm*|*[Kk]onsole*|*[Tt]erminal*|*[Tt]erminator*|*tilix*|*ptyxis*|*kgx*|*st-256color*)"
         + "wtype -M ctrl -M shift -k v -m shift -m ctrl ;; *) wtype -M ctrl -k v -m ctrl ;; esac"
 
+    // the window that was focused when the menu opened ("0x..."); the paste goes there even when a
+    // click on the menu has moved the focus somewhere else
+    property string target: ""
+
+    // $2 and $3 are the command that focuses that window (Lua form, then the old form), see HyprCommand
+    readonly property string refocus: "if [ -n \"$2\" ]; then case \"$(hyprctl dispatch \"$2\" 2>&1)\" in ok*) ;; *) hyprctl dispatch \"$3\" >/dev/null 2>&1 ;; esac; fi; "
+
+    function pasteCommand() {
+        return (Config.clipboard?.autoPaste ?? true) ? refocus + pasteKeys : "true";
+    }
+
+    function focusArgs() {
+        const a = HyprCommand.clean(target);
+        return a === "" ? ["", ""] : ["hl.dsp.focus({ window = \"address:" + a + "\" })", "focuswindow address:" + a];
+    }
+
     function paste(entry) {
-        const keys = (Config.clipboard?.autoPaste ?? true) ? pasteKeys : "true";
+        const f = focusArgs();
         if (entry.key !== undefined)
-            Quickshell.execDetached(["sh", "-c", "wl-copy < \"$1\" && { " + keys + "; }", "sh", pinPath(entry.key)]);
+            Quickshell.execDetached(["sh", "-c", "wl-copy < \"$1\" && { " + pasteCommand() + "; }", "sh", pinPath(entry.key), f[0], f[1]]);
         else
-            Quickshell.execDetached(["sh", "-c", "cliphist decode \"$1\" | wl-copy && { " + keys + "; }", "sh", entry.id]);
+            Quickshell.execDetached(["sh", "-c", "cliphist decode \"$1\" | wl-copy && { " + pasteCommand() + "; }", "sh", entry.id, f[0], f[1]]);
     }
 
     // Same as paste, for plain text that is not an entry of the history (an emoji).
     function pasteText(text) {
-        const keys = (Config.clipboard?.autoPaste ?? true) ? pasteKeys : "true";
-        Quickshell.execDetached(["sh", "-c", "printf %s \"$1\" | wl-copy && { " + keys + "; }", "sh", text]);
+        const f = focusArgs();
+        Quickshell.execDetached(["sh", "-c", "printf %s \"$1\" | wl-copy && { " + pasteCommand() + "; }", "sh", text, f[0], f[1]]);
     }
 
     function remove(entry) {

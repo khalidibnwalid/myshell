@@ -102,7 +102,7 @@ When the laptop's camera switch cuts or restores the camera, the shell shows "Ca
 
 ### Emoji and symbols
 
-The clipboard menu (`Super + V`) has a smiley button next to the search box that switches it to an emoji and symbol picker: tabs for the groups (recent, smileys, people, animals, food, activities, travel, objects, symbols, flags and text symbols such as arrows and Greek letters), a search by name or keyword, and a click or `Enter` pastes the pick into the window you came from. The arrow keys move over the grid and `Tab` changes the group. To open it directly, bind `bind = $mainMod, period, global, quickshell:emoji`. The list is `assets/emoji.json` (made from the gemoji data, MIT); the recently used ones are in `~/.local/share/quickshell/emoji-recent.json`.
+The clipboard menu (`Super + V`) has a smiley button next to the search box that switches it to an emoji and symbol picker: tabs for the groups (recent, smileys, people, animals, food, activities, travel, objects, symbols, flags and text symbols such as arrows and Greek letters), a search by name or keyword, and a click or `Enter` pastes the pick into the window you came from (the menu remembers that window and refocuses it, so a click pastes too, as it does for the clipboard items). The arrow keys move over the grid and `Tab` changes the group. To open it directly, bind `bind = $mainMod, semicolon, global, quickshell:emoji`. The list is `assets/emoji.json` (made from the gemoji data, MIT); the recently used ones are in `~/.local/share/quickshell/emoji-recent.json`.
 
 ### Processes
 
