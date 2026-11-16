@@ -36,6 +36,16 @@ Scope {
             readonly property var rowResults: results.filter(r => r && tileResults.indexOf(r) < 0).slice(0, 6)
             readonly property var ordered: tileResults.concat(rowResults)
             property int currentIndex: -1
+            // where the pointer was last seen; results that appear under a pointer that did not move are not selected
+            property point lastPointer: Qt.point(-1, -1)
+
+            function pointerMoved(area, mouse, index) {
+                const p = area.mapToItem(null, mouse.x, mouse.y);
+                const moved = lastPointer.x >= 0 && (p.x !== lastPointer.x || p.y !== lastPointer.y);
+                lastPointer = p;
+                if (moved)
+                    currentIndex = index;
+            }
 
             function typeLabel(r) {
                 switch (r.type) {
@@ -296,7 +306,7 @@ Scope {
                             required property var modelData
                             required property int index
                             readonly property bool selected: panelWindow.currentIndex === index
-                            readonly property bool highlighted: selected || tileMouse.containsMouse
+                            readonly property bool highlighted: selected
 
                             Layout.fillWidth: true
                             Layout.preferredWidth: 1
@@ -388,7 +398,7 @@ Scope {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
-                                onEntered: panelWindow.currentIndex = tile.index
+                                onPositionChanged: mouse => panelWindow.pointerMoved(tileMouse, mouse, tile.index)
                                 onClicked: panelWindow.activate(tile.index)
                             }
                         }
@@ -524,10 +534,12 @@ Scope {
                             }
 
                             MouseArea {
+                                id: rowMouse
+
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
-                                onEntered: panelWindow.currentIndex = row.flatIndex
+                                onPositionChanged: mouse => panelWindow.pointerMoved(rowMouse, mouse, row.flatIndex)
                                 onClicked: panelWindow.activate(row.flatIndex)
                             }
                         }

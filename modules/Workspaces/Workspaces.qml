@@ -327,7 +327,7 @@ Scope {
                         }
 
                         if (targetWs > 0) {
-                            Hyprland.dispatch(`movetoworkspacesilent ${targetWs},address:${address}`);
+                            Hyprland.dispatch(`hl.dsp.window.move({ workspace = ${targetWs}, follow = false, window = "address:${address}" })`);
                             Hyprland.refreshWorkspaces();
                             Hyprland.refreshToplevels();
                         } 
