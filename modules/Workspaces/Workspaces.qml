@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import "../../components/"
 import "../../config/"
+import "../../services" as Services
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
@@ -194,7 +195,7 @@ Scope {
                             MouseArea {
                                 anchors.fill: parent
                                 cursorShape: Qt.PointingHandCursor
-                                onClicked: Hyprland.dispatch(`workspace ${workspaceContainer.workspaceId}`)
+                                onClicked: Services.HyprCommand.goToWorkspace(workspaceContainer.workspaceId)
                             }
 
                             // toplevels
@@ -327,7 +328,7 @@ Scope {
                         }
 
                         if (targetWs > 0) {
-                            Hyprland.dispatch(`hl.dsp.window.move({ workspace = ${targetWs}, follow = false, window = "address:${address}" })`);
+                            Services.HyprCommand.moveWindowToWorkspace(address, targetWs);
                             Hyprland.refreshWorkspaces();
                             Hyprland.refreshToplevels();
                         } 

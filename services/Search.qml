@@ -102,7 +102,8 @@ Singleton {
         Quickshell.execDetached(args);
         const cls = Config.search?.browserClass || "";
         if (cls !== "")
-            Quickshell.execDetached(["sh", "-c", "sleep 0.4; hyprctl dispatch focuswindow \"class:^($1)$\"", "sh", cls]);
+            focusTimer.cls = cls;
+            focusTimer.restart();
     }
 
     function bangIcon(key) {
@@ -543,6 +544,16 @@ Singleton {
             searchService.fileResults = results;
             searchService.publish();
         });
+    }
+
+    // the browser window is brought to the front once it has had a moment to open
+    Timer {
+        id: focusTimer
+
+        property string cls: ""
+
+        interval: 400
+        onTriggered: HyprCommand.focusClass(cls)
     }
 
     Timer {

@@ -162,7 +162,7 @@ PanelWindow {
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
-                            Hyprland.dispatch("focuswindow address:0x" + cell.modelData.address);
+                            HyprCommand.focusWindow("0x" + cell.modelData.address);
                             root.open = false;
                         }
                     }

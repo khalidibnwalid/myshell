@@ -101,7 +101,7 @@ Singleton {
         if (toplevel.wayland)
             toplevel.wayland.activate();
         else
-            Hyprland.dispatch("focuswindow address:0x" + toplevel.address);
+            HyprCommand.focusWindow("0x" + toplevel.address);
     }
 
     // Click on a dock icon: launch when nothing is open, otherwise focus the app,

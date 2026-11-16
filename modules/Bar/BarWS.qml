@@ -1,5 +1,6 @@
 import "../../components/"
 import "../../config/"
+import "../../services" as Services
 import "."
 import QtQuick
 import QtQuick.Layouts
@@ -113,7 +114,7 @@ Item {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: Hyprland.dispatch(`workspace ${ws.workspaceId}`)
+                    onClicked: Services.HyprCommand.goToWorkspace(ws.workspaceId)
                     // hovering a workspace with windows lists them next to the bar
                     onEntered: {
                         if (ws.occupied)
