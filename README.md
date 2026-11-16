@@ -13,7 +13,7 @@ Required packages:
 - `quickshell` — runs the QML shell and brings in its Qt 6 and Wayland modules.
 - `hyprland` — provides the compositor and `hyprctl` commands used for workspaces, keyboard layouts, and window focus. The Hyprland page reads every option from `hyprctl descriptions`, so use a version that has it (0.50 or newer). Both the hyprlang (`.conf`) and the Lua (`hyprland.lua`, 0.55 and newer) formats are supported.
 - `networkmanager` — provides `nmcli` for Wi-Fi controls.
-- `bluez` — provides Bluetooth support. `busctl` from `systemd` reads Bluetooth signal strength.
+- `bluez` — provides Bluetooth support. `busctl` from `systemd` reads Bluetooth signal strength, and `udevadm` from `systemd` reports the camera switch.
 - `pipewire`, `pipewire-audio`, and `wireplumber` — provide audio devices and routing. Add `pipewire-pulse` for PulseAudio compatibility with other applications.
 - `upower` — provides battery and power-profile information.
 - `swaybg` — applies the shared desktop and lock screen wallpaper.
@@ -57,6 +57,10 @@ Pages for hardware or tools that are missing are hidden.
 - `nvidia-utils` — GPU details (usage, memory, power) for NVIDIA cards, in Settings → System → Detailed.
 - `chwd` (CachyOS) — shows the installed hardware profile in Settings → System → Detailed.
 - `brightnessctl` — also drives the keyboard backlight, when the laptop has one.
+
+### Optional capture tools
+
+- `tesseract` and `tesseract-data-eng` — "Extract text" in the screenshot selector reads the words in the chosen area. Add `tesseract-data-ara` or another language package for more languages, then set them in Settings → Clipboard & capture (for example `eng+ara`).
 
 ### Optional settings tools
 

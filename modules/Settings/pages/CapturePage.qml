@@ -75,6 +75,21 @@ SettingsPage {
         }
 
         SettingRow {
+            icon: "document_scanner"
+            title: "Text languages"
+            description: "Languages read by Extract text, joined with + (for example eng+ara). Installed: eng. More come from tesseract-data packages."
+
+            FieldInput {
+                implicitWidth: 240
+                value: Config.capture.ocrLanguages
+                onCommitted: text => {
+                    if (/^[a-z_]+(\+[a-z_]+)*$/.test(text.trim()))
+                        Config.capture.ocrLanguages = text.trim();
+                }
+            }
+        }
+
+        SettingRow {
             icon: "folder"
             title: "Screenshot folder"
             description: "Where saved screenshots go"

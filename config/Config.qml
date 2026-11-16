@@ -225,6 +225,8 @@ Singleton {
                 property string screenshotDir: "~/Pictures/Screenshots"
                 property string recordingDir: "~/Videos"
                 property bool recordAudio: false
+                // tesseract languages for "Extract text", joined with + (eng+ara)
+                property string ocrLanguages: "eng"
             }
 
             property JsonObject dock

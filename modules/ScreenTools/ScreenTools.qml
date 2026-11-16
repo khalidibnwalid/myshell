@@ -9,12 +9,18 @@ import Quickshell.Wayland
 
 // Shortcuts for the screen utilities, and the frame shown around the area being recorded.
 // bind = , Print, global, quickshell:screenshot
+// bind = $mainMod SHIFT, T, global, quickshell:ocr   (starts with "Extract text" chosen)
 // bind = $mainMod SHIFT, C, global, quickshell:colorpicker
 // bind = $mainMod SHIFT, R, global, quickshell:record
 Scope {
     GlobalShortcut {
         name: "screenshot"
         onPressed: Services.ScreenTools.screenshot()
+    }
+
+    GlobalShortcut {
+        name: "ocr"
+        onPressed: Services.ScreenTools.extractText()
     }
 
     GlobalShortcut {
@@ -25,6 +31,118 @@ Scope {
     GlobalShortcut {
         name: "record"
         onPressed: Services.ScreenTools.toggleRecording()
+    }
+
+    // Options shown above the area selection: take a screenshot, or extract the text in it.
+    // slurp draws the selection; this bar is mapped after it so it lies on top and takes clicks.
+    Variants {
+        model: Quickshell.screens
+
+        PanelWindow {
+            required property var modelData
+
+            screen: modelData
+            visible: Services.ScreenTools.selecting && barDelay.shown
+            color: "transparent"
+            exclusionMode: ExclusionMode.Ignore
+            WlrLayershell.layer: WlrLayer.Overlay
+            WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+            anchors.top: true
+            margins.top: 24
+            implicitWidth: optionBar.implicitWidth
+            implicitHeight: optionBar.implicitHeight
+
+            Rectangle {
+                id: optionBar
+
+                implicitWidth: barRow.implicitWidth + 20
+                implicitHeight: 56
+                radius: height / 2
+                color: Appearance.panelColor
+                border.width: 1
+                border.color: Appearance.hairlineColor
+
+                RowLayout {
+                    id: barRow
+
+                    anchors.centerIn: parent
+                    spacing: 6
+
+                    Repeater {
+                        model: [
+                            {
+                                "icon": "screenshot_region",
+                                "value": "screenshot"
+                            },
+                            {
+                                "icon": "document_scanner",
+                                "value": "text"
+                            },
+                            {
+                                "icon": "videocam",
+                                "value": "video"
+                            }
+                        ]
+
+                        // the chosen action is filled with the primary (accent) colour
+                        Rectangle {
+                            id: choice
+
+                            required property var modelData
+                            readonly property bool current: Services.ScreenTools.captureMode === modelData.value
+
+                            implicitWidth: 42
+                            implicitHeight: 42
+                            radius: width / 2
+                            color: current ? Appearance.accentColor : (choiceArea.containsMouse ? Appearance.surfaceHighColor : "transparent")
+
+                            MaterialSymbol {
+                                anchors.centerIn: parent
+                                icon: choice.modelData.icon
+                                font.pixelSize: 24
+                                color: choice.current ? Appearance.accentContrastColor : Appearance.fgColor
+                            }
+
+                            MouseArea {
+                                id: choiceArea
+
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: Services.ScreenTools.setMode(choice.modelData.value)
+                            }
+
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: Appearance.animFast
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    Timer {
+        id: barDelay
+
+        // slurp must be on screen first, so the bar is mapped above it
+        property bool shown: false
+
+        interval: 450
+        onTriggered: shown = true
+    }
+
+    Connections {
+        function onSelectingChanged() {
+            if (Services.ScreenTools.selecting)
+                barDelay.restart();
+            else
+                barDelay.shown = false;
+        }
+
+        target: Services.ScreenTools
     }
 
     Variants {

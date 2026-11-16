@@ -22,6 +22,8 @@ SettingsPage {
         "wl-screenrec": "screen recording",
         "hyprpicker": "colour picker",
         "notify-send": "capture notifications",
+        "tesseract": "Extract text from a screen area",
+        "udevadm": "camera on and off message",
         "bc": "calculator in the launcher",
         "hyprsunset": "night light",
         "matugen": "colours from the wallpaper",

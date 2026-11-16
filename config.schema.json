@@ -235,6 +235,10 @@
         "recordAudio": {
           "type": "boolean",
           "description": "Record audio with the screen"
+        },
+        "ocrLanguages": {
+          "type": "string",
+          "description": "Tesseract languages used by Extract text, joined with + (for example eng+ara)"
         }
       }
     },

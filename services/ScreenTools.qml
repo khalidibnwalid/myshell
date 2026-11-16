@@ -18,6 +18,11 @@ Singleton {
     property rect region: Qt.rect(0, 0, 0, 0)
     property int elapsed: 0
     property string recordingFile: ""
+    // what the area selection will do: "screenshot", "text" (extract the text in it) or "video"
+    property string captureMode: "screenshot"
+    // true while the area is being selected; shows the option bar
+    readonly property bool selecting: shotProc.running
+    readonly property string modeFile: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/quickshell-capture-mode"
     property bool stopRequested: false
     readonly property string elapsedText: Math.floor(elapsed / 60) + ":" + String(elapsed % 60).padStart(2, "0")
 
@@ -53,27 +58,51 @@ Singleton {
     // Copies the selected area. With Config.capture.autoSave it is also saved as a file;
     // without it, clicking the notification saves it.
     // $1 = screenshot folder, $2 = cache folder for shots that are not saved yet
-    readonly property string shotScript: "t=\"$2/$(date +%Y-%m-%d_%H-%M-%S).png\"; f=\"$1/Screenshot_$(basename \"$t\")\"; "
+    // $4 = file holding the chosen mode (screenshot or text), $5 = tesseract languages
+    readonly property string shotScript: "m=$(cat \"$4\" 2>/dev/null); "
+        // Video: free the screen and hand the area back to the shell, which starts the recorder
+        + "if [ \"$m\" = video ]; then kill $hp 2>/dev/null; printf 'VIDEO %s' \"$g\"; exit; fi; "
+        + "t=\"$2/$(date +%Y-%m-%d_%H-%M-%S).png\"; f=\"$1/Screenshot_$(basename \"$t\")\"; "
         + "mkdir -p \"$2\" && grim -g \"$g\" \"$t\" || exit 1; "
         // the frozen screen can go as soon as the shot is taken
-        + "kill $hp 2>/dev/null; wl-copy -t image/png < \"$t\"; "
+        + "kill $hp 2>/dev/null; "
+        // Extract text: read the area, copy the words, keep no picture
+        + "if [ \"$m\" = text ]; then "
+        + "x=$(tesseract \"$t\" stdout -l \"$5\" 2>/dev/null | sed -e :a -e '/^[[:space:]]*$/{$d;N;ba' -e '}'); rm -f \"$t\"; "
+        + "if [ -z \"$x\" ]; then notify-send -a Screenshot 'No text found' 'Try a larger area, or add a language in Settings'; "
+        + "else printf %s \"$x\" | wl-copy; notify-send -a Screenshot 'Text copied' \"$(printf %s \"$x\" | head -c 160)\"; fi; exit; fi; "
+        + "wl-copy -t image/png < \"$t\"; "
         + "save() { mkdir -p \"$1\" && mv \"$t\" \"$f\" && notify-send -a Screenshot -i \"$f\" 'Screenshot saved' \"$f\"; }; "
-        + "if [ \"$3\" = save ]; then save \"$1\"; exit; fi; "
-        // waits until the notification is clicked ("default") or dismissed
+        // the rest waits for the notification to be clicked ("default") or dismissed, so it runs on its own
+        // with its output closed: the selector is finished as soon as the shot is taken
+        + "( if [ \"$3\" = save ]; then save \"$1\"; else "
         + "a=$(notify-send -a Screenshot -i \"$t\" -A default=Save 'Screenshot copied' 'Click to save it as a file'); "
-        + "if [ \"$a\" = default ]; then save \"$1\"; else rm -f \"$t\"; fi"
+        + "if [ \"$a\" = default ]; then save \"$1\"; else rm -f \"$t\"; fi; fi ) >/dev/null 2>&1 &"
 
-    function screenshot() {
+    function setMode(mode) {
+        captureMode = mode;
+        Quickshell.execDetached(["sh", "-c", "printf %s \"$2\" > \"$1\"", "sh", modeFile, mode]);
+    }
+
+    function screenshot(mode) {
         // hyprpicker holds a frozen copy of the screen while the area is selected, so menus,
         // tooltips and hover states that would vanish when focus moves stay in the shot
         const script = "hyprpicker -r -z >/dev/null 2>&1 & hp=$!; trap 'kill $hp 2>/dev/null' EXIT; sleep 0.2; g=$(" + slurpCmd + ") || exit 0; " + shotScript;
-        afterPanels(() => Quickshell.execDetached(["sh", "-c", script, "sh", expand(Config.capture.screenshotDir), cacheDir, Config.capture.autoSave ? "save" : "ask"]));
+        if (shotProc.running)
+            return;
+        setMode(mode || "screenshot");
+        shotProc.command = ["sh", "-c", script, "sh", expand(Config.capture.screenshotDir), cacheDir, Config.capture.autoSave ? "save" : "ask", modeFile, Config.capture.ocrLanguages || "eng"];
+        afterPanels(() => shotProc.running = true);
+    }
+
+    function extractText() {
+        screenshot("text");
     }
 
     function toggleRecording() {
         if (recording)
             stopRecording();
-        else if (!selectProc.running)
+        else if (!selectProc.running && !shotProc.running)
             afterPanels(() => selectProc.running = true);
     }
 
@@ -116,6 +145,18 @@ Singleton {
         repeat: true
         running: root.recording
         onTriggered: root.elapsed++
+    }
+
+    Process {
+        id: shotProc
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                // the script prints the area only when the chosen action is a recording
+                if (this.text.startsWith("VIDEO "))
+                    root.startRecording(this.text.substring(6).trim());
+            }
+        }
     }
 
     Process {
