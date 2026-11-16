@@ -116,6 +116,12 @@ Singleton {
             Quickshell.execDetached(["sh", "-c", "cliphist decode \"$1\" | wl-copy && { " + keys + "; }", "sh", entry.id]);
     }
 
+    // Same as paste, for plain text that is not an entry of the history (an emoji).
+    function pasteText(text) {
+        const keys = (Config.clipboard?.autoPaste ?? true) ? pasteKeys : "true";
+        Quickshell.execDetached(["sh", "-c", "printf %s \"$1\" | wl-copy && { " + keys + "; }", "sh", text]);
+    }
+
     function remove(entry) {
         if (entry.key !== undefined) {
             root.pins = pins.filter(p => p.key !== entry.key);

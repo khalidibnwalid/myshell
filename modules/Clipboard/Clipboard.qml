@@ -23,6 +23,9 @@ Scope {
     property real pointerY: 0
     property var targetScreen: Quickshell.screens[0]
 
+    // the menu was opened by the emoji shortcut
+    property bool startInEmoji: false
+
     function toggle() {
         if (open)
             Services.WindowManager.clipboardVisible = false;
@@ -46,7 +49,19 @@ Scope {
 
     GlobalShortcut {
         name: "clipboard"
-        onPressed: root.toggle()
+        onPressed: {
+            root.startInEmoji = false;
+            root.toggle();
+        }
+    }
+
+    // bind = $mainMod, period, global, quickshell:emoji
+    GlobalShortcut {
+        name: "emoji"
+        onPressed: {
+            root.startInEmoji = true;
+            root.toggle();
+        }
     }
 
     Process {
@@ -68,11 +83,67 @@ Scope {
         // pinned items first, then the history; both narrowed by the search text
         property var items: []
         property int currentIndex: -1
+        // emoji and symbol picker, shown in place of the history
+        property bool emojiMode: false
+        property string emojiCategory: "recent"
+        property var emojiItems: []
+        readonly property int emojiColumns: 8
         readonly property bool shown: root.open && backingWindowVisible
-        readonly property real cardHeight: Math.min(root.maxHeight, 12 + 44 + 8 + (items.length > 0 ? list.contentHeight : 96) + 8 + hint.implicitHeight + 12)
+        readonly property real cardHeight: emojiMode ? root.maxHeight : Math.min(root.maxHeight, 12 + 44 + 8 + (items.length > 0 ? list.contentHeight : 96) + 8 + hint.implicitHeight + 12)
 
         function close() {
             Services.WindowManager.clipboardVisible = false;
+        }
+
+        function setEmojiMode(on) {
+            emojiMode = on;
+            searchField.text = "";
+            if (on) {
+                emojiCategory = Services.Emoji.recent.length > 0 ? "recent" : "smileys";
+                rebuildEmoji();
+            } else {
+                rebuild(false);
+            }
+            searchField.forceActiveFocus();
+        }
+
+        function rebuildEmoji() {
+            const q = searchField.text.trim();
+            if (q !== "") {
+                emojiItems = Services.Emoji.search(q);
+            } else if (emojiCategory === "recent") {
+                emojiItems = Services.Emoji.recentItems();
+            } else {
+                const c = Services.Emoji.categories.find(c => c.id === emojiCategory);
+                emojiItems = c ? c.items : [];
+            }
+            currentIndex = emojiItems.length > 0 ? 0 : -1;
+            grid.positionViewAtBeginning();
+        }
+
+        function moveEmoji(delta) {
+            if (emojiItems.length === 0)
+                return;
+            currentIndex = Math.max(0, Math.min(emojiItems.length - 1, currentIndex + delta));
+            grid.positionViewAtIndex(currentIndex, GridView.Contain);
+        }
+
+        // Tab and Shift+Tab step through the categories
+        function stepCategory(delta) {
+            const ids = (Services.Emoji.recent.length > 0 ? ["recent"] : []).concat(Services.Emoji.categories.map(c => c.id));
+            const i = ids.indexOf(emojiCategory);
+            emojiCategory = ids[(i + delta + ids.length) % ids.length];
+            searchField.text = "";
+            rebuildEmoji();
+        }
+
+        function pickEmoji(i) {
+            const e = emojiItems[i];
+            if (!e)
+                return;
+            close();
+            Services.Emoji.used(e.char);
+            Services.Clipboard.pasteText(e.char);
         }
 
         function rebuild(keepPosition) {
@@ -120,6 +191,7 @@ Scope {
             if (visible) {
                 searchField.text = "";
                 rebuild(false);
+                setEmojiMode(root.startInEmoji);
                 searchField.forceActiveFocus();
             }
         }
@@ -208,7 +280,7 @@ Scope {
 
                             Layout.fillWidth: true
                             color: Appearance.fgColor
-                            placeholderText: "Search clipboard"
+                            placeholderText: window.emojiMode ? "Search emoji and symbols" : "Search clipboard"
                             placeholderTextColor: Appearance.mutedColor
                             font.family: Appearance.fontFamily
                             font.pixelSize: 15
@@ -216,9 +288,34 @@ Scope {
                             selectedTextColor: Appearance.accentContrastColor
                             selectByMouse: true
                             background: null
-                            onTextChanged: window.rebuild(false)
+                            onTextChanged: window.emojiMode ? window.rebuildEmoji() : window.rebuild(false)
                             Keys.onPressed: event => {
                                 const current = window.items[window.currentIndex];
+                                if (window.emojiMode) {
+                                    // the picker is a grid: arrows move over it, Tab changes the category
+                                    const cols = window.emojiColumns;
+                                    if (event.key === Qt.Key_Right) {
+                                        window.moveEmoji(1);
+                                    } else if (event.key === Qt.Key_Left) {
+                                        window.moveEmoji(-1);
+                                    } else if (event.key === Qt.Key_Down) {
+                                        window.moveEmoji(cols);
+                                    } else if (event.key === Qt.Key_Up) {
+                                        window.moveEmoji(-cols);
+                                    } else if (event.key === Qt.Key_Tab) {
+                                        window.stepCategory(1);
+                                    } else if (event.key === Qt.Key_Backtab) {
+                                        window.stepCategory(-1);
+                                    } else if (event.key === Qt.Key_Escape) {
+                                        window.close();
+                                    } else if (event.key === Qt.Key_Enter || event.key === Qt.Key_Return) {
+                                        window.pickEmoji(window.currentIndex);
+                                    } else {
+                                        return;
+                                    }
+                                    event.accepted = true;
+                                    return;
+                                }
                                 if (event.key === Qt.Key_Down || event.key === Qt.Key_Tab) {
                                     window.move(1);
                                 } else if (event.key === Qt.Key_Up || event.key === Qt.Key_Backtab) {
@@ -244,13 +341,116 @@ Scope {
                         }
 
                         IconButton {
-                            icon: "delete_sweep"
+                            icon: "mood"
                             size: 32
                             iconSize: 19
-                            visible: Services.Clipboard.history.length > 0
-                            onClicked: Services.Clipboard.wipe()
+                            toggled: window.emojiMode
+                            onClicked: window.setEmojiMode(!window.emojiMode)
                         }
                     }
+                }
+
+                // --- emoji and symbols ---
+                Row {
+                    Layout.alignment: Qt.AlignHCenter
+                    visible: window.emojiMode
+                    spacing: 2
+
+                    Repeater {
+                        model: (Services.Emoji.recent.length > 0 ? [
+                                {
+                                    "id": "recent",
+                                    "icon": "history"
+                                }
+                            ] : []).concat(Services.Emoji.categories)
+
+                        IconButton {
+                            required property var modelData
+
+                            icon: modelData.icon
+                            size: 30
+                            iconSize: 18
+                            toggled: window.emojiCategory === modelData.id && searchField.text.trim() === ""
+                            onClicked: {
+                                window.emojiCategory = modelData.id;
+                                searchField.text = "";
+                                window.rebuildEmoji();
+                                searchField.forceActiveFocus();
+                            }
+                        }
+                    }
+                }
+
+                GridView {
+                    id: grid
+
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    visible: window.emojiMode && window.emojiItems.length > 0
+                    clip: true
+                    cellWidth: Math.floor(width / window.emojiColumns)
+                    cellHeight: 46
+                    boundsBehavior: Flickable.StopAtBounds
+                    model: window.emojiItems
+
+                    delegate: Item {
+                        id: cell
+
+                        required property var modelData
+                        required property int index
+                        readonly property bool selected: window.currentIndex === index
+
+                        width: grid.cellWidth
+                        height: grid.cellHeight
+
+                        Rectangle {
+                            anchors.fill: parent
+                            anchors.margins: 2
+                            radius: 12
+                            color: cell.selected || cellArea.containsMouse ? Appearance.surfaceHighColor : "transparent"
+                            border.width: cell.selected ? 1 : 0
+                            border.color: Qt.alpha(Appearance.accentColor, 0.5)
+
+                            StyledText {
+                                anchors.centerIn: parent
+                                text: cell.modelData.char
+                                font.pixelSize: 24
+                            }
+                        }
+
+                        MouseArea {
+                            id: cellArea
+
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onEntered: window.currentIndex = cell.index
+                            onClicked: window.pickEmoji(cell.index)
+                        }
+                    }
+                }
+
+                Item {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    visible: window.emojiMode && window.emojiItems.length === 0
+
+                    StyledText {
+                        anchors.centerIn: parent
+                        text: searchField.text.trim() !== "" ? "No matches" : "Nothing used yet"
+                        color: Appearance.mutedColor
+                        font.pixelSize: 13
+                    }
+                }
+
+                StyledText {
+                    Layout.fillWidth: true
+                    visible: window.emojiMode
+                    horizontalAlignment: Text.AlignHCenter
+                    elide: Text.ElideRight
+                    text: window.emojiItems[window.currentIndex] ? window.emojiItems[window.currentIndex].char + "  " + window.emojiItems[window.currentIndex].name : "Enter paste  ·  Tab next group"
+                    color: Appearance.mutedColor
+                    font.pixelSize: 12
                 }
 
                 // --- entries ---
@@ -259,7 +459,7 @@ Scope {
 
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    visible: window.items.length > 0
+                    visible: !window.emojiMode && window.items.length > 0
                     clip: true
                     spacing: 4
                     boundsBehavior: Flickable.StopAtBounds
@@ -382,7 +582,7 @@ Scope {
                 Item {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    visible: window.items.length === 0
+                    visible: !window.emojiMode && window.items.length === 0
 
                     ColumnLayout {
                         anchors.centerIn: parent
@@ -407,6 +607,7 @@ Scope {
                 StyledText {
                     id: hint
 
+                    visible: !window.emojiMode
                     Layout.fillWidth: true
                     horizontalAlignment: Text.AlignHCenter
                     text: "Enter paste  ·  Ctrl+P pin  ·  Del delete"

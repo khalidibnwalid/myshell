@@ -100,6 +100,10 @@ A small notes app in `apps/Notepad/`: a list of notes on the left (pinned first,
 
 When the laptop's camera switch cuts or restores the camera, the shell shows "Camera on" or "Camera off". The switch disconnects the camera from USB, and `udevadm monitor` (from `systemd`) reports that, so nothing is polled and no key bind is needed.
 
+### Emoji and symbols
+
+The clipboard menu (`Super + V`) has a smiley button next to the search box that switches it to an emoji and symbol picker: tabs for the groups (recent, smileys, people, animals, food, activities, travel, objects, symbols, flags and text symbols such as arrows and Greek letters), a search by name or keyword, and a click or `Enter` pastes the pick into the window you came from. The arrow keys move over the grid and `Tab` changes the group. To open it directly, bind `bind = $mainMod, period, global, quickshell:emoji`. The list is `assets/emoji.json` (made from the gemoji data, MIT); the recently used ones are in `~/.local/share/quickshell/emoji-recent.json`.
+
 ### Keyboard layouts
 
 Settings → Keyboard edits the layouts, their variants and the switching shortcut. Apply changes them in the running Hyprland session and writes them to `~/.config/hypr/config/keyboard.conf`; the first Apply also adds `source = ~/.config/hypr/config/keyboard.conf` to `hyprland.conf` (after the window rules) so they are used on the next start. That file is overwritten by Settings, and it takes precedence over `kb_layout`, `kb_variant` and `kb_options` in `input.conf`. On a laptop with a keyboard backlight it also sets the light's level and can turn it off when idle; until you pick a level the laptop's own auto mode is left alone.
