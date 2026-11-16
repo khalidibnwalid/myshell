@@ -21,6 +21,7 @@ Singleton {
     property bool notepadVisible: false
     property bool processesVisible: false
     property bool timerVisible: false
+    property bool agentVisible: false
     // the next time the System page opens, it shows its Detailed look
     property bool settingsDetailed: false
     property int idlePauseRemainingSeconds: 0

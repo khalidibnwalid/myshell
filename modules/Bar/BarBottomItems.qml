@@ -36,6 +36,33 @@ GridLayout {
         }
     }
 
+    // the AI agent: toggles its chat panel
+    Rectangle {
+        Layout.alignment: Qt.AlignCenter
+        implicitWidth: root.horizontal ? 36 : 30
+        implicitHeight: root.horizontal ? 36 : 30
+        radius: height / 2
+        color: WindowManager.agentVisible ? Appearance.accentColor : (agentArea.containsMouse || root.horizontal ? Appearance.surfaceColor : "transparent")
+
+        MaterialSymbol {
+            anchors.centerIn: parent
+            icon: "auto_awesome"
+            fill: WindowManager.agentVisible ? 1 : 0
+            font.pixelSize: 20
+            color: WindowManager.agentVisible ? Appearance.accentContrastColor : Appearance.fgColor
+        }
+
+        MouseArea {
+            id: agentArea
+
+            anchors.fill: parent
+            anchors.margins: -4
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: WindowManager.agentVisible = !WindowManager.agentVisible
+        }
+    }
+
     // wifi / bluetooth / volume / battery -> open quick settings
     Item {
         Layout.alignment: Qt.AlignCenter

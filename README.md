@@ -63,6 +63,10 @@ Pages for hardware or tools that are missing are hidden.
 - `tesseract` and `tesseract-data-eng` — "Extract text" in the screenshot selector reads the words in the chosen area. Add `tesseract-data-ara` or another language package for more languages, then set them in Settings → Clipboard & capture (for example `eng+ara`).
 - `zbar` — provides `zbarimg`, which reads QR codes for the QR option of the screenshot selector.
 
+### Optional agent tools
+
+- `claude` (Claude Code) and/or `codex` (Codex CLI) — the Agent panel talks to whichever is installed. The Claude icon comes from the Claude desktop app's icon and the Codex one from the Papirus icon theme when they are there; otherwise a symbol is shown.
+
 ### Optional settings tools
 
 - `hyprsunset` — running in the background, it enables the night light controls in Settings → Display.
@@ -118,6 +122,19 @@ Countdown timers and a stopwatch in `apps/Timer/`. Pick a time (1 minute to 1 ho
 
 - Open it with `qs ipc call timer toggle` (also `open`, `close`, `start 5m "tea"`), or bind `bind = $mainMod, T, global, quickshell:timer`. It is also in the launcher and the dock.
 - It opens as a floating window like Settings (`title = "^(Timer)$"` in the Hyprland window rules).
+
+### Agent
+
+A chat with Claude or Codex in a full-height panel beside the bar, opened with the sparkle button above the status icons (or `qs ipc call agent toggle`, also `open`, `close`, `ask "question"`, or `bind = $mainMod, A, global, quickshell:agent`). It lies over the windows and a click anywhere else closes it.
+
+- It runs the tools you already have, signed in as you: `claude -p` and `codex exec`, in your home folder. They may read files to answer but not change them. A tool that is not installed is not offered.
+- Every conversation is kept (`~/.local/share/quickshell/agent/chat.json`) and continued where it stopped; the speech-bubble button lists them, and the pencil starts a new one. A chat keeps the tool it started with.
+- Claude's answers appear as they are written; Codex reports whole messages.
+- The pill above the message box (or `/model`) picks the model, with the names and versions each tool shows in its own picker (read from Claude Code's and Codex's model lists on disk); Default leaves it to the tool's own setting. The choice is kept per tool and can change in the middle of a chat.
+- Attach pictures or files with the paperclip, by dropping them on the panel, or paste a picture with `Ctrl + V`.
+- Type `/` for commands: `/new`, `/history`, `/claude`, `/codex`, `/model`, `/stop`, `/delete`, and the tool's own commands (Claude lists its commands after the first message; any other `/command` is passed on as it is).
+- Type `@`, `~/` or a `/path/` to complete folder and file names; `Tab` or `Enter` fills one in.
+- `Enter` sends, `Shift + Enter` makes a new line, `Escape` closes.
 
 ### Keyboard layouts
 

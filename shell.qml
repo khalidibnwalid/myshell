@@ -1,6 +1,7 @@
 import Quickshell
 import Quickshell.Hyprland
 import QtQuick
+import "modules/Agent"
 import "modules/Autocomplete"
 import "modules/Bar"
 import "modules/Clipboard"
@@ -66,6 +67,9 @@ Scope {
     }
 
     ScreenTools {
+    }
+
+    AgentPanel {
     }
 
     VolumeOsd {
