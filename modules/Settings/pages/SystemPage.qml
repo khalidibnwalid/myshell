@@ -60,11 +60,28 @@ SettingsPage {
         return out;
     }
 
+    // asked for by a Quick Settings tile (CPU): open on the Detailed look
+    function takeDetailedRequest() {
+        if (WindowManager.settingsDetailed) {
+            WindowManager.settingsDetailed = false;
+            detailed = true;
+        }
+    }
+
     title: "System"
     subtitle: SystemInfo.hostname
     Component.onCompleted: {
+        takeDetailedRequest();
         SystemInfo.refresh();
         SystemInfo.refreshLive();
+    }
+
+    Connections {
+        function onSettingsDetailedChanged() {
+            page.takeDetailedRequest();
+        }
+
+        target: WindowManager
     }
     onDetailedChanged: {
         if (detailed) {

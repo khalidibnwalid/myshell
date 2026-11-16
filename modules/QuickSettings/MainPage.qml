@@ -206,7 +206,10 @@ Item {
                 Layout.preferredWidth: 1
                 text: SystemInfo.formatCapacityRatio(SystemInfo.memoryUsed, SystemInfo.memoryTotal)
                 icon: "memory"
-                onClicked: SystemInfo.refresh()
+                onClicked: {
+                    WindowManager.quickSettingsVisible = false;
+                    WindowManager.openProcesses();
+                }
             }
 
             Tile {
@@ -214,7 +217,12 @@ Item {
                 Layout.preferredWidth: 1
                 text: SystemInfo.cpuCores > 0 ? SystemInfo.cpuCores + " cores" + (SystemInfo.cpuTemperature >= 0 ? " · " + Math.round(SystemInfo.cpuTemperature) + "°C" : "") : "—"
                 icon: "developer_board"
-                onClicked: SystemInfo.refresh()
+                // the System page with every reading
+                onClicked: {
+                    WindowManager.quickSettingsVisible = false;
+                    WindowManager.settingsDetailed = true;
+                    WindowManager.openSettings("system");
+                }
             }
 
             Tile {
@@ -222,7 +230,10 @@ Item {
                 Layout.preferredWidth: 1
                 text: SystemInfo.formatCapacityRatio(SystemInfo.diskUsed, SystemInfo.diskTotal)
                 icon: "storage"
-                onClicked: SystemInfo.refresh()
+                onClicked: {
+                    WindowManager.quickSettingsVisible = false;
+                    WindowManager.openSettings("storage");
+                }
             }
 
         }

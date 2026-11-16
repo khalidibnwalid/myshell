@@ -54,12 +54,14 @@ Singleton {
     readonly property var order: pins.concat(Object.keys(apps).filter(id => !apps[id].pinned))
     readonly property int pinnedCount: pins.length
 
-    // The shell's own windows share one app id, so Notepad is told apart by its title and has
+    // The shell's own windows share one app id, so Notepad and Processes are told apart by its title and has
     // its own desktop entry (installed by scripts/install-app-icons.sh).
     function windowId(toplevel) {
         const cls = windowClass(toplevel);
         if (toplevel.title === "Notepad" && (cls.endsWith("noctalia-qs") || cls === "quickshell"))
             return "quickshell-notepad";
+        if (toplevel.title === "Processes" && (cls.endsWith("noctalia-qs") || cls === "quickshell"))
+            return "quickshell-processes";
         return cls;
     }
 

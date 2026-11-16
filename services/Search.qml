@@ -425,6 +425,17 @@ Singleton {
                 "type": "app",
                 "execute": () => WindowManager.openNotepad()
             });
+        if (query.length >= 2 && source("apps") && ["processes", "task manager", "system monitor", "activity monitor", "kill", "end task", "top", "htop"].some(w => w.startsWith(query)))
+            own.push({
+                "id": "quickshell-processes",
+                "name": "Processes",
+                "description": "See what is running and end it",
+                "image": Quickshell.shellDir + "/apps/Processes/processes.svg",
+                "symbol": "monitoring",
+                "icon": "monitoring",
+                "type": "app",
+                "execute": () => WindowManager.openProcesses()
+            });
         if (own.length > 0)
             appResults = own.concat(appResults.filter(a => !own.some(o => o.name === a.name))).slice(0, 5);
 

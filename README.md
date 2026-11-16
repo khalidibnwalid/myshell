@@ -104,6 +104,13 @@ When the laptop's camera switch cuts or restores the camera, the shell shows "Ca
 
 The clipboard menu (`Super + V`) has a smiley button next to the search box that switches it to an emoji and symbol picker: tabs for the groups (recent, smileys, people, animals, food, activities, travel, objects, symbols, flags and text symbols such as arrows and Greek letters), a search by name or keyword, and a click or `Enter` pastes the pick into the window you came from. The arrow keys move over the grid and `Tab` changes the group. To open it directly, bind `bind = $mainMod, period, global, quickshell:emoji`. The list is `assets/emoji.json` (made from the gemoji data, MIT); the recently used ones are in `~/.local/share/quickshell/emoji-recent.json`.
 
+### Processes
+
+A task manager in `apps/Processes/`: every running program with its CPU and memory use, grouped by program (a browser's many helpers become one row) or listed one by one, only yours or everyone's, a search, and a click on a column title sorts by it. Pick a row and press `Delete` (or the buttons in the title bar) to end it; Force quit stops it at once. The shell itself, Hyprland and the first process cannot be ended from here, and processes of other users need administrator rights. Nothing runs while the window is closed.
+
+- Open it with `qs ipc call processes toggle` (also `open`, `close`), or bind `bind = $mainMod, Escape, global, quickshell:processes`. It is also in the launcher, the dock, and the memory tile of Quick Settings opens it (the processor tile opens Settings → System in its Detailed look, the storage tile Settings → Storage).
+- It opens as a floating window like Settings (`title = "^(Processes)$"` in the Hyprland window rules).
+
 ### Keyboard layouts
 
 Settings → Keyboard edits the layouts, their variants and the switching shortcut. Apply changes them in the running Hyprland session and writes them to `~/.config/hypr/config/keyboard.conf`; the first Apply also adds `source = ~/.config/hypr/config/keyboard.conf` to `hyprland.conf` (after the window rules) so they are used on the next start. That file is overwritten by Settings, and it takes precedence over `kb_layout`, `kb_variant` and `kb_options` in `input.conf`. On a laptop with a keyboard backlight it also sets the light's level and can turn it off when idle; until you pick a level the laptop's own auto mode is left alone.

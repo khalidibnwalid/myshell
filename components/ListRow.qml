@@ -7,6 +7,10 @@ Rectangle {
     id: root
 
     property string icon
+    // a picture (an app's own icon) shown instead of the symbol
+    property string image
+    // a fixed width kept for the icon, so rows with a picture and rows with a symbol line up
+    property int iconBox: 0
     property real iconFill: 0
     property string title
     property string subtitle
@@ -36,8 +40,20 @@ Rectangle {
         anchors.rightMargin: 18 + root.trailingSpace
         spacing: 14
 
+        Image {
+            visible: root.image !== ""
+            source: root.image
+            sourceSize: Qt.size(56, 56)
+            Layout.preferredWidth: 28
+            Layout.preferredHeight: 28
+            fillMode: Image.PreserveAspectFit
+            asynchronous: true
+        }
+
         MaterialSymbol {
-            visible: root.icon !== ""
+            visible: root.image === "" && root.icon !== ""
+            Layout.preferredWidth: root.iconBox > 0 ? root.iconBox : implicitWidth
+            horizontalAlignment: Text.AlignHCenter
             icon: root.icon
             fill: root.iconFill
             font.pixelSize: 20

@@ -54,3 +54,25 @@ Terminal=false"
         command -v update-desktop-database >/dev/null && update-desktop-database "$data/applications" >/dev/null 2>&1
     fi
 fi
+
+# Processes: the same, an app of its own (it opens with `qs ipc call processes open`)
+picon="$data/icons/hicolor/scalable/apps/quickshell-processes.svg"
+pentry="$data/applications/quickshell-processes.desktop"
+if [ -f "$dir/apps/Processes/processes.svg" ]; then
+    if ! cmp -s "$dir/apps/Processes/processes.svg" "$picon"; then
+        cp "$dir/apps/Processes/processes.svg" "$picon"
+        command -v gtk-update-icon-cache >/dev/null && gtk-update-icon-cache -f -t "$data/icons/hicolor" >/dev/null 2>&1
+        touch "$data/icons/hicolor"
+    fi
+    pwant="[Desktop Entry]
+Version=1.5
+Type=Application
+Name=Processes
+Comment=See what is running and end it
+Exec=qs ipc call processes open
+Icon=quickshell-processes
+Categories=System;Monitor;
+Keywords=task manager;system monitor;kill;processes;
+Terminal=false"
+    [ "$(cat "$pentry" 2>/dev/null)" = "$pwant" ] || printf '%s\n' "$pwant" > "$pentry"
+fi

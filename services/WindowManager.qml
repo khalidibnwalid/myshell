@@ -19,6 +19,9 @@ Singleton {
     property bool searchVisible: false
     property bool clipboardVisible: false
     property bool notepadVisible: false
+    property bool processesVisible: false
+    // the next time the System page opens, it shows its Detailed look
+    property bool settingsDetailed: false
     property int idlePauseRemainingSeconds: 0
     // the bar windows, so a panel's click-outside grab can leave the bar usable
     property var barWindows: []
@@ -45,6 +48,15 @@ Singleton {
     signal lockRequested
     // the Notepad window is already open: bring it to the front
     signal notepadRaiseRequested
+    // the Processes window is already open: bring it to the front
+    signal processesRaiseRequested
+
+    function openProcesses() {
+        if (processesVisible)
+            processesRaiseRequested();
+        else
+            processesVisible = true;
+    }
 
     function openNotepad() {
         if (notepadVisible)
