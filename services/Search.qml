@@ -437,6 +437,17 @@ Singleton {
                 "type": "app",
                 "execute": () => WindowManager.openProcesses()
             });
+        if (query.length >= 2 && source("apps") && ["timer", "stopwatch", "alarm", "countdown", "pomodoro", "clock"].some(w => w.startsWith(query)))
+            own.push({
+                "id": "quickshell-timer",
+                "name": "Timer",
+                "description": "Countdown timers and a stopwatch",
+                "image": Quickshell.shellDir + "/apps/Timer/timer.svg",
+                "symbol": "timer",
+                "icon": "timer",
+                "type": "app",
+                "execute": () => WindowManager.openTimer()
+            });
         if (own.length > 0)
             appResults = own.concat(appResults.filter(a => !own.some(o => o.name === a.name))).slice(0, 5);
 

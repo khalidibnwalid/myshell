@@ -8,6 +8,7 @@ import "modules/Dock"
 import "modules/Idle"
 import "apps/Notepad"
 import "apps/Processes"
+import "apps/Timer"
 import "modules/Notifications"
 import "modules/OSD"
 import "modules/QuickSettings"
@@ -59,6 +60,9 @@ Scope {
     }
 
     ProcessManager {
+    }
+
+    TimerApp {
     }
 
     ScreenTools {

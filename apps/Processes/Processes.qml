@@ -11,19 +11,15 @@ import Quickshell.Io
 Singleton {
     id: root
 
-    // the window is open: sample every `interval` ms
     property bool active: false
     readonly property int interval: 2000
 
     // shown rows: { key, name, count, pids, cpu (% of one core), mem (bytes), user, detail }
     property var list: []
     property string query: ""
-    // "cpu", "mem", "name" or "pid"
     property string sortKey: "cpu"
     property bool sortDescending: true
-    // merge the processes of one program (a browser's many helpers) into one row
     property bool grouped: true
-    // only the processes of the logged-in user
     property bool onlyMine: true
     property int count: 0
     property string status: ""
@@ -101,7 +97,6 @@ Singleton {
         return sortDescending ? -r : r;
     }
 
-    // the rows from the last sample, filtered, grouped and sorted
     function rebuild() {
         const q = query.trim().toLowerCase();
         const mine = onlyMine ? procs.filter(p => p.user === me) : procs;

@@ -112,6 +112,13 @@ A task manager in `apps/Processes/`: every running program with its CPU and memo
 - Open it with `qs ipc call processes toggle` (also `open`, `close`), or bind `bind = $mainMod, Escape, global, quickshell:processes`. It is also in the launcher, the dock, and the memory tile of Quick Settings opens it (the processor tile opens Settings → System in its Detailed look, the storage tile Settings → Storage).
 - It opens as a floating window like Settings (`title = "^(Processes)$"` in the Hyprland window rules).
 
+### Timer
+
+Countdown timers and a stopwatch in `apps/Timer/`. Pick a time (1 minute to 1 hour) or type one (`5:30`, `90` minutes, `1h 30m`, `45s`) with an optional name; run as many timers as you like, pause, restart or remove each, and a finished one rings with a notification and a sound (`canberra-gtk-play`, or `paplay` as the fallback). Timers are end times kept in `~/.local/share/quickshell/timer/timers.json`, so they go on while the window is closed and across a restart, and nothing is polled. The stopwatch has laps.
+
+- Open it with `qs ipc call timer toggle` (also `open`, `close`, `start 5m "tea"`), or bind `bind = $mainMod, T, global, quickshell:timer`. It is also in the launcher and the dock.
+- It opens as a floating window like Settings (`title = "^(Timer)$"` in the Hyprland window rules).
+
 ### Keyboard layouts
 
 Settings → Keyboard edits the layouts, their variants and the switching shortcut. Apply changes them in the running Hyprland session and writes them to `~/.config/hypr/config/keyboard.conf`; the first Apply also adds `source = ~/.config/hypr/config/keyboard.conf` to `hyprland.conf` (after the window rules) so they are used on the next start. That file is overwritten by Settings, and it takes precedence over `kb_layout`, `kb_variant` and `kb_options` in `input.conf`. On a laptop with a keyboard backlight it also sets the light's level and can turn it off when idle; until you pick a level the laptop's own auto mode is left alone.

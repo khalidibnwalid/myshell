@@ -76,3 +76,25 @@ Keywords=task manager;system monitor;kill;processes;
 Terminal=false"
     [ "$(cat "$pentry" 2>/dev/null)" = "$pwant" ] || printf '%s\n' "$pwant" > "$pentry"
 fi
+
+# Timer: the same, an app of its own (it opens with `qs ipc call timer open`)
+ticon="$data/icons/hicolor/scalable/apps/quickshell-timer.svg"
+tentry="$data/applications/quickshell-timer.desktop"
+if [ -f "$dir/apps/Timer/timer.svg" ]; then
+    if ! cmp -s "$dir/apps/Timer/timer.svg" "$ticon"; then
+        cp "$dir/apps/Timer/timer.svg" "$ticon"
+        command -v gtk-update-icon-cache >/dev/null && gtk-update-icon-cache -f -t "$data/icons/hicolor" >/dev/null 2>&1
+        touch "$data/icons/hicolor"
+    fi
+    twant="[Desktop Entry]
+Version=1.5
+Type=Application
+Name=Timer
+Comment=Countdown timers and a stopwatch
+Exec=qs ipc call timer open
+Icon=quickshell-timer
+Categories=Utility;Clock;
+Keywords=timer;stopwatch;alarm;countdown;pomodoro;
+Terminal=false"
+    [ "$(cat "$tentry" 2>/dev/null)" = "$twant" ] || printf '%s\n' "$twant" > "$tentry"
+fi

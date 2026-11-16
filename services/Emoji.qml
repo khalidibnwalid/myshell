@@ -10,7 +10,6 @@ import Quickshell.Io
 Singleton {
     id: root
 
-    // [{ id, icon, name, items: [{ char, name, words }] }]
     property var categories: []
     property var recent: []
     property bool loaded: false
@@ -78,7 +77,6 @@ Singleton {
             });
     }
 
-    // moves the symbol to the front of the recent list and keeps it
     function used(ch) {
         const list = [ch].concat(root.recent.filter(c => c !== ch)).slice(0, root.maxRecent);
         root.recent = list;

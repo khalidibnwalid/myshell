@@ -62,6 +62,8 @@ Singleton {
             return "quickshell-notepad";
         if (toplevel.title === "Processes" && (cls.endsWith("noctalia-qs") || cls === "quickshell"))
             return "quickshell-processes";
+        if (toplevel.title === "Timer" && (cls.endsWith("noctalia-qs") || cls === "quickshell"))
+            return "quickshell-timer";
         return cls;
     }
 

@@ -20,6 +20,7 @@ Singleton {
     property bool clipboardVisible: false
     property bool notepadVisible: false
     property bool processesVisible: false
+    property bool timerVisible: false
     // the next time the System page opens, it shows its Detailed look
     property bool settingsDetailed: false
     property int idlePauseRemainingSeconds: 0
@@ -50,6 +51,15 @@ Singleton {
     signal notepadRaiseRequested
     // the Processes window is already open: bring it to the front
     signal processesRaiseRequested
+    // the Timer window is already open: bring it to the front
+    signal timerRaiseRequested
+
+    function openTimer() {
+        if (timerVisible)
+            timerRaiseRequested();
+        else
+            timerVisible = true;
+    }
 
     function openProcesses() {
         if (processesVisible)

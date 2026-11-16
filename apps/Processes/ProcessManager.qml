@@ -73,7 +73,6 @@ ApplicationWindow {
         target: WindowManager
     }
 
-    // keeps the summary numbers moving while the window is open
     Timer {
         interval: 2000
         repeat: true
@@ -132,7 +131,6 @@ ApplicationWindow {
         anchors.margins: 20
         spacing: 14
 
-        // --- title bar: what the computer is doing, and the actions ---
         RowLayout {
             Layout.fillWidth: true
             // the title bar never makes the window's content wider than the window
@@ -226,7 +224,6 @@ ApplicationWindow {
             onEdited: text => Processes.query = text
         }
 
-        // --- column titles: click one to sort by it ---
         RowLayout {
             Layout.fillWidth: true
             Layout.minimumWidth: 0
@@ -305,7 +302,6 @@ ApplicationWindow {
                 required property int index
                 readonly property bool busy: modelData.cpu >= 50
 
-                // the program's own icon, or a symbol when it has none
                 readonly property string appIcon: {
                     const icon = DesktopEntries.heuristicLookup(modelData.name)?.icon ?? "";
                     return icon === "" ? "" : Quickshell.iconPath(icon, true);
@@ -321,9 +317,7 @@ ApplicationWindow {
                 active: root.selectedKey === modelData.key
                 title: modelData.name + (modelData.count > 1 ? "  (" + modelData.count + ")" : "")
                 subtitle: Processes.onlyMine ? modelData.detail : modelData.user + "  ·  " + modelData.detail
-                // the three columns sit over the row's right side
                 trailingSpace: columns.implicitWidth
-                // clicking the chosen row again lets go of it
                 onClicked: root.selectedKey = root.selectedKey === modelData.key ? "" : modelData.key
 
                 Row {
