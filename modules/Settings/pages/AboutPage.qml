@@ -23,6 +23,7 @@ SettingsPage {
         "hyprpicker": "colour picker",
         "notify-send": "capture notifications",
         "tesseract": "Extract text from a screen area",
+        "zbarimg": "reading QR codes in the screenshot selector",
         "udevadm": "camera on and off message",
         "bc": "calculator in the launcher",
         "hyprsunset": "night light",

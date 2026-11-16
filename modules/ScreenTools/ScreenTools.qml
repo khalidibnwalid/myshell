@@ -79,6 +79,10 @@ Scope {
                                 "value": "text"
                             },
                             {
+                                "icon": "qr_code_scanner",
+                                "value": "qr"
+                            },
+                            {
                                 "icon": "videocam",
                                 "value": "video"
                             }

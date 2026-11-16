@@ -18,7 +18,7 @@ Singleton {
     property rect region: Qt.rect(0, 0, 0, 0)
     property int elapsed: 0
     property string recordingFile: ""
-    // what the area selection will do: "screenshot", "text" (extract the text in it) or "video"
+    // what the area selection will do: "screenshot", "text" (extract the text in it), "qr" (read a QR code) or "video"
     property string captureMode: "screenshot"
     // true while the area is being selected; shows the option bar
     readonly property bool selecting: shotProc.running
@@ -71,6 +71,13 @@ Singleton {
         + "x=$(tesseract \"$t\" stdout -l \"$5\" 2>/dev/null | sed -e :a -e '/^[[:space:]]*$/{$d;N;ba' -e '}'); rm -f \"$t\"; "
         + "if [ -z \"$x\" ]; then notify-send -a Screenshot 'No text found' 'Try a larger area, or add a language in Settings'; "
         + "else printf %s \"$x\" | wl-copy; notify-send -a Screenshot 'Text copied' \"$(printf %s \"$x\" | head -c 160)\"; fi; exit; fi; "
+        // QR code: read it, copy what it says; a web address can be opened from the notification
+        + "if [ \"$m\" = qr ]; then "
+        + "x=$(zbarimg -q --raw \"$t\" 2>/dev/null); rm -f \"$t\"; "
+        + "if [ -z \"$x\" ]; then notify-send -a Screenshot 'No QR code found' 'Select the code with a little space around it'; exit; fi; "
+        + "printf %s \"$x\" | wl-copy; "
+        + "case \"$x\" in http://*|https://*) ( a=$(notify-send -a Screenshot -A default=Open 'QR code copied' \"$x\"); [ \"$a\" = default ] && xdg-open \"$x\" ) >/dev/null 2>&1 & ;; "
+        + "*) notify-send -a Screenshot 'QR code copied' \"$(printf %s \"$x\" | head -c 160)\" ;; esac; exit; fi; "
         + "wl-copy -t image/png < \"$t\"; "
         + "save() { mkdir -p \"$1\" && mv \"$t\" \"$f\" && notify-send -a Screenshot -i \"$f\" 'Screenshot saved' \"$f\"; }; "
         // the rest waits for the notification to be clicked ("default") or dismissed, so it runs on its own

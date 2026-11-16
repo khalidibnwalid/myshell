@@ -61,6 +61,7 @@ Pages for hardware or tools that are missing are hidden.
 ### Optional capture tools
 
 - `tesseract` and `tesseract-data-eng` — "Extract text" in the screenshot selector reads the words in the chosen area. Add `tesseract-data-ara` or another language package for more languages, then set them in Settings → Clipboard & capture (for example `eng+ara`).
+- `zbar` — provides `zbarimg`, which reads QR codes for the QR option of the screenshot selector.
 
 ### Optional settings tools
 
