@@ -36,7 +36,9 @@ SettingsPage {
         "python3": "recent files, VS Code and browser history in the launcher",
         "ffmpegthumbnailer": "album covers and video frames in the launcher",
         "udisksctl": "mounting and ejecting drives",
-        "lpstat": "printers"
+        "lpstat": "printers",
+        "hostnamectl": "changing the computer name",
+        "gnome-control-center": "adding online accounts"
     })
     property var missing: []
     property bool checked: false

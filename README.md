@@ -67,6 +67,7 @@ Pages for hardware or tools that are missing are hidden.
 
 - `hyprsunset` — running in the background, it enables the night light controls in Settings → Display.
 - `matugen` — enables "Match the wallpaper" in Settings → Appearance.
+- `gnome-control-center` — the "Add or remove accounts" button in Settings → Accounts opens its online accounts window. Existing accounts are listed without it.
 
 ### Services and hardware
 

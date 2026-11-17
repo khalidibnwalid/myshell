@@ -97,6 +97,14 @@ ApplicationWindow {
             "component": autocompletePage
         },
         {
+            "key": "accounts",
+            "name": "Accounts",
+            "icon": "account_circle",
+            "group": "Personalisation",
+            "keywords": "user profile picture avatar name password hostname computer name shell groups google microsoft nextcloud online account email login",
+            "component": accountsPage
+        },
+        {
             "key": "appearance",
             "name": "Appearance",
             "icon": "palette",
@@ -514,6 +522,13 @@ ApplicationWindow {
         id: keyboardPage
 
         KeyboardPage {
+        }
+    }
+
+    Component {
+        id: accountsPage
+
+        AccountsPage {
         }
     }
 
