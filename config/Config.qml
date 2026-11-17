@@ -12,6 +12,7 @@ Singleton {
     readonly property alias hyprland: jsonAdapter.hyprland
     readonly property alias search: jsonAdapter.search
     readonly property alias clipboard: jsonAdapter.clipboard
+    readonly property alias fonts: jsonAdapter.fonts
     readonly property alias capture: jsonAdapter.capture
     readonly property alias dock: jsonAdapter.dock
     readonly property alias idle: jsonAdapter.idle
@@ -63,7 +64,7 @@ Singleton {
     // --- config.json is the hand-written base; what the Settings window changes
     // is stored as a difference in config.overrides.json (git-ignored, generated) ---
     readonly property var objectSections: ["appearance", "layout", "capture", "dock", "autocomplete", "display", "bar", "notifications", "idle"]
-    readonly property var plainSections: ["keyboard", "hyprland", "search", "clipboard"]
+    readonly property var plainSections: ["keyboard", "hyprland", "search", "clipboard", "fonts"]
     readonly property var wholeValues: ["monitors", "recentColors"]
     property var baseData: ({})
     property var overrides: ({})
@@ -340,6 +341,16 @@ Singleton {
             // clipboard menu: paste the picked item right away, or only copy it
             property var clipboard: ({
                 "autoPaste": true
+            })
+            // system fonts, written to fontconfig and the GTK settings by services/Fonts.qml.
+            // "" means the system default; languages maps a language code to a family
+            property var fonts: ({
+                "sans": "",
+                "serif": "",
+                "mono": "",
+                "gtk": "",
+                "languages": {
+                }
             })
         }
 

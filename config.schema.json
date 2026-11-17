@@ -251,6 +251,20 @@
         }
       }
     },
+    "fonts": {
+      "type": "object",
+      "properties": {
+        "sans": { "type": "string", "description": "Family for sans-serif text in every app; empty keeps the system default" },
+        "serif": { "type": "string" },
+        "mono": { "type": "string" },
+        "gtk": { "type": "string", "description": "Interface font written to the GTK settings; empty leaves them alone" },
+        "languages": {
+          "type": "object",
+          "description": "Language code (ar, ja, zh-cn...) to the family used for that language",
+          "additionalProperties": { "type": "string" }
+        }
+      }
+    },
     "hyprland": {
       "type": "object",
       "properties": {

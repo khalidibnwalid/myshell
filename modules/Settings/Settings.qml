@@ -113,6 +113,14 @@ ApplicationWindow {
             "component": appearancePage
         },
         {
+            "key": "fonts",
+            "name": "Fonts",
+            "icon": "match_case",
+            "group": "Personalisation",
+            "keywords": "font typeface text family serif sans monospace arabic language gtk terminal emoji size",
+            "component": fontsPage
+        },
+        {
             "key": "bar",
             "name": "Bar & dock",
             "icon": "dock_to_right",
@@ -544,6 +552,13 @@ ApplicationWindow {
         id: dateTimePage
 
         DateTimePage {
+        }
+    }
+
+    Component {
+        id: fontsPage
+
+        FontsPage {
         }
     }
 

@@ -38,6 +38,7 @@ SettingsPage {
         "udisksctl": "mounting and ejecting drives",
         "lpstat": "printers",
         "hostnamectl": "changing the computer name",
+        "fc-list": "listing fonts",
         "timedatectl": "time zone and clock settings",
         "localectl": "language and formats",
         "gnome-control-center": "adding online accounts"
