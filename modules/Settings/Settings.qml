@@ -153,6 +153,14 @@ ApplicationWindow {
             "component": capturePage
         },
         {
+            "key": "datetime",
+            "name": "Date, time & region",
+            "icon": "schedule",
+            "group": "System",
+            "keywords": "clock time zone timezone ntp automatic 24 hour 12 language locale region format calendar date country units",
+            "component": dateTimePage
+        },
+        {
             "key": "startup",
             "name": "Startup apps",
             "icon": "rocket_launch",
@@ -529,6 +537,13 @@ ApplicationWindow {
         id: accountsPage
 
         AccountsPage {
+        }
+    }
+
+    Component {
+        id: dateTimePage
+
+        DateTimePage {
         }
     }
 
