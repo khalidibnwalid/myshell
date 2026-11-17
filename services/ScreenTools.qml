@@ -55,6 +55,11 @@ Singleton {
         afterPanels(() => Quickshell.execDetached(["sh", "-c", "c=$(hyprpicker -a) && [ -n \"$c\" ] && notify-send -a 'Color picker' \"$c\" 'Copied to the clipboard'"]));
     }
 
+    // from the selector's option bar: cancel the area selection, then pick a colour
+    function pickColorFromSelector() {
+        Quickshell.execDetached(["sh", "-c", "pkill -x slurp; sleep 0.3; c=$(hyprpicker -a) && [ -n \"$c\" ] && notify-send -a 'Color picker' \"$c\" 'Copied to the clipboard'"]);
+    }
+
     // Copies the selected area. With Config.capture.autoSave it is also saved as a file;
     // without it, clicking the notification saves it.
     // $1 = screenshot folder, $2 = cache folder for shots that are not saved yet

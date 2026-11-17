@@ -13,6 +13,41 @@ import Quickshell.Wayland
 // bind = $mainMod SHIFT, C, global, quickshell:colorpicker
 // bind = $mainMod SHIFT, R, global, quickshell:record
 Scope {
+    id: root
+
+    readonly property var options: [
+        {
+            "icon": "screenshot_region",
+            "value": "screenshot"
+        },
+        {
+            "icon": "document_scanner",
+            "value": "text"
+        },
+        {
+            "icon": "qr_code_scanner",
+            "value": "qr"
+        },
+        {
+            "icon": "colorize",
+            "value": "color"
+        },
+        {
+            "icon": "videocam",
+            "value": "video"
+        }
+    ]
+
+    // the option the keyboard is on (Left/Right/Tab move it, Enter or Space chooses it)
+    property int focusIndex: 0
+
+    function activate(value) {
+        if (value === "color")
+            Services.ScreenTools.pickColorFromSelector();
+        else
+            Services.ScreenTools.setMode(value);
+    }
+
     GlobalShortcut {
         name: "screenshot"
         onPressed: Services.ScreenTools.screenshot()
@@ -46,7 +81,7 @@ Scope {
             color: "transparent"
             exclusionMode: ExclusionMode.Ignore
             WlrLayershell.layer: WlrLayer.Overlay
-            WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+            WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
             anchors.top: true
             margins.top: 24
             implicitWidth: optionBar.implicitWidth
@@ -61,6 +96,23 @@ Scope {
                 color: Appearance.panelColor
                 border.width: 1
                 border.color: Appearance.hairlineColor
+                focus: true
+
+                // this window holds the keyboard while it is up, so Esc cancels the selection here
+                Keys.onPressed: event => {
+                    const n = root.options.length;
+                    if (event.key === Qt.Key_Right || event.key === Qt.Key_Down || (event.key === Qt.Key_Tab && !(event.modifiers & Qt.ShiftModifier)))
+                        root.focusIndex = (root.focusIndex + 1) % n;
+                    else if (event.key === Qt.Key_Left || event.key === Qt.Key_Up || event.key === Qt.Key_Backtab || event.key === Qt.Key_Tab)
+                        root.focusIndex = (root.focusIndex + n - 1) % n;
+                    else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space)
+                        root.activate(root.options[root.focusIndex].value);
+                    else if (event.key === Qt.Key_Escape)
+                        Quickshell.execDetached(["pkill", "-x", "slurp"]);
+                    else
+                        return;
+                    event.accepted = true;
+                }
 
                 RowLayout {
                     id: barRow
@@ -69,36 +121,24 @@ Scope {
                     spacing: 6
 
                     Repeater {
-                        model: [
-                            {
-                                "icon": "screenshot_region",
-                                "value": "screenshot"
-                            },
-                            {
-                                "icon": "document_scanner",
-                                "value": "text"
-                            },
-                            {
-                                "icon": "qr_code_scanner",
-                                "value": "qr"
-                            },
-                            {
-                                "icon": "videocam",
-                                "value": "video"
-                            }
-                        ]
+                        model: root.options
 
                         // the chosen action is filled with the primary (accent) colour
                         Rectangle {
                             id: choice
 
                             required property var modelData
-                            readonly property bool current: Services.ScreenTools.captureMode === modelData.value
+                            required property int index
+                            readonly property bool current: modelData.value !== "color" && Services.ScreenTools.captureMode === modelData.value
 
                             implicitWidth: 42
                             implicitHeight: 42
                             radius: width / 2
+                            readonly property bool focused: root.focusIndex === index
                             color: current ? Appearance.accentColor : (choiceArea.containsMouse ? Appearance.surfaceHighColor : "transparent")
+
+                            border.width: focused ? 2 : 0
+                            border.color: Appearance.fgColor
 
                             MaterialSymbol {
                                 anchors.centerIn: parent
@@ -113,7 +153,7 @@ Scope {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
-                                onClicked: Services.ScreenTools.setMode(choice.modelData.value)
+                                onClicked: root.activate(choice.modelData.value)
                             }
 
                             Behavior on color {
@@ -140,8 +180,14 @@ Scope {
 
     Connections {
         function onSelectingChanged() {
-            if (Services.ScreenTools.selecting)
+            if (Services.ScreenTools.selecting) {
+                root.focusIndex = 0;
+                for (let i = 0; i < root.options.length; i++) {
+                    if (root.options[i].value === Services.ScreenTools.captureMode)
+                        root.focusIndex = i;
+                }
                 barDelay.restart();
+            }
             else
                 barDelay.shown = false;
         }
