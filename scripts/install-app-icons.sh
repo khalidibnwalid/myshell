@@ -37,12 +37,17 @@ if [ -f "$dir/apps/Notepad/notepad.svg" ]; then
         command -v gtk-update-icon-cache >/dev/null && gtk-update-icon-cache -f -t "$data/icons/hicolor" >/dev/null 2>&1
         touch "$data/icons/hicolor"
     fi
+    # quoted only when it has to be: xdg-open looks the first word up with the quotes still on
+    nexec="$dir/apps/Notepad/open.sh"
+    case $nexec in
+        *[[:space:]\"\'\\\<\>~\|\&\;\$\*\?\#\(\)\`]*) nexec="\"$nexec\"" ;;
+    esac
     nwant="[Desktop Entry]
 Version=1.5
 Type=Application
 Name=Notepad
 Comment=Quick notes, saved as you type
-Exec=\"$dir/apps/Notepad/open.sh\" %f
+Exec=$nexec %f
 Icon=quickshell-notepad
 Categories=Utility;TextEditor;
 MimeType=text/plain;text/markdown;

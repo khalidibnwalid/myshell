@@ -5,9 +5,18 @@
 import glob
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
+
+
+# the first word of Exec is quoted only when it has to be: xdg-open looks it up with the quotes still on and
+# opens the browser instead when it cannot find it
+def exec_word(path):
+    if not re.search(r"[\s\"'\\<>~|&;$*?#()`]", path):
+        return path
+    return '"%s"' % re.sub(r'(["`$\\])', r"\\\1", path)
 
 
 def main():
@@ -46,7 +55,7 @@ def main():
                 icon_changed = True
 
         if m.get("open"):
-            exec_line = '"%s" %%F' % os.path.join(folder, m["open"])
+            exec_line = "%s %%F" % exec_word(os.path.join(folder, m["open"]))
         else:
             exec_line = "qs ipc call %s open" % m.get("ipc", app)
         lines = [
@@ -74,6 +83,26 @@ def main():
                 f.write(want)
             if m.get("mime"):
                 mime_changed = True
+
+    # an app that was renamed or removed leaves its entry behind: the ones that start a missing launcher of ours go
+    known = set()
+    for path in glob.glob(os.path.join(shell, "apps/*/app.json")):
+        try:
+            with open(path, encoding="utf-8") as f:
+                known.add(json.load(f)["id"])
+        except (OSError, ValueError, KeyError):
+            pass
+    for entry in glob.glob(os.path.join(entries, "quickshell-*.desktop")):
+        app = os.path.basename(entry)[len("quickshell-"):-len(".desktop")]
+        try:
+            with open(entry, encoding="utf-8") as f:
+                text = f.read()
+        except OSError:
+            continue
+        launcher = re.search(r'(?m)^Exec="?([^"\s]+)', text)
+        if app not in known and launcher and launcher.group(1).startswith(os.path.join(shell, "apps") + "/") and not os.path.isfile(launcher.group(1)):
+            os.remove(entry)
+            mime_changed = True
 
     hicolor = os.path.join(data, "icons/hicolor")
     if icon_changed and shutil.which("gtk-update-icon-cache"):
