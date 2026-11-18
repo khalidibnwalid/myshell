@@ -8,13 +8,19 @@ import Quickshell.Io
 // One sample = `ps` (who, memory, command line) + the CPU time of every process from /proc;
 // the CPU share is the change since the previous sample, so it is read only while the window
 // is open (the window starts and stops `active`).
+// Memory is the proportional set size (PSS: shared libraries are split between the programs that use
+// them, so the column adds up to what is really used). It costs the kernel a walk of every process, so it
+// is read less often than the rest, and only for processes of this user; for the others the resident
+// size (RSS, which counts the shared libraries in full) is shown instead.
 Singleton {
     id: root
 
     property bool active: false
     readonly property int interval: 2000
+    readonly property int pssInterval: 6000
 
-    // shown rows: { key, name, count, pids, cpu (% of one core), mem (bytes), user, detail }
+    // shown rows: { key, name, count, pids, cpu (% of one core), mem (bytes: PSS, or RSS when exact is false),
+    // rss (bytes), exact, user, detail }
     property var list: []
     property string query: ""
     property string sortKey: "cpu"
@@ -26,11 +32,13 @@ Singleton {
 
     readonly property string me: Quickshell.env("USER") || ""
     property var procs: []
+    property var pss: ({})
     property var lastTicks: ({})
     property double lastTime: 0
     property int clockTicks: 100
 
     // the sample: clock ticks per second, `ps`, a marker, then "pid ticks" per process
+    readonly property string pssScript: "grep -H '^Pss:' /proc/[0-9]*/smaps_rollup 2>/dev/null"
     readonly property string sampleScript: "getconf CLK_TCK; ps -eo pid=,user:32=,rss=,args=; echo @@; "
         + "awk '{ j = length($0); while (j > 0 && substr($0, j, 1) != \")\") j--; split(substr($0, j + 2), a, \" \"); print $1, a[12] + a[13] }' /proc/[0-9]*/stat 2>/dev/null"
 
@@ -69,11 +77,13 @@ Singleton {
                 found.push({
                     "pid": parseInt(m[1]),
                     "user": m[2],
-                    "mem": parseInt(m[3]) * 1024,
+                    "rss": parseInt(m[3]) * 1024,
                     "args": m[4],
                     "name": nameOf(m[4])
                 });
         }
+        for (const p of found)
+            useMemory(p);
         const now = Date.now();
         const seconds = lastTime > 0 ? (now - lastTime) / 1000 : 0;
         for (const p of found) {
@@ -85,6 +95,27 @@ Singleton {
         root.lastTicks = ticks;
         root.lastTime = now;
         root.procs = found;
+        rebuild();
+    }
+
+    // PSS when it is known for this process, else its RSS
+    function useMemory(p) {
+        const v = pss[p.pid];
+        p.exact = v !== undefined;
+        p.mem = p.exact ? v : p.rss;
+    }
+
+    function parsePss(text) {
+        const found = {};
+        const re = /^\/proc\/(\d+)\/smaps_rollup:Pss:\s+(\d+) kB/;
+        for (const line of text.split("\n")) {
+            const m = re.exec(line);
+            if (m)
+                found[m[1]] = parseInt(m[2]) * 1024;
+        }
+        pss = found;
+        for (const p of procs)
+            useMemory(p);
         rebuild();
     }
 
@@ -114,6 +145,8 @@ Singleton {
                         "pids": [],
                         "cpu": 0,
                         "mem": 0,
+                        "rss": 0,
+                        "exact": true,
                         "pid": p.pid,
                         "user": p.user,
                         "detail": p.args
@@ -124,6 +157,8 @@ Singleton {
                 g.pids.push(p.pid);
                 g.cpu += p.cpu;
                 g.mem += p.mem;
+                g.rss += p.rss;
+                g.exact = g.exact && p.exact;
                 g.pid = Math.min(g.pid, p.pid);
             }
             rows = Object.keys(groups).map(k => groups[k]);
@@ -135,6 +170,8 @@ Singleton {
                         "pids": [p.pid],
                         "cpu": p.cpu,
                         "mem": p.mem,
+                        "rss": p.rss,
+                        "exact": p.exact,
                         "pid": p.pid,
                         "user": p.user,
                         "detail": p.args
@@ -165,6 +202,11 @@ Singleton {
             sampler.running = true;
     }
 
+    function refreshPss() {
+        if (!pssSampler.running)
+            pssSampler.running = true;
+    }
+
     function end(row, force) {
         if (protectedRow(row))
             return;
@@ -185,7 +227,9 @@ Singleton {
         if (active) {
             lastTime = 0;
             refresh();
+            refreshPss();
         } else {
+            pss = ({});
             // a stopped window forgets the old sample, so the next first one does not look like a spike
             lastTicks = ({});
         }
@@ -200,11 +244,27 @@ Singleton {
         }
     }
 
+    Process {
+        id: pssSampler
+
+        command: ["sh", "-c", root.pssScript]
+        stdout: StdioCollector {
+            onStreamFinished: root.parsePss(text)
+        }
+    }
+
     Timer {
         interval: root.interval
         repeat: true
         running: root.active
         onTriggered: root.refresh()
+    }
+
+    Timer {
+        interval: root.pssInterval
+        repeat: true
+        running: root.active
+        onTriggered: root.refreshPss()
     }
 
     Process {

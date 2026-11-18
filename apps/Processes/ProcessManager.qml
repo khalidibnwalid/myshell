@@ -34,6 +34,13 @@ ApplicationWindow {
         return SystemInfo.formatBytes(bytes);
     }
 
+    // Memory is the PSS (shared libraries split between their users); the resident size is what ps and btop show
+    function memoryNote(row) {
+        if (!row.exact)
+            return formatBytes(row.rss) + " resident (shared memory not split)";
+        return formatBytes(row.mem) + " memory, " + formatBytes(row.rss) + " resident (as ps shows)";
+    }
+
     function formatCpu(value) {
         return value < 0.05 ? "0%" : (value < 10 ? value.toFixed(1) : Math.round(value)) + "%";
     }
@@ -345,6 +352,8 @@ ApplicationWindow {
                         width: 100
                         text: root.formatBytes(row.modelData.mem)
                         color: row.contentColor
+                        // the resident size, not readable as PSS, counts shared libraries in full
+                        opacity: row.modelData.exact ? 1 : 0.6
                         font.features: {
                             "tnum": 1
                         }
@@ -366,7 +375,7 @@ ApplicationWindow {
         StyledText {
             Layout.fillWidth: true
             Layout.leftMargin: 8
-            text: Processes.status !== "" ? Processes.status : (root.rows.length + (Processes.grouped ? " programs" : " processes") + (root.selectedRow ? "  ·  " + root.selectedRow.name + " selected  ·  Delete ends it" : "  ·  Click one to select it"))
+            text: Processes.status !== "" ? Processes.status : (root.rows.length + (Processes.grouped ? " programs" : " processes") + (root.selectedRow ? "  ·  " + root.selectedRow.name + " selected  ·  " + root.memoryNote(root.selectedRow) + "  ·  Delete ends it" : "  ·  Click one to select it"))
             color: Appearance.mutedColor
             font.pixelSize: 12
             elide: Text.ElideRight
