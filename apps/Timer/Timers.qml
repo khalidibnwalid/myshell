@@ -186,6 +186,11 @@ Singleton {
         finishTimer.restart();
     }
 
+    // the app is switched off: nothing rings until it is switched on again
+    function stop() {
+        finishTimer.stop();
+    }
+
     function finishDue() {
         const due = timers.filter(t => t.state === "running" && t.endAt <= Date.now() + 50);
         if (due.length === 0) {

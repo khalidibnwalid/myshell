@@ -1,11 +1,12 @@
 #!/bin/sh
 # What the desktop entry runs: open Audio, and play the files the system hands over.
 # usage: open.sh [FILE]...
+ctl="$(dirname "$0")/scripts/ctl.sh"
 if [ -z "$1" ]; then
-    exec qs ipc call audio open
+    exec "$ctl" open
 fi
-qs ipc call audio openFile "$1"
+"$ctl" openFile "$1"
 shift
 for f in "$@"; do
-    qs ipc call audio enqueue "$f"
+    "$ctl" enqueue "$f"
 done

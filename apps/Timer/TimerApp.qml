@@ -59,7 +59,12 @@ ApplicationWindow {
     readonly property bool hasDone: Timers.timers.some(t => t.state === "done")
 
     function openWindow() {
-        WindowManager.openTimer();
+        Apps.open("timer");
+    }
+
+    // called when the app is switched off: stop what runs without the window
+    function shutdown() {
+        Timers.stop();
     }
 
     // the typed time starts a timer; an unreadable one is told
@@ -80,9 +85,9 @@ ApplicationWindow {
     minimumWidth: 400
     minimumHeight: 420
     title: "Timer"
-    visible: WindowManager.timerVisible
+    visible: Apps.isOpen("timer")
     color: Qt.alpha(Appearance.bgColor, Appearance.isLight ? 1 - Math.pow(1 - Config.appearance.settingsOpacity, 2) : Config.appearance.settingsOpacity)
-    onClosing: WindowManager.timerVisible = false
+    onClosing: Apps.close("timer")
     onVisibleChanged: {
         Timers.watching = visible;
         if (visible)
@@ -92,26 +97,25 @@ ApplicationWindow {
     Component.onCompleted: Timers.schedule()
 
     Connections {
-        function onTimerRaiseRequested() {
-            root.raise();
-            root.requestActivate();
+        function onRaiseRequested(id) {
+            if (id === "timer") {
+                root.raise();
+                root.requestActivate();
+            }
         }
 
-        target: WindowManager
+        target: Apps
     }
 
     GlobalShortcut {
         name: "timer"
-        onPressed: WindowManager.timerVisible = !WindowManager.timerVisible
+        onPressed: Apps.toggle("timer")
     }
 
     // qs ipc call timer toggle | open | close | start 5m "tea"
     IpcHandler {
         function toggle(): void {
-            if (WindowManager.timerVisible)
-                WindowManager.timerVisible = false;
-            else
-                root.openWindow();
+            Apps.toggle("timer");
         }
 
         function open(): void {
@@ -119,7 +123,7 @@ ApplicationWindow {
         }
 
         function close(): void {
-            WindowManager.timerVisible = false;
+            Apps.close("timer");
         }
 
         function start(duration: string, label: string): void {
@@ -131,7 +135,7 @@ ApplicationWindow {
 
     Shortcut {
         sequence: "Escape"
-        onActivated: WindowManager.timerVisible = false
+        onActivated: Apps.close("timer")
     }
 
     ColumnLayout {
@@ -172,7 +176,7 @@ ApplicationWindow {
             IconButton {
                 icon: "close"
                 size: 36
-                onClicked: WindowManager.timerVisible = false
+                onClicked: Apps.close("timer")
             }
         }
 

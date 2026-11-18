@@ -60,12 +60,9 @@ Singleton {
         const cls = windowClass(toplevel);
         if (toplevel.title === "Notepad" && (cls.endsWith("noctalia-qs") || cls === "quickshell"))
             return "quickshell-notepad";
-        if (toplevel.title === "Processes" && (cls.endsWith("noctalia-qs") || cls === "quickshell"))
-            return "quickshell-processes";
-        if (toplevel.title === "Timer" && (cls.endsWith("noctalia-qs") || cls === "quickshell"))
-            return "quickshell-timer";
-        if (toplevel.title === "Audio" && (cls.endsWith("noctalia-qs") || cls === "quickshell"))
-            return "quickshell-audio";
+        const app = Apps.byTitle(toplevel.title);
+        if (app && (cls.endsWith("noctalia-qs") || cls === "quickshell"))
+            return "quickshell-" + app.id;
         return cls;
     }
 

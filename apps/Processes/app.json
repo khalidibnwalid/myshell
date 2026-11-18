@@ -1,0 +1,14 @@
+{
+    "id": "processes",
+    "name": "Processes",
+    "description": "See what is running and end it",
+    "mode": "inline",
+    "entry": "ProcessManager.qml",
+    "icon": "processes.svg",
+    "symbol": "monitoring",
+    "window": { "title": "Processes", "width": 900, "height": 640 },
+    "ipc": "processes",
+    "keywords": ["processes", "task manager", "system monitor", "activity monitor", "kill", "end task", "top", "htop"],
+    "categories": "System;Monitor;",
+    "desktopKeywords": "task manager;system monitor;kill;processes;"
+}

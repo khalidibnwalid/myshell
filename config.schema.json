@@ -290,6 +290,18 @@
           }
         }
       }
+    },
+    "apps": {
+      "type": "object",
+      "properties": {
+        "disabled": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Ids of the shell's own apps (apps/<App>/app.json) that are switched off"
+        }
+      }
     }
   }
 }

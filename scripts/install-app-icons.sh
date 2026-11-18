@@ -55,72 +55,7 @@ Terminal=false"
     fi
 fi
 
-# Processes: the same, an app of its own (it opens with `qs ipc call processes open`)
-picon="$data/icons/hicolor/scalable/apps/quickshell-processes.svg"
-pentry="$data/applications/quickshell-processes.desktop"
-if [ -f "$dir/apps/Processes/processes.svg" ]; then
-    if ! cmp -s "$dir/apps/Processes/processes.svg" "$picon"; then
-        cp "$dir/apps/Processes/processes.svg" "$picon"
-        command -v gtk-update-icon-cache >/dev/null && gtk-update-icon-cache -f -t "$data/icons/hicolor" >/dev/null 2>&1
-        touch "$data/icons/hicolor"
-    fi
-    pwant="[Desktop Entry]
-Version=1.5
-Type=Application
-Name=Processes
-Comment=See what is running and end it
-Exec=qs ipc call processes open
-Icon=quickshell-processes
-Categories=System;Monitor;
-Keywords=task manager;system monitor;kill;processes;
-Terminal=false"
-    [ "$(cat "$pentry" 2>/dev/null)" = "$pwant" ] || printf '%s\n' "$pwant" > "$pentry"
-fi
-
-# Timer: the same, an app of its own (it opens with `qs ipc call timer open`)
-ticon="$data/icons/hicolor/scalable/apps/quickshell-timer.svg"
-tentry="$data/applications/quickshell-timer.desktop"
-if [ -f "$dir/apps/Timer/timer.svg" ]; then
-    if ! cmp -s "$dir/apps/Timer/timer.svg" "$ticon"; then
-        cp "$dir/apps/Timer/timer.svg" "$ticon"
-        command -v gtk-update-icon-cache >/dev/null && gtk-update-icon-cache -f -t "$data/icons/hicolor" >/dev/null 2>&1
-        touch "$data/icons/hicolor"
-    fi
-    twant="[Desktop Entry]
-Version=1.5
-Type=Application
-Name=Timer
-Comment=Countdown timers and a stopwatch
-Exec=qs ipc call timer open
-Icon=quickshell-timer
-Categories=Utility;Clock;
-Keywords=timer;stopwatch;alarm;countdown;pomodoro;
-Terminal=false"
-    [ "$(cat "$tentry" 2>/dev/null)" = "$twant" ] || printf '%s\n' "$twant" > "$tentry"
-fi
-
-# Audio: the same, and it can play audio files (Settings → Default apps)
-micon="$data/icons/hicolor/scalable/apps/quickshell-audio.svg"
-mentry="$data/applications/quickshell-audio.desktop"
-if [ -f "$dir/apps/Audio/audio.svg" ]; then
-    if ! cmp -s "$dir/apps/Audio/audio.svg" "$micon"; then
-        cp "$dir/apps/Audio/audio.svg" "$micon"
-        command -v gtk-update-icon-cache >/dev/null && gtk-update-icon-cache -f -t "$data/icons/hicolor" >/dev/null 2>&1
-        touch "$data/icons/hicolor"
-    fi
-    mwant="[Desktop Entry]
-Version=1.5
-Type=Application
-Name=Audio
-Comment=Play your tracks, with albums, lyrics and a queue
-Exec=\"$dir/apps/Audio/open.sh\" %F
-Icon=quickshell-audio
-Categories=AudioVideo;Audio;Player;
-MimeType=audio/mpeg;audio/flac;audio/x-flac;audio/ogg;audio/opus;audio/mp4;audio/x-m4a;audio/aac;audio/wav;audio/x-wav;audio/x-ms-wma;audio/x-matroska;
-Keywords=audio;sound;player;tracks;lyrics;mp3;
-Terminal=false"
-    if [ "$(cat "$mentry" 2>/dev/null)" != "$mwant" ]; then
-        printf '%s\n' "$mwant" > "$mentry"
-        command -v update-desktop-database >/dev/null && update-desktop-database "$data/applications" >/dev/null 2>&1
-    fi
-fi
+# The other apps (apps/*/app.json: Processes, Timer, Audio…) are installed from their manifests, and the
+# entry of one that is switched off is removed. usage: install-app-icons.sh SHELL_DIR [DISABLED_ID]...
+shift
+command -v python3 >/dev/null && python3 "$dir/scripts/install-apps.py" "$dir" "$@"

@@ -22,7 +22,12 @@ ApplicationWindow {
     readonly property bool canEnd: selectedRow !== null && !Processes.protectedRow(selectedRow)
 
     function openWindow() {
-        WindowManager.openProcesses();
+        Apps.open("processes");
+    }
+
+    // called when the app is switched off: stop what runs without the window
+    function shutdown() {
+        Processes.active = false;
     }
 
     function formatBytes(bytes) {
@@ -44,9 +49,9 @@ ApplicationWindow {
     minimumWidth: 560
     minimumHeight: 360
     title: "Processes"
-    visible: WindowManager.processesVisible
+    visible: Apps.isOpen("processes")
     color: Qt.alpha(Appearance.bgColor, Appearance.isLight ? 1 - Math.pow(1 - Config.appearance.settingsOpacity, 2) : Config.appearance.settingsOpacity)
-    onClosing: WindowManager.processesVisible = false
+    onClosing: Apps.close("processes")
     onVisibleChanged: {
         Processes.active = visible;
         if (visible) {
@@ -65,12 +70,14 @@ ApplicationWindow {
     }
 
     Connections {
-        function onProcessesRaiseRequested() {
-            root.raise();
-            root.requestActivate();
+        function onRaiseRequested(id) {
+            if (id === "processes") {
+                root.raise();
+                root.requestActivate();
+            }
         }
 
-        target: WindowManager
+        target: Apps
     }
 
     Timer {
@@ -82,16 +89,13 @@ ApplicationWindow {
 
     GlobalShortcut {
         name: "processes"
-        onPressed: WindowManager.processesVisible = !WindowManager.processesVisible
+        onPressed: Apps.toggle("processes")
     }
 
     // qs ipc call processes toggle | open | close
     IpcHandler {
         function toggle(): void {
-            if (WindowManager.processesVisible)
-                WindowManager.processesVisible = false;
-            else
-                root.openWindow();
+            Apps.toggle("processes");
         }
 
         function open(): void {
@@ -99,7 +103,7 @@ ApplicationWindow {
         }
 
         function close(): void {
-            WindowManager.processesVisible = false;
+            Apps.close("processes");
         }
 
         target: "processes"
@@ -122,7 +126,7 @@ ApplicationWindow {
             if (search.text !== "")
                 search.clear();
             else
-                WindowManager.processesVisible = false;
+                Apps.close("processes");
         }
     }
 
@@ -210,7 +214,7 @@ ApplicationWindow {
             IconButton {
                 icon: "close"
                 size: 36
-                onClicked: WindowManager.processesVisible = false
+                onClicked: Apps.close("processes")
             }
         }
 

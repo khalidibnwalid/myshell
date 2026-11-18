@@ -1,0 +1,14 @@
+{
+    "id": "timer",
+    "name": "Timer",
+    "description": "Countdown timers and a stopwatch",
+    "mode": "inline",
+    "entry": "TimerApp.qml",
+    "icon": "timer.svg",
+    "symbol": "timer",
+    "window": { "title": "Timer", "width": 480, "height": 640 },
+    "ipc": "timer",
+    "keywords": ["timer", "stopwatch", "alarm", "countdown", "pomodoro", "clock"],
+    "categories": "Utility;Clock;",
+    "desktopKeywords": "timer;stopwatch;alarm;countdown;pomodoro;"
+}

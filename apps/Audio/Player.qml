@@ -1,6 +1,5 @@
 pragma Singleton
 
-import "../../services/"
 import QtMultimedia
 import QtQuick
 import Quickshell
@@ -25,6 +24,8 @@ Singleton {
     property bool muted: false
     property real speed: 1
     property bool loaded: false
+    // play or pause asked for before the saved queue was read, done as soon as it has been
+    property string afterLoad: ""
     // the place kept from the last session, used when the track is first loaded
     property real resumeMs: 0
     property bool sourceSet: false
@@ -61,6 +62,9 @@ Singleton {
         }
         return at;
     }
+
+    signal raiseRequested
+    signal quitRequested
 
     function shuffled(list, first) {
         const rest = list.slice();
@@ -250,6 +254,10 @@ Singleton {
     }
 
     function play() {
+        if (!loaded) {
+            afterLoad = "play";
+            return;
+        }
         if (!hasTrack)
             return;
         if (!sourceSet) {
@@ -275,6 +283,10 @@ Singleton {
     }
 
     function toggle() {
+        if (!loaded) {
+            afterLoad = "toggle";
+            return;
+        }
         if (playing)
             pause();
         else
@@ -551,10 +563,10 @@ Singleton {
             openPaths([c.uri], !c.current);
             break;
         case "raise":
-            WindowManager.openAudio();
+            raiseRequested();
             break;
         case "quit":
-            WindowManager.audioVisible = false;
+            quitRequested();
             break;
         }
     }
@@ -619,11 +631,18 @@ Singleton {
         }
     }
 
+    MediaDevices {
+        id: devices
+    }
+
     MediaPlayer {
         id: media
 
         playbackRate: root.speed
         audioOutput: AudioOutput {
+            // follows the system's default output (the earbuds when they are the default), instead of
+            // keeping the device that was the default when the program started
+            device: devices.defaultAudioOutput
             volume: root.muted ? 0 : root.volume * root.volume * root.fade
         }
         onMediaStatusChanged: {
@@ -736,6 +755,12 @@ Singleton {
                 root.loaded = true;
                 root.loadLyrics();
                 mprisProc.running = true;
+                const later = root.afterLoad;
+                root.afterLoad = "";
+                if (later === "play")
+                    root.play();
+                else if (later === "toggle")
+                    root.toggle();
             }
         }
     }

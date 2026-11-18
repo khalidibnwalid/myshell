@@ -208,7 +208,7 @@ Item {
                 icon: "memory"
                 onClicked: {
                     WindowManager.quickSettingsVisible = false;
-                    WindowManager.openProcesses();
+                    Apps.open("processes");
                 }
             }
 

@@ -268,8 +268,12 @@ Singleton {
 
     // scans the folders again (only what changed is read); extra files or folders are indexed too
     function refresh(extra) {
-        if (!loaded)
+        if (!loaded) {
+            // asked for before the saved library was read: done as soon as it has been
+            extraQueued = extraQueued.concat(extra || []);
+            rescanQueued = true;
             return;
+        }
         if (scanning && scanProc.running) {
             rescanQueued = true;
             if (extra)
@@ -365,9 +369,13 @@ Singleton {
                 root.history = Array.isArray(data.history) ? data.history.map(String) : [];
                 root.rebuildIndex();
                 root.loaded = true;
-                // the first start has no library yet
-                if (root.tracks.length === 0)
-                    root.refresh();
+                // the first start has no library yet, and a file may have been asked for while loading
+                if (root.tracks.length === 0 || root.rescanQueued) {
+                    const more = root.extraQueued;
+                    root.extraQueued = [];
+                    root.rescanQueued = false;
+                    root.refresh(more);
+                }
             }
         }
     }

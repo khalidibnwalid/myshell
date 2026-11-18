@@ -1,5 +1,6 @@
 import Quickshell
 import Quickshell.Hyprland
+import QtQml
 import QtQuick
 import "modules/Autocomplete"
 import "modules/Bar"
@@ -27,8 +28,8 @@ Scope {
         Services.Displays.applySaved();
         // reads the Hyprland options and keeps the window borders on the accent colour
         Services.HyprSettings.refresh();
-        // the icons and desktop entries of the Settings window and of Notepad
-        Quickshell.execDetached([Quickshell.shellDir + "/scripts/install-app-icons.sh", Quickshell.shellDir]);
+        // finds the apps (apps/*/app.json), then installs the icons and desktop entries of Settings, Notepad and them
+        Services.Apps.refresh();
         // the keyboard light's switch-off when idle
         Services.KeyboardLight.refresh();
     }
@@ -60,13 +61,21 @@ Scope {
     Notepad {
     }
 
-    ProcessManager {
-    }
+    // The other apps are loaded from their app.json (see services/Apps.qml). One that is switched off is
+    // not loaded, and is told to stop what it runs without a window when it is taken away. Each app folder is
+    // imported above only so that its files see each other; nothing else names an app.
+    Instantiator {
+        model: Services.Apps.enabled
 
-    TimerApp {
-    }
+        delegate: LazyLoader {
+            required property var modelData
 
-    AudioApp {
+            // relative to this file, so the app sees the same singletons as everything else
+            source: Qt.resolvedUrl("apps/" + modelData.dir.split("/").pop() + "/" + modelData.entry)
+            active: true
+        }
+
+        onObjectRemoved: (index, object) => Services.Apps.released(object.modelData, object.item)
     }
 
     ScreenTools {

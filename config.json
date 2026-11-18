@@ -95,5 +95,8 @@
         "browserClass": "helium",
         "defaultBang": "g",
         "privateFlag": "--incognito"
+    },
+    "apps": {
+        "disabled": []
     }
 }

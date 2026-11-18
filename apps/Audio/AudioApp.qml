@@ -1,6 +1,5 @@
 import "../../components"
 import "../../config"
-import "../../services/"
 import "components"
 import QtQuick
 import QtQuick.Controls
@@ -49,6 +48,8 @@ ApplicationWindow {
             "count": Library.history.length
         }
     ]
+    // the window can be closed while the sound goes on
+    property bool shown: false
     property string section: "tracks"
     // an album or an artist that is open: { kind: "album" | "artist", key }
     property var detail: null
@@ -86,7 +87,12 @@ ApplicationWindow {
     readonly property var sectionInfo: sections.find(s => s.id === section)
 
     function openWindow() {
-        WindowManager.openAudio();
+        if (shown) {
+            raise();
+            requestActivate();
+        } else {
+            shown = true;
+        }
     }
 
     function go(id) {
@@ -109,9 +115,9 @@ ApplicationWindow {
     minimumWidth: 900
     minimumHeight: 520
     title: "Audio"
-    visible: WindowManager.audioVisible
+    visible: root.shown
     color: Qt.alpha(Appearance.bgColor, Appearance.isLight ? 1 - Math.pow(1 - Config.appearance.settingsOpacity, 2) : Config.appearance.settingsOpacity)
-    onClosing: WindowManager.audioVisible = false
+    onClosing: root.shown = false
     onVisibleChanged: {
         if (visible)
             Library.refresh();
@@ -122,41 +128,36 @@ ApplicationWindow {
         Player.load();
     }
 
+    // a quit or raise asked for over MPRIS
     Connections {
-        function onAudioRaiseRequested() {
-            root.raise();
-            root.requestActivate();
+        function onRaiseRequested() {
+            root.openWindow();
         }
 
-        target: WindowManager
+        function onQuitRequested() {
+            root.shown = false;
+        }
+
+        target: Player
     }
 
-    GlobalShortcut {
-        name: "audio"
-        onPressed: WindowManager.audioVisible = !WindowManager.audioVisible
-    }
-
-    GlobalShortcut {
-        name: "audioPlayPause"
-        onPressed: Player.toggle()
-    }
-
-    GlobalShortcut {
-        name: "audioNext"
-        onPressed: Player.next()
-    }
-
-    GlobalShortcut {
-        name: "audioPrevious"
-        onPressed: Player.previous()
+    // The program is only here while it is used: a minute after the window is closed and the sound is
+    // off it quits, with the queue and the place saved.
+    Timer {
+        interval: 60000
+        running: Player.loaded && !root.shown && !Player.playing
+        onTriggered: {
+            Player.save();
+            Qt.quit();
+        }
     }
 
     // qs ipc call audio toggle | open | close | playpause | play | pause | next | previous | stop
     //                        | openFile <path> | enqueue <path> | volume <0-100> | status
     IpcHandler {
         function toggle(): void {
-            if (WindowManager.audioVisible)
-                WindowManager.audioVisible = false;
+            if (root.shown)
+                root.shown = false;
             else
                 root.openWindow();
         }
@@ -166,7 +167,12 @@ ApplicationWindow {
         }
 
         function close(): void {
-            WindowManager.audioVisible = false;
+            root.shown = false;
+        }
+
+        function quit(): void {
+            Player.save();
+            Qt.quit();
         }
 
         function playpause(): void {
@@ -320,7 +326,7 @@ ApplicationWindow {
             } else if (root.detail) {
                 root.detail = null;
             } else {
-                WindowManager.audioVisible = false;
+                root.shown = false;
             }
         }
     }
@@ -599,7 +605,7 @@ ApplicationWindow {
                             icon: "close"
                             size: 34
                             iconSize: 20
-                            onClicked: WindowManager.audioVisible = false
+                            onClicked: root.shown = false
                         }
                     }
 

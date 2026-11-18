@@ -43,7 +43,7 @@ These optional packages enable additional hardware readings on the System Info p
 
 ### Optional launcher tools
 
-- `python` — runs the launcher sources for recent files, VS Code projects and browser history (standard library only).
+- `python` — installs the desktop entries of the apps from their `app.json`, and runs the launcher sources for recent files, VS Code projects and browser history (standard library only).
 - `ffmpeg` (with `ffprobe`) — the Audio player reads tags and makes covers with it. `python-gobject` lets it appear as an MPRIS player.
 - `ffmpegthumbnailer` — makes album covers and video frames for file previews in the launcher.
 - `systemd` — `busctl` asks apps that offer their own results (GNOME search providers, installed by apps such as Files, Calculator and Firefox).
@@ -90,6 +90,14 @@ Choose a wallpaper in Settings → Appearance. The selected image is shared by t
 
 Open it from the Quick Settings footer, or bind a key to `qs ipc call settings toggle` (also `open`, `close`, and `page <name>`, e.g. `page appearance`). Changes you make there are kept in `config.overrides.json` (generated and git-ignored), so the hand-written `config.json` stays the base; Settings → About lists any missing command-line tools.
 
+### Apps and switching them off
+
+The apps of the shell (Processes, Timer, Audio) are folders in `apps/`, each with an `app.json` that says what it is: name, icon, window title and size, the words that find it in the launcher, its IPC target and the file types it opens. `services/Apps.qml` reads them, and the loader in `shell.qml`, the launcher, the dock and the desktop entries (`scripts/install-apps.py`) all follow them, so nothing else names an app.
+
+- Switch an app off with `"apps": { "disabled": ["timer"] }` in `config.json` (ids: `processes`, `timer`, `audio`). It is then not loaded, not found by the launcher and has no desktop entry; an app of its own (Audio) is told to quit. Nothing is switched off by default.
+- An app is either `inline` (loaded by the shell) or `process` (a program of its own, started when you open it and quitting when it is not in use; Audio is the one that is). Each app folder is imported once in `shell.qml` so its files see each other; to remove an app for good, delete its folder and that line.
+- Window rules are still in your Hyprland config (`title = "^(Timer)$"` …); the size to use is in the app's `app.json`.
+
 ### Notepad
 
 A small notes app in `apps/Notepad/`: a list of notes on the left (pinned first, then the latest; drag its edge to change the width, hover a note for an `x` that deletes it, drag a note to put it where you want; pinned notes stay first and new notes start at the top), the editor on the right, a search box, and open, save, copy, pin and delete under the editor. Notes are saved as you type in `~/.local/share/quickshell/notepad/notes.json`; the first line is the title.
@@ -120,7 +128,8 @@ A player in `apps/Audio/`. It indexes the folders you give it (`~/Music` to star
 
 - A queue you reorder by dragging, shuffle, repeat (off, all, one), speed 0.75 to 2, a sleep timer that fades out, and lyrics shown in time from a `.lrc` file with the same name beside the track (or the lyrics tag of the file); click a line to jump to it.
 - It is an MPRIS player (`apps/Audio/scripts/mpris.py`, needs `python-gobject` for `/usr/bin/python3`): Quick Settings' media card, `playerctl` and the media keys show and control it, with the track list, seeking, volume, shuffle and loop. If the helper cannot start the rest still works.
-- Open it with `qs ipc call audio toggle` (also `open`, `close`, `playpause`, `play`, `pause`, `next`, `previous`, `stop`, `openFile <path>`, `enqueue <path>`, `volume <0-100>`, `status`), or bind `bind = $mainMod, M, global, quickshell:audio`; `audioPlayPause`, `audioNext` and `audioPrevious` are shortcuts too. It is also in the launcher and the dock, plays files dropped on the window and is offered for audio files (Settings → Default apps).
+- Audio runs as a program of its own (`audio.qml`, started with `qs -p audio.qml`), not inside the shell: it starts when you open it and quits by itself a minute after the window is closed and the sound is off. A shell reload or restart does not stop the sound, and when Audio is not in use nothing of it is running. `apps/Audio/scripts/ctl.sh` starts it when needed and passes a command on; the shell keeps only the shortcuts and the `audio` IPC target, which call it.
+- Open it with `qs ipc call audio toggle` (also `open`, `close`, `playpause`, `play`, `pause`, `next`, `previous`, `stop`, `openFile <path>`, `enqueue <path>`, `volume <0-100>`), or bind `bind = $mainMod, M, global, quickshell:audio`; `audioPlayPause`, `audioNext` and `audioPrevious` are shortcuts too. These start Audio when it is not running (`close`, `pause`, `next` and the like do nothing then). To read what is playing use `qs -p audio.qml ipc call audio status`. It is also in the launcher and the dock, plays files dropped on the window and is offered for audio files (Settings → Default apps).
 - Keys: `Space` play/pause, `Left`/`Right` seek 5 s, `Up`/`Down` volume, `Ctrl+Left`/`Ctrl+Right` previous/next, `Ctrl+F` search, `Ctrl+L` lyrics, `Ctrl+J` queue, `Ctrl+B` sidebar, `Ctrl+O` open files, `Ctrl+Shift+S` shuffle, `Ctrl+R` repeat.
 - It opens as a floating window like Settings (`title = "^(Audio)$"` in the Hyprland window rules).
 

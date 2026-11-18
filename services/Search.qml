@@ -426,39 +426,20 @@ Singleton {
                 "type": "app",
                 "execute": () => WindowManager.openNotepad()
             });
-        if (query.length >= 2 && source("apps") && ["processes", "task manager", "system monitor", "activity monitor", "kill", "end task", "top", "htop"].some(w => w.startsWith(query)))
-            own.push({
-                "id": "quickshell-processes",
-                "name": "Processes",
-                "description": "See what is running and end it",
-                "image": Quickshell.shellDir + "/apps/Processes/processes.svg",
-                "symbol": "monitoring",
-                "icon": "monitoring",
-                "type": "app",
-                "execute": () => WindowManager.openProcesses()
-            });
-        if (query.length >= 2 && source("apps") && ["timer", "stopwatch", "alarm", "countdown", "pomodoro", "clock"].some(w => w.startsWith(query)))
-            own.push({
-                "id": "quickshell-timer",
-                "name": "Timer",
-                "description": "Countdown timers and a stopwatch",
-                "image": Quickshell.shellDir + "/apps/Timer/timer.svg",
-                "symbol": "timer",
-                "icon": "timer",
-                "type": "app",
-                "execute": () => WindowManager.openTimer()
-            });
-        if (query.length >= 2 && source("apps") && ["audio", "music", "player", "tracks", "playlist", "lyrics", "mp3"].some(w => w.startsWith(query)))
-            own.push({
-                "id": "quickshell-audio",
-                "name": "Audio",
-                "description": "Play your tracks, albums and playlists",
-                "image": Quickshell.shellDir + "/apps/Audio/audio.svg",
-                "symbol": "graphic_eq",
-                "icon": "graphic_eq",
-                "type": "app",
-                "execute": () => WindowManager.openAudio()
-            });
+        // the apps with an app.json: found by the words in their manifest
+        for (const app of Apps.enabled) {
+            if (query.length >= 2 && source("apps") && (app.keywords ?? []).some(w => w.startsWith(query)))
+                own.push({
+                    "id": "quickshell-" + app.id,
+                    "name": app.name,
+                    "description": app.description,
+                    "image": app.dir + "/" + app.icon,
+                    "symbol": app.symbol,
+                    "icon": app.symbol,
+                    "type": "app",
+                    "execute": () => Apps.open(app.id)
+                });
+        }
         if (own.length > 0)
             appResults = own.concat(appResults.filter(a => !own.some(o => o.name === a.name))).slice(0, 5);
 

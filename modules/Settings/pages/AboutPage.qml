@@ -33,7 +33,7 @@ SettingsPage {
         "gio": "default apps and file previews in the launcher",
         "xdg-mime": "changing default apps",
         "busctl": "results from apps in the launcher",
-        "python3": "recent files, VS Code and browser history in the launcher",
+        "python3": "recent files, VS Code and browser history in the launcher, and the apps' desktop entries",
         "ffmpegthumbnailer": "album covers and video frames in the launcher",
         "ffprobe": "tags and covers in the Audio player",
         "ffmpeg": "covers in the Audio player",

@@ -1,0 +1,18 @@
+{
+    "id": "audio",
+    "name": "Audio",
+    "description": "Play your tracks, with albums, lyrics and a queue",
+    "mode": "process",
+    "entry": "AudioLauncher.qml",
+    "process": "audio.qml",
+    "ctl": "scripts/ctl.sh",
+    "icon": "audio.svg",
+    "symbol": "graphic_eq",
+    "window": { "title": "Audio", "width": 1100, "height": 720 },
+    "ipc": "audio",
+    "open": "open.sh",
+    "keywords": ["audio", "music", "player", "tracks", "playlist", "lyrics", "mp3"],
+    "categories": "AudioVideo;Audio;Player;",
+    "desktopKeywords": "audio;sound;player;tracks;lyrics;mp3;",
+    "mime": ["audio/mpeg", "audio/flac", "audio/x-flac", "audio/ogg", "audio/opus", "audio/mp4", "audio/x-m4a", "audio/aac", "audio/wav", "audio/x-wav", "audio/x-ms-wma", "audio/x-matroska"]
+}
