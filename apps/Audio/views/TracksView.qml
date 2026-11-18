@@ -24,6 +24,11 @@ ColumnLayout {
     signal shuffleRequested
     signal clearRequested
     signal activated(int index)
+    signal topReached
+
+    function focusList() {
+        tracksList.focusList();
+    }
 
     spacing: 8
 
@@ -60,6 +65,8 @@ ColumnLayout {
     }
 
     TrackList {
+        id: tracksList
+
         Layout.fillWidth: true
         Layout.fillHeight: true
         tracks: root.tracks
@@ -69,5 +76,6 @@ ColumnLayout {
         emptyText: root.emptyText
         emptyHint: root.emptyHint
         onActivated: i => root.activated(i)
+        onTopReached: root.topReached()
     }
 }

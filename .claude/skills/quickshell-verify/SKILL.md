@@ -27,5 +27,11 @@ Run the exact command on this machine first (`hyprctl descriptions -j`, `gio inf
 - `rm` inside `sh -c` may be blocked by the safety check; do not work around it, avoid the removal or leave it to the user.
 - Hyprland live changes made by tests (`hyprctl keyword`) revert with `hyprctl reload` or the page's reset.
 
+## Memory, processes and keys
+- Memory: compare **PSS** (`/proc/<pid>/smaps_rollup`, MB) before and after, in the same state (window open or closed, playing or idle), several runs: one run can be 100 MB off. `Pss_Anon` is the private heap. A bare `qs -p <empty shell.qml>` (no window ~69 MB, one `ApplicationWindow` ~79 MB) is the floor to compare with. Bisect a heavy window by deleting parts of a temporary copy of the file (keep the original in the scratchpad), not by guessing.
+- A second Quickshell program (`qs -p audio.qml`) has its own log: `qs -p audio.qml log`. Its processes: `pgrep -fx 'qs -p .*/audio.qml'`. Control it with `apps/Audio/scripts/ctl.sh` (`open`, `play`, `pause`, `status`, `quit`) and `playerctl -p quickshell_audio` / `busctl --user` for MPRIS.
+- Keys: `wtype -k Down`, `wtype -M ctrl -k 3 -m ctrl`, typing with `-k q -k s`. Before each key focus the window and abort if `hyprctl activewindow -j` is not it (a small wrapper script in the scratchpad). Screenshot with `grim -g` from `hyprctl clients -j` geometry; the window may move between runs. A saved file hot-reloads the shell and closes open windows: reopen after edits.
+- Qt Quick tests cannot run here: `qmltestrunner` and `qml` exit silently offscreen (Qt 6.12 / noctalia-qs built for 6.11). Do not spend time on it; verify through the live window and the log, and say that a click-through was not tested.
+
 ## Report
 Say what was run and seen, what was only checked in the log or by data, and what is untested (e.g. a drag, a click, an action button). Then ask whether to commit or amend.

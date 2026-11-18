@@ -78,6 +78,20 @@ Item {
                 implicitHeight: 42
                 radius: 14
                 color: current ? Appearance.accentColor : (navArea.containsMouse ? Appearance.surfaceHighColor : "transparent")
+                activeFocusOnTab: true
+                Keys.onPressed: event => {
+                    if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
+                        root.selected(nav.modelData.id);
+                        event.accepted = true;
+                    }
+                }
+                Keys.onShortcutOverride: event => {
+                    if (event.key === Qt.Key_Space)
+                        event.accepted = true;
+                }
+
+                FocusRing {
+                }
 
                 RowLayout {
                     anchors.fill: parent

@@ -218,6 +218,16 @@ ApplicationWindow {
                             radius: 18
                             color: tileArea.containsMouse ? Appearance.surfaceHighColor : Appearance.surfaceColor
                             scale: tileArea.pressed ? 0.96 : 1
+                            activeFocusOnTab: true
+                            Keys.onPressed: event => {
+                                if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
+                                    Timers.add(tile.modelData.seconds, "");
+                                    event.accepted = true;
+                                }
+                            }
+
+                            FocusRing {
+                            }
 
                             Column {
                                 anchors.centerIn: parent
@@ -510,6 +520,16 @@ ApplicationWindow {
                     radius: 38
                     color: swArea.containsMouse ? Appearance.accentColorLight : Appearance.accentColor
                     scale: swArea.pressed ? 0.95 : 1
+                    activeFocusOnTab: true
+                    Keys.onPressed: event => {
+                        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
+                            Timers.swToggle();
+                            event.accepted = true;
+                        }
+                    }
+
+                    FocusRing {
+                    }
 
                     MaterialSymbol {
                         anchors.centerIn: parent
@@ -579,5 +599,8 @@ ApplicationWindow {
                 }
             }
         }
+    }
+
+    ClickAway {
     }
 }

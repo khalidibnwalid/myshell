@@ -13,6 +13,18 @@ Rectangle {
 
     signal clicked()
 
+    activeFocusOnTab: true
+    Keys.onPressed: event => {
+        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
+            root.clicked();
+            event.accepted = true;
+        }
+    }
+    // Space is the player's play key in some windows: a focused button keeps it
+    Keys.onShortcutOverride: event => {
+        if (event.key === Qt.Key_Space)
+            event.accepted = true;
+    }
     implicitHeight: 36
     implicitWidth: row.implicitWidth + 32
     radius: height / 2
@@ -39,6 +51,9 @@ Rectangle {
             font.weight: Font.Medium
             color: root.contentColor
         }
+    }
+
+    FocusRing {
     }
 
     MouseArea {

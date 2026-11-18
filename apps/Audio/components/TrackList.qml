@@ -20,6 +20,13 @@ Item {
     readonly property alias view: list
 
     signal activated(int index)
+    signal topReached
+
+    function focusList() {
+        list.forceActiveFocus();
+        if (list.currentIndex < 0 && list.count > 0)
+            list.currentIndex = 0;
+    }
 
     ListView {
         id: list
@@ -31,6 +38,34 @@ Item {
         boundsBehavior: Flickable.StopAtBounds
         reuseItems: true
         cacheBuffer: 600
+        activeFocusOnTab: true
+        highlightFollowsCurrentItem: false
+        // Enter plays from the row; F favourites it, Q queues it, N plays it next
+        Keys.onShortcutOverride: event => nav.override(event)
+        Keys.onPressed: event => {
+            nav.press(event);
+            const t = root.tracks[currentIndex];
+            if (event.accepted || !t || event.modifiers !== Qt.NoModifier)
+                return;
+            if (event.key === Qt.Key_F)
+                Library.toggleFavorite(t.path);
+            else if (event.key === Qt.Key_Q)
+                Player.enqueue(t.path, false);
+            else if (event.key === Qt.Key_N)
+                Player.enqueue(t.path, true);
+            else
+                return;
+            event.accepted = true;
+        }
+
+        ListNav {
+            id: nav
+
+            view: list
+            rowHeight: 58
+            onActivated: root.activated(list.currentIndex)
+            onTopReached: root.topReached()
+        }
 
         ScrollBar.vertical: ScrollBar {
             policy: ScrollBar.AsNeeded
@@ -52,6 +87,11 @@ Item {
 
             HoverHandler {
                 id: hover
+            }
+
+            FocusRing {
+                gap: 0
+                visible: row.ListView.isCurrentItem && list.activeFocus
             }
 
             MouseArea {

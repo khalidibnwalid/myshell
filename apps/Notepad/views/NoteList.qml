@@ -14,6 +14,10 @@ Item {
     // a note was picked: the editor takes the keyboard
     signal noteOpened
 
+    function focusList() {
+        list.forceActiveFocus();
+    }
+
     Layout.fillWidth: true
     Layout.fillHeight: true
 
@@ -37,6 +41,42 @@ Item {
         // the page must not scroll while a note is being dragged
         interactive: !dragging
         onRowsChanged: order = rows.map(n => n.id)
+
+        // Up and Down pick the note before or after the open one, Enter takes the editor
+        function pick(to) {
+            if (rows.length === 0)
+                return;
+            const at = rows.findIndex(n => n.id === Notes.currentId);
+            const next = Math.max(0, Math.min(rows.length - 1, to !== undefined ? to : at));
+            Notes.select(rows[next].id);
+            const top = next * (rowHeight + gap);
+            if (top < contentY)
+                contentY = top;
+            else if (top + rowHeight > contentY + height)
+                contentY = top + rowHeight - height;
+        }
+
+        activeFocusOnTab: true
+        Keys.onShortcutOverride: event => {
+            if ([Qt.Key_Up, Qt.Key_Down, Qt.Key_Home, Qt.Key_End, Qt.Key_Return, Qt.Key_Enter].indexOf(event.key) >= 0)
+                event.accepted = true;
+        }
+        Keys.onPressed: event => {
+            const at = rows.findIndex(n => n.id === Notes.currentId);
+            if (event.key === Qt.Key_Up)
+                pick(Math.max(0, at - 1));
+            else if (event.key === Qt.Key_Down)
+                pick(at + 1);
+            else if (event.key === Qt.Key_Home)
+                pick(0);
+            else if (event.key === Qt.Key_End)
+                pick(rows.length - 1);
+            else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter)
+                root.noteOpened();
+            else
+                return;
+            event.accepted = true;
+        }
 
         Item {
             width: list.width
@@ -70,6 +110,13 @@ Item {
                     onClicked: {
                         Notes.select(modelData.id);
                         root.noteOpened();
+                    }
+
+                    FocusRing {
+                        gap: 0
+                        radius: 8
+                        ringColor: Appearance.fgColor
+                        visible: row.active && list.activeFocus
                     }
 
                     Behavior on y {

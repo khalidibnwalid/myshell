@@ -23,6 +23,12 @@ Controls
 - `ColorWell` (`modules/Settings/pages/`, click opens `ColorPicker { openWith(color, title); onPreviewed/onApplied/onCancelled }`).
 - `SortableList { items: [{id, title, description, icon, image}]; onReordered: ids => }`: drag rows to reorder; keeps the page from scrolling.
 
+Keyboard (see `quickshell-ui-ux`)
+- `FocusRing { gap; radius; ringColor }`: put it inside a focusable control; it shows while the parent has `activeFocus`. `ringColor: Appearance.fgColor` on an accent-filled selected row.
+- `ListNav { view; rowHeight; horizontal; onActivated; onTopReached }`: Home/End/PageUp/PageDown, Enter, and "Up on the first row" for a `ListView`/`GridView`. In the view: `Keys.onShortcutOverride: event => nav.override(event)` and `Keys.onPressed: event => nav.press(event)`. The arrows themselves are the view's (`keyNavigationEnabled`).
+- `ClickAway {}`: last child of every app window; a passive `PointHandler` that takes the focus (and so the outline) away on any press without eating the click.
+- `PillButton`, `IconButton` (Tab, Enter/Space, outline), `Segmented` (Tab, Left/Right choose), `FieldInput` already focusable. A new clickable `Rectangle`+`MouseArea` needs `activeFocusOnTab: true`, `Keys.onPressed` for Enter/Return/Space (accept it), `Keys.onShortcutOverride` accepting Space, and a `FocusRing {}`.
+
 Display
 - `Meter { value; fillColor }` thin bar. `RingGauge { icon; value; valueText; label; detail; color }`.
 - `MaterialSymbol { icon; fill }` for every symbol. `StyledText` for all text. `HyprlandLogo { size; color }` tints the shipped SVG.

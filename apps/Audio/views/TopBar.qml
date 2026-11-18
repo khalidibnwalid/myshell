@@ -23,6 +23,7 @@ RowLayout {
     signal sortSelected(string key)
     signal openRequested
     signal closeRequested
+    signal contentRequested
 
     function focusSearch() {
         search.focusInput();
@@ -67,6 +68,8 @@ RowLayout {
         icon: "search"
         placeholder: "Search"
         onEdited: text => root.queryEdited(text)
+        Keys.onDownPressed: root.contentRequested()
+        Keys.onReturnPressed: root.contentRequested()
     }
 
     Dropdown {

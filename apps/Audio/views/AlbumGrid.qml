@@ -13,6 +13,13 @@ GridView {
     property var albums: []
 
     signal opened(string key)
+    signal topReached
+
+    function focusList() {
+        forceActiveFocus();
+        if (currentIndex < 0 && count > 0)
+            currentIndex = 0;
+    }
 
     readonly property int columns: Math.max(2, Math.floor(width / 176))
 
@@ -21,6 +28,19 @@ GridView {
     cellWidth: Math.floor(width / columns)
     cellHeight: cellWidth + 56
     boundsBehavior: Flickable.StopAtBounds
+    activeFocusOnTab: true
+    highlightFollowsCurrentItem: false
+    Keys.onShortcutOverride: event => nav.override(event)
+    Keys.onPressed: event => nav.press(event)
+
+    ListNav {
+        id: nav
+
+        view: grid
+        horizontal: true
+        onActivated: grid.opened(grid.albums[grid.currentIndex].key)
+        onTopReached: grid.topReached()
+    }
 
     ScrollBar.vertical: ScrollBar {
         policy: ScrollBar.AsNeeded
@@ -38,7 +58,12 @@ GridView {
             anchors.fill: parent
             anchors.margins: 4
             radius: 18
-            color: cardArea.containsMouse ? Appearance.surfaceColor : "transparent"
+            color: cardArea.containsMouse || (card.GridView.isCurrentItem && grid.activeFocus) ? Appearance.surfaceColor : "transparent"
+
+            FocusRing {
+                gap: 0
+                visible: card.GridView.isCurrentItem && grid.activeFocus
+            }
 
             ColumnLayout {
                 anchors.fill: parent

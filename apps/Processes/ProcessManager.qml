@@ -45,10 +45,25 @@ ApplicationWindow {
         return value < 0.05 ? "0%" : (value < 10 ? value.toFixed(1) : Math.round(value)) + "%";
     }
 
+    // the list's current row follows the picked program, and a new sample must not move it
+    property bool syncing: false
+
+    function syncCurrent() {
+        syncing = true;
+        list.currentIndex = rows.findIndex(r => r.key === selectedKey);
+        syncing = false;
+    }
+
     function taken() {
         const y = list.contentY;
+        syncing = true;
         rows = Processes.list;
         list.contentY = Math.min(y, Math.max(0, list.contentHeight - list.height));
+        syncCurrent();
+    }
+
+    function sortByNumber(n) {
+        Processes.sortBy(["name", "cpu", "mem", "pid"][n - 1]);
     }
 
     width: 900
@@ -125,6 +140,37 @@ ApplicationWindow {
         sequence: "Delete"
         enabled: root.canEnd && !search.inputItem.activeFocus
         onActivated: Processes.end(root.selectedRow, false)
+    }
+
+    Shortcut {
+        sequence: "Shift+Delete"
+        enabled: root.canEnd && !search.inputItem.activeFocus
+        onActivated: Processes.end(root.selectedRow, true)
+    }
+
+    Shortcut {
+        sequence: "Ctrl+G"
+        onActivated: Processes.grouped = !Processes.grouped
+    }
+
+    Shortcut {
+        sequence: "Ctrl+U"
+        onActivated: Processes.onlyMine = !Processes.onlyMine
+    }
+
+    Repeater {
+        model: 4
+
+        Item {
+            id: sortKey
+
+            required property int index
+
+            Shortcut {
+                sequence: "Ctrl+" + (sortKey.index + 1)
+                onActivated: root.sortByNumber(sortKey.index + 1)
+            }
+        }
     }
 
     Shortcut {
@@ -233,6 +279,13 @@ ApplicationWindow {
             icon: "search"
             placeholder: "Search by name, command or number"
             onEdited: text => Processes.query = text
+            Keys.onDownPressed: {
+                if (root.rows.length === 0)
+                    return;
+                list.forceActiveFocus();
+                if (list.currentIndex < 0)
+                    list.currentIndex = 0;
+            }
         }
 
         RowLayout {
@@ -303,7 +356,25 @@ ApplicationWindow {
             spacing: 3
             boundsBehavior: Flickable.StopAtBounds
             model: root.rows
+            currentIndex: -1
+            activeFocusOnTab: true
+            highlightFollowsCurrentItem: false
+            keyNavigationEnabled: true
+            onCurrentIndexChanged: {
+                if (!root.syncing && currentIndex >= 0 && currentIndex < root.rows.length)
+                    root.selectedKey = root.rows[currentIndex].key;
+            }
+            Keys.onShortcutOverride: event => nav.override(event)
+            Keys.onPressed: event => nav.press(event)
             ScrollBar.vertical: ScrollBar {
+            }
+
+            ListNav {
+                id: nav
+
+                view: list
+                rowHeight: 63
+                onTopReached: search.focusInput()
             }
 
             delegate: ListRow {
@@ -329,7 +400,17 @@ ApplicationWindow {
                 title: modelData.name + (modelData.count > 1 ? "  (" + modelData.count + ")" : "")
                 subtitle: Processes.onlyMine ? modelData.detail : modelData.user + "  ·  " + modelData.detail
                 trailingSpace: columns.implicitWidth
-                onClicked: root.selectedKey = root.selectedKey === modelData.key ? "" : modelData.key
+                onClicked: {
+                    root.selectedKey = root.selectedKey === modelData.key ? "" : modelData.key;
+                    root.syncCurrent();
+                }
+
+                FocusRing {
+                    gap: 0
+                    radius: 8
+                    ringColor: Appearance.fgColor
+                    visible: row.ListView.isCurrentItem && list.activeFocus
+                }
 
                 Row {
                     id: columns
@@ -375,10 +456,13 @@ ApplicationWindow {
         StyledText {
             Layout.fillWidth: true
             Layout.leftMargin: 8
-            text: Processes.status !== "" ? Processes.status : (root.rows.length + (Processes.grouped ? " programs" : " processes") + (root.selectedRow ? "  ·  " + root.selectedRow.name + " selected  ·  " + root.memoryNote(root.selectedRow) + "  ·  Delete ends it" : "  ·  Click one to select it"))
+            text: Processes.status !== "" ? Processes.status : (root.rows.length + (Processes.grouped ? " programs" : " processes") + (root.selectedRow ? "  ·  " + root.selectedRow.name + " selected  ·  " + root.memoryNote(root.selectedRow) + "  ·  Delete ends it, Shift+Delete forces it" : "  ·  Click one, or press ↓, to select it"))
             color: Appearance.mutedColor
             font.pixelSize: 12
             elide: Text.ElideRight
         }
+    }
+
+    ClickAway {
     }
 }

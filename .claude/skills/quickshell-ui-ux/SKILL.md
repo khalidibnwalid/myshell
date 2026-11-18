@@ -32,6 +32,13 @@ description: The user's UI/UX preferences for the Settings window, launcher and 
 - A typed number: clicking the number beside a slider turns it into an input.
 - Dropdown for anything with a short fixed list of words; search box for long lists (fonts, apps).
 
+## Keyboard
+- Every app must be usable without a mouse: Tab/Shift+Tab reach every control, an outline (`FocusRing`) shows the focus, Enter/Space press, a list takes Up/Down/Home/End/PageUp/PageDown + Enter, a segmented choice takes Left/Right. Mouse-only controls (`MouseArea` on a `Rectangle`) are a bug.
+- Buttons that only show on hover (row actions) need a key on the list instead (Audio: `F` favourite, `Q` queue, `N` play next).
+- Opening a window focuses its main list; Down (or Enter) from the search box goes to the list, Up on the first row goes back to the search box. Number shortcuts switch sections (`Ctrl+1..5`) or sort (`Ctrl+1..4`).
+- A window shortcut must not steal a focused control's keys: Audio's `Up/Down/Left/Right/Space` shortcuts yield while a list or button has the focus (the control accepts `Keys.onShortcutOverride`). Clicking elsewhere clears the focus (`ClickAway`), so the arrows are the shortcuts again.
+- Show the keys where the user looks: status line hint ("Delete ends it, Shift+Delete forces it"), tooltips, README.
+
 ## Wording
 - Short, plain, second person. Say what it does and what it costs ("Asking an app that is not running may start it").
 - Report honestly in chat: say when something was tested on the real machine and when it was not seen on screen.

@@ -87,9 +87,12 @@ ColumnLayout {
         placeholder: "Search notes"
         icon: "search"
         onEdited: text => root.queryEdited(text)
+        Keys.onDownPressed: noteList.focusList()
     }
 
 NoteList {
+    id: noteList
+
     Layout.fillWidth: true
     Layout.fillHeight: true
     query: root.query

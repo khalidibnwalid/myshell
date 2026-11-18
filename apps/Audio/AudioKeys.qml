@@ -87,6 +87,23 @@ Item {
         onActivated: Player.cycleRepeat()
     }
 
+    // Ctrl+1 to Ctrl+5 open the sections of the sidebar
+    Repeater {
+        model: window.sections
+
+        Item {
+            id: section
+
+            required property var modelData
+            required property int index
+
+            Shortcut {
+                sequence: "Ctrl+" + (section.index + 1)
+                onActivated: window.go(section.modelData.id)
+            }
+        }
+    }
+
     Shortcut {
         sequence: "Escape"
         onActivated: window.back()

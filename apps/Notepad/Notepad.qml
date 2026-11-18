@@ -212,4 +212,7 @@ GlobalShortcut {
             }
         }
     }
+
+    ClickAway {
+    }
 }

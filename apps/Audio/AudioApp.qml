@@ -91,6 +91,7 @@ ApplicationWindow {
         detail = null;
         query = "";
         topBar.clearSearch();
+        Qt.callLater(focusContent);
     }
 
     function playShown(i) {
@@ -104,6 +105,12 @@ ApplicationWindow {
 
     function shuffleAll() {
         Player.playShuffled(shownTracks.map(t => t.path));
+    }
+
+    // the keyboard goes to the list that is shown
+    function focusContent() {
+        const view = viewKind === "albums" ? albumGrid : (viewKind === "artists" ? artistList : tracksView);
+        view.focusList();
     }
 
     function focusSearch() {
@@ -139,7 +146,10 @@ ApplicationWindow {
     visible: true
     color: Qt.alpha(Appearance.bgColor, Appearance.isLight ? 1 - Math.pow(1 - Config.appearance.settingsOpacity, 2) : Config.appearance.settingsOpacity)
     onClosing: program.shown = false
-    Component.onCompleted: Library.refresh()
+    Component.onCompleted: {
+        Library.refresh();
+        Qt.callLater(focusContent);
+    }
 
     AudioKeys {
         window: root
@@ -232,6 +242,7 @@ DropArea {
                         onSortSelected: key => root.sortKey = key
                         onOpenRequested: root.openFiles()
                         onCloseRequested: root.program.shown = false
+                        onContentRequested: root.focusContent()
                     }
 
                     DetailHeader {
@@ -248,6 +259,8 @@ DropArea {
                         currentIndex: root.viewKind === "tracks" ? 0 : (root.viewKind === "albums" ? 1 : 2)
 
                         TracksView {
+                            id: tracksView
+
                             tracks: root.shownTracks
                             showActions: !root.detailItem
                             canClear: root.section === "recent"
@@ -260,10 +273,14 @@ DropArea {
                             onShuffleRequested: root.shuffleAll()
                             onClearRequested: Library.clearHistory()
                             onActivated: i => root.playShown(i)
+                            onTopReached: root.focusSearch()
                         }
 
                         AlbumGrid {
+                            id: albumGrid
+
                             albums: root.shownAlbums
+                            onTopReached: root.focusSearch()
                             onOpened: key => root.detail = {
                                 "kind": "album",
                                 "key": key
@@ -271,7 +288,10 @@ DropArea {
                         }
 
                         ArtistList {
+                            id: artistList
+
                             artists: root.shownArtists
+                            onTopReached: root.focusSearch()
                             onOpened: key => root.detail = {
                                 "kind": "artist",
                                 "key": key
@@ -303,5 +323,8 @@ DropArea {
     DropHint {
         anchors.fill: parent
         visible: drop.containsDrag
+    }
+
+    ClickAway {
     }
 }

@@ -11,11 +11,30 @@ Rectangle {
 
     signal selected(var value)
 
+    function step(by) {
+        const values = model.map(m => m !== null && typeof m === "object" ? m.value : m);
+        const at = values.indexOf(value);
+        const next = Math.max(0, Math.min(values.length - 1, (at < 0 ? 0 : at) + by));
+        if (values.length > 0 && next !== at)
+            selected(values[next]);
+    }
+
+    activeFocusOnTab: true
+    Keys.onLeftPressed: step(-1)
+    Keys.onRightPressed: step(1)
+    Keys.onShortcutOverride: event => {
+        if (event.key === Qt.Key_Left || event.key === Qt.Key_Right)
+            event.accepted = true;
+    }
+
     implicitHeight: 36
     implicitWidth: row.implicitWidth + 6
     radius: height / 2
     color: Appearance.surfaceColor
     opacity: enabled ? 1 : 0.45
+
+    FocusRing {
+    }
 
     Row {
         id: row

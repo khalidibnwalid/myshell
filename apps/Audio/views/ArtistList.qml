@@ -13,11 +13,31 @@ ListView {
     property var artists: []
 
     signal opened(string key)
+    signal topReached
+
+    function focusList() {
+        forceActiveFocus();
+        if (currentIndex < 0 && count > 0)
+            currentIndex = 0;
+    }
 
     clip: true
     spacing: 2
     model: artistList.artists
     boundsBehavior: Flickable.StopAtBounds
+    activeFocusOnTab: true
+    highlightFollowsCurrentItem: false
+    Keys.onShortcutOverride: event => nav.override(event)
+    Keys.onPressed: event => nav.press(event)
+
+    ListNav {
+        id: nav
+
+        view: artistList
+        rowHeight: 66
+        onActivated: artistList.opened(artistList.artists[artistList.currentIndex].key)
+        onTopReached: artistList.topReached()
+    }
 
     ScrollBar.vertical: ScrollBar {
         policy: ScrollBar.AsNeeded
@@ -31,7 +51,12 @@ ListView {
         width: artistList.width - (artistList.ScrollBar.vertical.visible ? 10 : 0)
         height: 64
         radius: 14
-        color: artistArea.containsMouse ? Appearance.surfaceColor : "transparent"
+        color: artistArea.containsMouse || (artistRow.ListView.isCurrentItem && artistList.activeFocus) ? Appearance.surfaceColor : "transparent"
+
+        FocusRing {
+            gap: 0
+            visible: artistRow.ListView.isCurrentItem && artistList.activeFocus
+        }
 
         RowLayout {
             anchors.fill: parent
