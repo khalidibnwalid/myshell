@@ -44,6 +44,7 @@ These optional packages enable additional hardware readings on the System Info p
 ### Optional launcher tools
 
 - `python` — runs the launcher sources for recent files, VS Code projects and browser history (standard library only).
+- `ffmpeg` (with `ffprobe`) — the Audio player reads tags and makes covers with it. `python-gobject` lets it appear as an MPRIS player.
 - `ffmpegthumbnailer` — makes album covers and video frames for file previews in the launcher.
 - `systemd` — `busctl` asks apps that offer their own results (GNOME search providers, installed by apps such as Files, Calculator and Firefox).
 - `gtk3` — `gtk-update-icon-cache` refreshes the icon cache so the Settings window's gear icon shows.
@@ -112,6 +113,16 @@ A task manager in `apps/Processes/`: every running program with its CPU and memo
 
 - Open it with `qs ipc call processes toggle` (also `open`, `close`), or bind `bind = $mainMod, Escape, global, quickshell:processes`. It is also in the launcher, the dock, and the memory tile of Quick Settings opens it (the processor tile opens Settings → System in its Detailed look, the storage tile Settings → Storage).
 - It opens as a floating window like Settings (`title = "^(Processes)$"` in the Hyprland window rules).
+
+### Audio
+
+A player in `apps/Audio/`. It indexes the folders you give it (`~/Music` to start; Folders in the sidebar adds or removes more, subfolders included) and shows the tracks, albums and artists, favourites and recently played. Tracks are read once with `ffprobe` (tags, length) and `ffmpeg` (the cover: the picture inside the file, a frame of a video, or `cover.jpg`/`folder.jpg` beside it) and again only when the file changes. The index is in `~/.local/share/quickshell/audio/library.json`, the covers in `~/.cache/quickshell/audio/`, and the queue, the place in the track, volume, shuffle, repeat and speed in `player.json` next to it, so it carries on after a restart. The sound comes from Qt Multimedia, so it plays on while the window is closed.
+
+- A queue you reorder by dragging, shuffle, repeat (off, all, one), speed 0.75 to 2, a sleep timer that fades out, and lyrics shown in time from a `.lrc` file with the same name beside the track (or the lyrics tag of the file); click a line to jump to it.
+- It is an MPRIS player (`apps/Audio/scripts/mpris.py`, needs `python-gobject` for `/usr/bin/python3`): Quick Settings' media card, `playerctl` and the media keys show and control it, with the track list, seeking, volume, shuffle and loop. If the helper cannot start the rest still works.
+- Open it with `qs ipc call audio toggle` (also `open`, `close`, `playpause`, `play`, `pause`, `next`, `previous`, `stop`, `openFile <path>`, `enqueue <path>`, `volume <0-100>`, `status`), or bind `bind = $mainMod, M, global, quickshell:audio`; `audioPlayPause`, `audioNext` and `audioPrevious` are shortcuts too. It is also in the launcher and the dock, plays files dropped on the window and is offered for audio files (Settings → Default apps).
+- Keys: `Space` play/pause, `Left`/`Right` seek 5 s, `Up`/`Down` volume, `Ctrl+Left`/`Ctrl+Right` previous/next, `Ctrl+F` search, `Ctrl+L` lyrics, `Ctrl+J` queue, `Ctrl+B` sidebar, `Ctrl+O` open files, `Ctrl+Shift+S` shuffle, `Ctrl+R` repeat.
+- It opens as a floating window like Settings (`title = "^(Audio)$"` in the Hyprland window rules).
 
 ### Timer
 

@@ -448,6 +448,17 @@ Singleton {
                 "type": "app",
                 "execute": () => WindowManager.openTimer()
             });
+        if (query.length >= 2 && source("apps") && ["audio", "music", "player", "tracks", "playlist", "lyrics", "mp3"].some(w => w.startsWith(query)))
+            own.push({
+                "id": "quickshell-audio",
+                "name": "Audio",
+                "description": "Play your tracks, albums and playlists",
+                "image": Quickshell.shellDir + "/apps/Audio/audio.svg",
+                "symbol": "graphic_eq",
+                "icon": "graphic_eq",
+                "type": "app",
+                "execute": () => WindowManager.openAudio()
+            });
         if (own.length > 0)
             appResults = own.concat(appResults.filter(a => !own.some(o => o.name === a.name))).slice(0, 5);
 

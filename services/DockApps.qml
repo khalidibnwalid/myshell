@@ -64,6 +64,8 @@ Singleton {
             return "quickshell-processes";
         if (toplevel.title === "Timer" && (cls.endsWith("noctalia-qs") || cls === "quickshell"))
             return "quickshell-timer";
+        if (toplevel.title === "Audio" && (cls.endsWith("noctalia-qs") || cls === "quickshell"))
+            return "quickshell-audio";
         return cls;
     }
 

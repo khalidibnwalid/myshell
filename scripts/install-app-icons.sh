@@ -98,3 +98,29 @@ Keywords=timer;stopwatch;alarm;countdown;pomodoro;
 Terminal=false"
     [ "$(cat "$tentry" 2>/dev/null)" = "$twant" ] || printf '%s\n' "$twant" > "$tentry"
 fi
+
+# Audio: the same, and it can play audio files (Settings → Default apps)
+micon="$data/icons/hicolor/scalable/apps/quickshell-audio.svg"
+mentry="$data/applications/quickshell-audio.desktop"
+if [ -f "$dir/apps/Audio/audio.svg" ]; then
+    if ! cmp -s "$dir/apps/Audio/audio.svg" "$micon"; then
+        cp "$dir/apps/Audio/audio.svg" "$micon"
+        command -v gtk-update-icon-cache >/dev/null && gtk-update-icon-cache -f -t "$data/icons/hicolor" >/dev/null 2>&1
+        touch "$data/icons/hicolor"
+    fi
+    mwant="[Desktop Entry]
+Version=1.5
+Type=Application
+Name=Audio
+Comment=Play your tracks, with albums, lyrics and a queue
+Exec=\"$dir/apps/Audio/open.sh\" %F
+Icon=quickshell-audio
+Categories=AudioVideo;Audio;Player;
+MimeType=audio/mpeg;audio/flac;audio/x-flac;audio/ogg;audio/opus;audio/mp4;audio/x-m4a;audio/aac;audio/wav;audio/x-wav;audio/x-ms-wma;audio/x-matroska;
+Keywords=audio;sound;player;tracks;lyrics;mp3;
+Terminal=false"
+    if [ "$(cat "$mentry" 2>/dev/null)" != "$mwant" ]; then
+        printf '%s\n' "$mwant" > "$mentry"
+        command -v update-desktop-database >/dev/null && update-desktop-database "$data/applications" >/dev/null 2>&1
+    fi
+fi

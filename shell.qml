@@ -6,6 +6,7 @@ import "modules/Bar"
 import "modules/Clipboard"
 import "modules/Dock"
 import "modules/Idle"
+import "apps/Audio"
 import "apps/Notepad"
 import "apps/Processes"
 import "apps/Timer"
@@ -63,6 +64,9 @@ Scope {
     }
 
     TimerApp {
+    }
+
+    AudioApp {
     }
 
     ScreenTools {

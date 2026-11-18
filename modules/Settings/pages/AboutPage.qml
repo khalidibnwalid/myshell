@@ -35,6 +35,8 @@ SettingsPage {
         "busctl": "results from apps in the launcher",
         "python3": "recent files, VS Code and browser history in the launcher",
         "ffmpegthumbnailer": "album covers and video frames in the launcher",
+        "ffprobe": "tags and covers in the Audio player",
+        "ffmpeg": "covers in the Audio player",
         "udisksctl": "mounting and ejecting drives",
         "lpstat": "printers",
         "hostnamectl": "changing the computer name",

@@ -21,6 +21,7 @@ Singleton {
     property bool notepadVisible: false
     property bool processesVisible: false
     property bool timerVisible: false
+    property bool audioVisible: false
     // the next time the System page opens, it shows its Detailed look
     property bool settingsDetailed: false
     property int idlePauseRemainingSeconds: 0
@@ -53,6 +54,15 @@ Singleton {
     signal processesRaiseRequested
     // the Timer window is already open: bring it to the front
     signal timerRaiseRequested
+    // the Audio window is already open: bring it to the front
+    signal audioRaiseRequested
+
+    function openAudio() {
+        if (audioVisible)
+            audioRaiseRequested();
+        else
+            audioVisible = true;
+    }
 
     function openTimer() {
         if (timerVisible)
