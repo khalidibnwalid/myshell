@@ -30,6 +30,15 @@ Rectangle {
         input.forceActiveFocus();
     }
 
+    // a character typed elsewhere in the window: focus the field and add it
+    function append(text) {
+        input.forceActiveFocus();
+        input.text = input.text + text;
+        input.cursorPosition = input.text.length;
+        dirty = true;
+        edited(input.text);
+    }
+
     function selectAll() {
         input.selectAll();
     }

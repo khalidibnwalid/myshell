@@ -40,21 +40,22 @@ Item {
         cacheBuffer: 600
         activeFocusOnTab: true
         highlightFollowsCurrentItem: false
-        // Enter plays from the row; F favourites it, Q queues it, N plays it next
+        // Enter plays from the row, Ctrl+Enter queues it, Shift+Enter plays it next, Ctrl+D favourites it;
+        // a letter is not a list key: it goes to the search box
         Keys.onShortcutOverride: event => nav.override(event)
         Keys.onPressed: event => {
-            nav.press(event);
             const t = root.tracks[currentIndex];
-            if (event.accepted || !t || event.modifiers !== Qt.NoModifier)
-                return;
-            if (event.key === Qt.Key_F)
-                Library.toggleFavorite(t.path);
-            else if (event.key === Qt.Key_Q)
+            const enter = event.key === Qt.Key_Return || event.key === Qt.Key_Enter;
+            if (t && enter && event.modifiers === Qt.ControlModifier)
                 Player.enqueue(t.path, false);
-            else if (event.key === Qt.Key_N)
+            else if (t && enter && event.modifiers === Qt.ShiftModifier)
                 Player.enqueue(t.path, true);
-            else
+            else if (t && event.key === Qt.Key_D && event.modifiers === Qt.ControlModifier)
+                Library.toggleFavorite(t.path);
+            else {
+                nav.press(event);
                 return;
+            }
             event.accepted = true;
         }
 

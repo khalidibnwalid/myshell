@@ -34,7 +34,7 @@ description: The user's UI/UX preferences for the Settings window, launcher and 
 
 ## Keyboard
 - Every app must be usable without a mouse: Tab/Shift+Tab reach every control, an outline (`FocusRing`) shows the focus, Enter/Space press, a list takes Up/Down/Home/End/PageUp/PageDown + Enter, a segmented choice takes Left/Right. Mouse-only controls (`MouseArea` on a `Rectangle`) are a bug.
-- Buttons that only show on hover (row actions) need a key on the list instead (Audio: `F` favourite, `Q` queue, `N` play next).
+- Buttons that only show on hover (row actions) need a key on the list instead (Audio: `Ctrl+D` favourite, `Ctrl+Enter` queue, `Shift+Enter` play next). Never plain letters: a letter typed in a window with a search box goes to the search box (`TypeToSearch`).
 - Opening a window focuses its main list; Down (or Enter) from the search box goes to the list, Up on the first row goes back to the search box. Number shortcuts switch sections (`Ctrl+1..5`) or sort (`Ctrl+1..4`).
 - A window shortcut must not steal a focused control's keys: Audio's `Up/Down/Left/Right/Space` shortcuts yield while a list or button has the focus (the control accepts `Keys.onShortcutOverride`). Clicking elsewhere clears the focus (`ClickAway`), so the arrows are the shortcuts again.
 - Show the keys where the user looks: status line hint ("Delete ends it, Shift+Delete forces it"), tooltips, README.

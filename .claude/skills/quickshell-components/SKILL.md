@@ -26,7 +26,8 @@ Controls
 Keyboard (see `quickshell-ui-ux`)
 - `FocusRing { gap; radius; ringColor }`: put it inside a focusable control; it shows while the parent has `activeFocus`. `ringColor: Appearance.fgColor` on an accent-filled selected row.
 - `ListNav { view; rowHeight; horizontal; onActivated; onTopReached }`: Home/End/PageUp/PageDown, Enter, and "Up on the first row" for a `ListView`/`GridView`. In the view: `Keys.onShortcutOverride: event => nav.override(event)` and `Keys.onPressed: event => nav.press(event)`. The arrows themselves are the view's (`keyNavigationEnabled`).
-- `ClickAway {}`: last child of every app window; a passive `PointHandler` that takes the focus (and so the outline) away on any press without eating the click.
+- `ClickAway { target: content }`: last child of every app window; a passive `PointHandler` that takes the focus (and so the outline) away on any press without eating the click; `target` is the item that gets it (the layout that handles typing).
+- `TypeToSearch { id: ahead; onTyped: text => search.append(text) }` plus `Keys.onPressed: event => ahead.press(event)` on the window's main layout: a printable key (no Space, no Ctrl/Alt/Meta) that no control took bubbles up there and goes to the search box (`FieldInput.append(text)`). So a list must **not** use plain letters as keys (Audio uses Ctrl+D, Ctrl+Enter, Shift+Enter). Apps with an editor (Notepad) and Timer do not use it.
 - `PillButton`, `IconButton` (Tab, Enter/Space, outline), `Segmented` (Tab, Left/Right choose), `FieldInput` already focusable. A new clickable `Rectangle`+`MouseArea` needs `activeFocusOnTab: true`, `Keys.onPressed` for Enter/Return/Space (accept it), `Keys.onShortcutOverride` accepting Space, and a `FocusRing {}`.
 
 Display

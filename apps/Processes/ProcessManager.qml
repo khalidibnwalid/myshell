@@ -183,10 +183,19 @@ ApplicationWindow {
         }
     }
 
+    TypeToSearch {
+        id: ahead
+
+        onTyped: text => search.append(text)
+    }
+
     ColumnLayout {
+        id: content
+
         anchors.fill: parent
         anchors.margins: 20
         spacing: 14
+        Keys.onPressed: event => ahead.press(event)
 
         RowLayout {
             Layout.fillWidth: true
@@ -464,5 +473,6 @@ ApplicationWindow {
     }
 
     ClickAway {
+        target: content
     }
 }

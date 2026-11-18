@@ -5,6 +5,9 @@ import QtQuick
 Item {
     id: root
 
+    // what gets the focus (default: the window's content); give it the item that handles typing
+    property Item target: null
+
     anchors.fill: parent
     z: 100000
 
@@ -12,7 +15,7 @@ Item {
         acceptedButtons: Qt.AllButtons
         onActiveChanged: {
             if (active && root.Window.window)
-                root.Window.window.contentItem.forceActiveFocus();
+                (root.target ?? root.Window.window.contentItem).forceActiveFocus();
         }
     }
 }

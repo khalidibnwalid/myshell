@@ -29,6 +29,10 @@ RowLayout {
         search.focusInput();
     }
 
+    function appendSearch(text) {
+        search.append(text);
+    }
+
     function clearSearch() {
         search.clear();
     }

@@ -199,10 +199,22 @@ DropArea {
     }
 }
 
+    TypeToSearch {
+        id: ahead
+
+        onTyped: text => {
+            root.sidebarOpen = true;
+            topBar.appendSearch(text);
+        }
+    }
+
     RowLayout {
+        id: content
+
         anchors.fill: parent
         anchors.margins: 12
         spacing: 12
+        Keys.onPressed: event => ahead.press(event)
 
         ColumnLayout {
             Layout.fillWidth: true
@@ -326,5 +338,6 @@ DropArea {
     }
 
     ClickAway {
+        target: content
     }
 }
