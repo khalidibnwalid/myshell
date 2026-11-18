@@ -1,0 +1,16 @@
+{
+    "id": "paint",
+    "name": "Paint",
+    "description": "Experimental: draw and edit images with layers, selections and editable text",
+    "mode": "inline",
+    "entry": "PaintApp.qml",
+    "icon": "paint.svg",
+    "symbol": "brush",
+    "window": { "title": "Paint", "width": 1360, "height": 860 },
+    "ipc": "paint",
+    "keywords": ["paint", "draw", "image", "editor", "photo", "pixel", "sketch", "paint.net", "gimp"],
+    "categories": "Graphics;RasterGraphics;2DGraphics;",
+    "desktopKeywords": "paint;draw;image;editor;photo;pixel;sketch;",
+    "mime": ["image/openraster"],
+    "open": "open.sh"
+}

@@ -44,7 +44,7 @@ These optional packages enable additional hardware readings on the System Info p
 ### Optional launcher tools
 
 - `python` — installs the desktop entries of the apps from their `app.json`, and runs the launcher sources for recent files, VS Code projects and browser history (standard library only).
-- `ffmpeg` (with `ffprobe`) — the Audio player reads tags and makes covers with it. `go` builds the small helper that lets it appear as an MPRIS player.
+- `ffmpeg` (with `ffprobe`) — the Audio player reads tags and makes covers with it. `go` builds the small helper that lets it appear as an MPRIS player, and the pixel engine of Paint.
 - `mpv` — the Audio player plays sound with it (without a window).
 - `ffmpegthumbnailer` — makes album covers and video frames for file previews in the launcher.
 - `systemd` — `busctl` asks apps that offer their own results (GNOME search providers, installed by apps such as Files, Calculator and Firefox).
@@ -145,6 +145,18 @@ Countdown timers and a stopwatch in `apps/Timer/`. Pick a time (1 minute to 1 ho
 
 - Open it with `qs ipc call timer toggle` (also `open`, `close`, `start 5m "tea"`), or bind `bind = $mainMod, T, global, quickshell:timer`. It is also in the launcher and the dock.
 - It opens as a floating window like Settings (`title = "^(Timer)$"` in the Hyprland window rules).
+
+### Paint
+
+An image editor in `apps/Paint/`, in the spirit of Paint.NET. **Experimental**: it is new and has only been tried a little, so a tool may misbehave (the window says so in its title bar); save often, and use `.ora` to keep the layers. The pixels live in a small Go program (`helpers/paint-engine`, standard library only, built into `~/.cache/quickshell/paint` on first use, so it needs `go`) that owns the layers, the selection and the history, does all the drawing and writes what is on screen as 256 px tiles under `$XDG_RUNTIME_DIR/quickshell-paint`; the window is only the screen and the pointer. The document stays when the window is closed.
+
+- **Tools** (the toolbox layout of Paint.NET, with its letters): rectangle, ellipse and lasso select, magic wand (contiguous or global, with tolerance), move selected pixels, move selection, zoom, pan (or hold `Space`), paint bucket, gradient (linear, reflected, diamond, radial, conical), paintbrush (size, hardness, spacing, antialiasing), eraser, pencil, colour picker (layer or image), clone stamp (`Ctrl+click` sets the source), recolor, text, line/curve (drag the dots to bend it) and shapes (rectangle, rounded, ellipse, triangle, diamond, pentagon, hexagon, star; outline, filled or both). A line or shape stays editable until `Enter`, another tool or a new shape. Left button draws with the primary colour, right button with the secondary. Selections take `Ctrl` (add) and `Alt` (subtract), and every drawing tool only paints inside the selection.
+- **Layers**: add, duplicate, delete, reorder (drag a layer, or `Ctrl+[` / `Ctrl+]`), merge down, rename (double click or `F2`), hide, opacity and blend mode (multiply, screen, overlay, darken, lighten, add, difference). **Text layers** stay text: click with the Text tool to type (`Ctrl+Enter` or a click elsewhere finishes, `Esc` cancels), click the text again to edit it, change font, size, bold, italic, underline, alignment and colour afterwards, and move it with the Move tool. Anything that needs pixels (an adjustment, flip, rotate, crop) turns text layers into pixels first.
+- **History**: every step is listed in the History panel; click one to go there. `Ctrl+Z`, `Ctrl+Y`.
+- **Menus**: File (new, open, open as layer, save, save as), Edit (cut, copy, paste as a new layer, erase, fill, select all, deselect, invert), Image (crop to selection, resize, canvas size, flip, rotate, flatten), Layers, Adjustments (invert, black and white, sepia, brightness, contrast, saturation, hue, posterize), Effects (blur, sharpen, pixelate, noise), View (zoom, panels). Adjustments and effects apply to the selection.
+- **Files**: `.ora` (OpenRaster) keeps the layers and the text, and opens in Krita and GIMP too; `.png`, `.jpg` and `.gif` are flattened. Opening reads `.ora`, `.png`, `.jpg` and `.gif`. Copy and paste go through the system clipboard with `wl-copy` and `wl-paste` when they are installed (they are optional).
+- Open it with `qs ipc call paint toggle` (also `open`, `close`, `openFile /path`, `create 800 600`), or bind `bind = $mainMod, P, global, quickshell:paint`. It is also in the launcher and the dock.
+- Not there (yet): selections that follow a curve of anti-aliased edges (selection edges are hard), a live preview in the adjustment dialogs, `.webp` and `.psd`.
 
 ### Keyboard layouts
 
