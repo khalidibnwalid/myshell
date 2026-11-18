@@ -37,6 +37,8 @@ SettingsPage {
         "ffmpegthumbnailer": "album covers and video frames in the launcher",
         "ffprobe": "tags and covers in the Audio player",
         "ffmpeg": "covers in the Audio player",
+        "mpv": "playing sound in the Audio player",
+        "go": "building the small MPRIS helper of the Audio player",
         "udisksctl": "mounting and ejecting drives",
         "lpstat": "printers",
         "hostnamectl": "changing the computer name",

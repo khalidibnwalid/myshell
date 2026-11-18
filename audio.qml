@@ -7,6 +7,6 @@ import "apps/Audio"
 // is not running when it is not used, and a reload of the main shell does not stop the sound.
 // It sits at the top of the config so it can use components/, config/ and services/ like the shell does.
 ShellRoot {
-    AudioApp {
+    AudioProgram {
     }
 }

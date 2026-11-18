@@ -27,7 +27,7 @@ Item {
         }
 
         function quit(): void {
-            Player.save();
+            Player.shutdown();
             Qt.quit();
         }
 

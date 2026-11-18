@@ -47,8 +47,8 @@ ApplicationWindow {
             "count": Library.history.length
         }
     ]
-    // the window can be closed while the sound goes on
-    property bool shown: false
+    // the program that owns this window; the window is destroyed when `program.shown` goes off
+    property var program: null
     property string section: "tracks"
     // an album or an artist that is open: { kind: "album" | "artist", key }
     property var detail: null
@@ -86,15 +86,6 @@ ApplicationWindow {
     readonly property string viewKind: detailItem ? "tracks" : (section === "albums" ? "albums" : (section === "artists" ? "artists" : "tracks"))
     readonly property var sectionInfo: sections.find(s => s.id === section)
 
-    function openWindow() {
-        if (shown) {
-            raise();
-            requestActivate();
-        } else {
-            shown = true;
-        }
-    }
-
     function go(id) {
         section = id;
         detail = null;
@@ -121,7 +112,7 @@ ApplicationWindow {
     }
 
     function openFiles() {
-        openDialog.open();
+        openDialog.show();
     }
 
     // Escape: clear the search, then leave an open album or artist, then close the window
@@ -132,7 +123,7 @@ ApplicationWindow {
         } else if (detail) {
             detail = null;
         } else {
-            shown = false;
+            program.shown = false;
         }
     }
 
@@ -145,66 +136,47 @@ ApplicationWindow {
     minimumWidth: 900
     minimumHeight: 520
     title: "Audio"
-    visible: root.shown
+    visible: true
     color: Qt.alpha(Appearance.bgColor, Appearance.isLight ? 1 - Math.pow(1 - Config.appearance.settingsOpacity, 2) : Config.appearance.settingsOpacity)
-    onClosing: root.shown = false
-    onVisibleChanged: {
-        if (visible)
-            Library.refresh();
-    }
-    // the library and the saved queue are read from the start of the shell
-    Component.onCompleted: {
-        Library.load();
-        Player.load();
-    }
-
-    // a quit or raise asked for over MPRIS
-    Connections {
-        function onRaiseRequested() {
-            root.openWindow();
-        }
-
-        function onQuitRequested() {
-            root.shown = false;
-        }
-
-        target: Player
-    }
-
-    // The program is only here while it is used: a minute after the window is closed and the sound is
-    // off it quits, with the queue and the place saved.
-    Timer {
-        interval: 60000
-        running: Player.loaded && !root.shown && !Player.playing
-        onTriggered: {
-            Player.save();
-            Qt.quit();
-        }
-    }
-
-    AudioIpc {
-        window: root
-    }
+    onClosing: program.shown = false
+    Component.onCompleted: Library.refresh()
 
     AudioKeys {
         window: root
         typing: topBar.typing
     }
 
-    FileDialog {
+    // the dialogs are created when first used (they pull in the Qt Quick dialog code)
+    Loader {
         id: openDialog
 
-        title: "Open audio"
-        fileMode: FileDialog.OpenFiles
-        nameFilters: ["Audio and video (*.mp3 *.flac *.ogg *.opus *.m4a *.aac *.wav *.wma *.mka *.mp4 *.mkv *.webm)", "All files (*)"]
-        onAccepted: Player.openPaths(selectedFiles.map(f => f.toString()), false)
+        function show() {
+            active = true;
+            item.open();
+        }
+
+        active: false
+        sourceComponent: FileDialog {
+            title: "Open audio"
+            fileMode: FileDialog.OpenFiles
+            nameFilters: ["Audio and video (*.mp3 *.flac *.ogg *.opus *.m4a *.aac *.wav *.wma *.mka *.mp4 *.mkv *.webm)", "All files (*)"]
+            onAccepted: Player.openPaths(selectedFiles.map(f => f.toString()), false)
+        }
     }
 
-    FolderDialog {
+    Loader {
         id: folderDialog
 
-        title: "Add an audio folder"
-        onAccepted: Library.addFolder(selectedFolder.toString())
+        function show() {
+            active = true;
+            item.open();
+        }
+
+        active: false
+        sourceComponent: FolderDialog {
+            title: "Add an audio folder"
+            onAccepted: Library.addFolder(selectedFolder.toString())
+        }
     }
 
 DropArea {
@@ -259,7 +231,7 @@ DropArea {
                         onQueryEdited: text => root.query = text
                         onSortSelected: key => root.sortKey = key
                         onOpenRequested: root.openFiles()
-                        onCloseRequested: root.shown = false
+                        onCloseRequested: root.program.shown = false
                     }
 
                     DetailHeader {
@@ -325,7 +297,7 @@ DropArea {
     FoldersPopup {
         id: folders
 
-        onAddRequested: folderDialog.open()
+        onAddRequested: folderDialog.show()
     }
 
     DropHint {

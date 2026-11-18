@@ -1,6 +1,5 @@
 pragma Singleton
 
-import QtMultimedia
 import QtQuick
 import Quickshell
 import Quickshell.Io
@@ -29,7 +28,6 @@ Singleton {
     // the place kept from the last session, used when the track is first loaded
     property real resumeMs: 0
     property bool sourceSet: false
-    property real pendingSeek: -1
     property string error: ""
     property real fade: 1
     property double sleepAt: 0
@@ -38,10 +36,12 @@ Singleton {
 
     readonly property string currentPath: index >= 0 && index < queue.length ? queue[index] : ""
     readonly property var track: currentPath === "" ? null : Library.byPath[currentPath] ?? Library.track(currentPath)
-    readonly property bool playing: media.playbackState === MediaPlayer.PlayingState
+    // the engine (an mpv process) is only started when something is first played
+    readonly property var media: engine.item
+    readonly property bool playing: media !== null && media.playing
     readonly property bool hasTrack: currentPath !== ""
-    readonly property real positionMs: sourceSet ? media.position : resumeMs
-    readonly property real durationMs: media.duration > 0 ? media.duration : (track ? track.duration * 1000 : 0)
+    readonly property real positionMs: sourceSet && media ? media.position : resumeMs
+    readonly property real durationMs: media && media.duration > 0 ? media.duration : (track ? track.duration * 1000 : 0)
     readonly property bool hasNext: index >= 0 && (index < queue.length - 1 || repeat !== "off")
     readonly property bool sleeping: sleepAt > 0 || sleepAtEnd
     readonly property string sleepLabel: sleepAtEnd ? "End of track" : (sleepAt > 0 ? Library.format(Math.max(0, (sleepAt - sleepNow) / 1000)) : "")
@@ -228,11 +228,17 @@ Singleton {
         save();
     }
 
+    // the engine, created on first use
+    function engineOn() {
+        if (!engine.active)
+            engine.active = true;
+        return engine.item;
+    }
+
     function ensureSource() {
         if (sourceSet || !hasTrack)
             return;
-        pendingSeek = resumeMs;
-        media.source = Library.url(currentPath);
+        engineOn().open(Library.url(currentPath), resumeMs, true);
         sourceSet = true;
     }
 
@@ -242,13 +248,10 @@ Singleton {
         if (!hasTrack)
             return;
         resumeMs = 0;
-        pendingSeek = -1;
-        media.source = Library.url(currentPath);
+        engineOn().open(Library.url(currentPath), 0, !playNow);
         sourceSet = true;
-        if (playNow) {
-            media.play();
+        if (playNow)
             Library.played(currentPath);
-        }
         loadLyrics();
         save();
     }
@@ -264,22 +267,30 @@ Singleton {
             ensureSource();
             loadLyrics();
         }
-        // after the end of the last track, play it from the start
-        if (media.mediaStatus === MediaPlayer.EndOfMedia)
-            media.position = 0;
-        media.play();
+        // after the end of the last track, the engine plays it from the start
+        engineOn().play();
         Library.played(currentPath);
         fade = 1;
     }
 
     function pause() {
-        media.pause();
-        resumeMs = media.position;
+        if (media) {
+            media.pause();
+            resumeMs = media.position;
+        }
         save();
     }
 
     function stop() {
-        media.stop();
+        if (media)
+            media.stop();
+    }
+
+    // the program is about to quit: ends the mpv process too
+    function shutdown() {
+        save();
+        if (media)
+            media.shutdown();
     }
 
     function toggle() {
@@ -318,7 +329,8 @@ Singleton {
             return;
         if (auto && sleepAtEnd) {
             sleepAtEnd = false;
-            media.pause();
+            if (media)
+                media.pause();
             resumeMs = 0;
             if (index < queue.length - 1)
                 index = index + 1;
@@ -326,8 +338,7 @@ Singleton {
             return;
         }
         if (auto && repeat === "one") {
-            media.position = 0;
-            media.play();
+            media.restart();
             return;
         }
         if (index < queue.length - 1) {
@@ -338,7 +349,8 @@ Singleton {
             jump(0);
         } else if (auto) {
             // the end of the queue
-            media.stop();
+            if (media)
+                media.stop();
             resumeMs = 0;
             sourceSet = true;
         }
@@ -354,7 +366,8 @@ Singleton {
             resumeMs = target;
             return;
         }
-        media.position = target;
+        if (media)
+            media.seek(target);
     }
 
     function setSleep(minutes) {
@@ -433,7 +446,7 @@ Singleton {
             "queue": queue,
             "original": original,
             "index": index,
-            "position": Math.round(sourceSet ? media.position : resumeMs),
+            "position": Math.round(sourceSet && media ? media.position : resumeMs),
             "shuffle": shuffle,
             "repeat": repeat,
             "volume": volume,
@@ -447,7 +460,7 @@ Singleton {
             loadProc.running = true;
     }
 
-    // ---- MPRIS: mpris.py shows this player to the system (the media card, playerctl, media keys)
+    // ---- MPRIS: helpers/audio-mpris shows this player to the system (the media card, playerctl, media keys)
     property bool mprisQueueDirty: true
     property bool mprisSeeked: false
     property int mprisTries: 0
@@ -619,44 +632,33 @@ Singleton {
     Process {
         id: mprisProc
 
-        command: ["/usr/bin/python3", Quickshell.shellDir + "/apps/Audio/scripts/mpris.py"]
+        command: ["sh", "-c", 'b=$("$1/helpers/audio-mpris/build.sh" "$2") && exec "$b"', "sh", Quickshell.shellDir, Library.cacheDir]
         stdinEnabled: true
         stdout: SplitParser {
             onRead: line => root.mprisCommand(line)
         }
         onExited: code => {
-            // without python-gobject it fails at once: three tries, then it is left off
+            // without Go it fails at once: three tries, then it is left off
             if (root.mprisTries++ < 3)
                 mprisRetry.start();
         }
     }
 
-    MediaDevices {
-        id: devices
-    }
+    LazyLoader {
+        id: engine
 
-    MediaPlayer {
-        id: media
+        active: false
 
-        playbackRate: root.speed
-        audioOutput: AudioOutput {
-            // follows the system's default output (the earbuds when they are the default), instead of
-            // keeping the device that was the default when the program started
-            device: devices.defaultAudioOutput
-            volume: root.muted ? 0 : root.volume * root.volume * root.fade
-        }
-        onMediaStatusChanged: {
-            if (mediaStatus === MediaPlayer.EndOfMedia) {
-                root.advance(true);
-            } else if ((mediaStatus === MediaPlayer.LoadedMedia || mediaStatus === MediaPlayer.BufferedMedia) && root.pendingSeek > 0) {
-                media.position = root.pendingSeek;
-                root.pendingSeek = -1;
+        component: MpvEngine {
+            // the player asks for the volume squared, which is how loudness is felt
+            gain: root.muted ? 0 : root.volume * root.volume * root.fade
+            rate: root.speed
+            onEnded: root.advance(true)
+            onFailed: message => {
+                root.error = message;
+                // a broken track does not stop the queue
+                skipTimer.restart();
             }
-        }
-        onErrorOccurred: (error, errorString) => {
-            root.error = errorString || "This file cannot be played";
-            // a broken track does not stop the queue
-            skipTimer.restart();
         }
     }
 
