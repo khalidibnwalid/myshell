@@ -24,9 +24,13 @@ Rectangle {
     property string title
     property string message
     property int dialogWidth: 380
+    // a slim one-line header and buttons that keep their own width (for big dialogs like the file chooser)
+    property bool compact: false
     // [{ text, key, primary, enabled }]; none = no button row
     property var buttons: []
     default property alias content: body.data
+    // extra controls on the left of the button row (compact dialogs)
+    property alias footer: footerRow.data
 
     signal buttonClicked(string key)
 
@@ -105,28 +109,28 @@ Rectangle {
         Rectangle {
             Layout.fillWidth: true
             visible: root.title !== ""
-            implicitHeight: header.implicitHeight + 24
-            radius: 20
+            implicitHeight: header.implicitHeight + (root.compact ? 16 : 24)
+            radius: root.compact ? 18 : 20
             color: Appearance.surfaceColor
 
             RowLayout {
                 id: header
 
                 anchors.fill: parent
-                anchors.margins: 12
-                spacing: 14
+                anchors.margins: root.compact ? 8 : 12
+                spacing: root.compact ? 12 : 14
 
                 Rectangle {
                     visible: root.icon !== ""
-                    implicitWidth: 48
-                    implicitHeight: 48
-                    radius: 24
+                    implicitWidth: root.compact ? 34 : 48
+                    implicitHeight: root.compact ? 34 : 48
+                    radius: implicitWidth / 2
                     color: Appearance.accentColor
 
                     MaterialSymbol {
                         anchors.centerIn: parent
                         icon: root.icon
-                        font.pixelSize: 24
+                        font.pixelSize: root.compact ? 18 : 24
                         color: Appearance.accentContrastColor
                     }
                 }
@@ -145,7 +149,7 @@ Rectangle {
 
                     StyledText {
                         Layout.fillWidth: true
-                        visible: text !== ""
+                        visible: text !== "" && !root.compact
                         text: root.message
                         color: Appearance.mutedColor
                         font.pixelSize: 12
@@ -153,6 +157,16 @@ Rectangle {
                         maximumLineCount: 3
                         elide: Text.ElideRight
                     }
+                }
+
+                // compact: the message sits at the right end of the same line
+                StyledText {
+                    Layout.maximumWidth: 280
+                    visible: root.compact && text !== ""
+                    text: root.message
+                    color: Appearance.mutedColor
+                    font.pixelSize: 12
+                    elide: Text.ElideRight
                 }
             }
         }
@@ -171,13 +185,25 @@ Rectangle {
             visible: root.buttons.length > 0
             spacing: 8
 
+            RowLayout {
+                id: footerRow
+
+                spacing: 8
+            }
+
+            Item {
+                Layout.fillWidth: true
+                visible: root.compact
+            }
+
             Repeater {
                 model: root.buttons
 
                 PillButton {
                     required property var modelData
 
-                    Layout.fillWidth: true
+                    Layout.fillWidth: !root.compact
+                    Layout.preferredWidth: root.compact ? 120 : -1
                     text: modelData.text
                     toggled: modelData.primary === true
                     enabled: modelData.enabled !== false

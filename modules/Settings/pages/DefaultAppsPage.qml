@@ -66,4 +66,19 @@ SettingsPage {
             }
         }
     }
+
+    SettingGroup {
+        title: "File dialogs"
+
+        SettingRow {
+            icon: "folder_open"
+            title: "Use the shell's own file dialogs"
+            description: Config.fileChooser.enabled ? "Open and save dialogs of other apps (VS Code, Firefox, ...) appear in the shell's look" : "Off: the GTK dialogs of your desktop portal are used"
+
+            ToggleSwitch {
+                checked: Config.fileChooser.enabled
+                onToggled: on => Config.fileChooser.enabled = on
+            }
+        }
+    }
 }

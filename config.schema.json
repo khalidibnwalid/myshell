@@ -197,6 +197,19 @@
         }
       }
     },
+    "fileChooser": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Draw the open and save dialogs of other apps in the shell (an xdg-desktop-portal file chooser); off uses the GTK dialogs"
+        },
+        "grid": {
+          "type": "boolean",
+          "description": "Show the files of those dialogs as tiles with bigger pictures instead of rows"
+        }
+      }
+    },
     "polkit": {
       "type": "object",
       "properties": {

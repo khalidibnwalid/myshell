@@ -40,6 +40,13 @@ PanelWindow {                       // a full-screen overlay window for a prompt
 - `buttons` is rebuilt when a binding inside it changes (`enabled: field.canSubmit`), which is fine for a few buttons.
 - Ids of the instance's children (e.g. `field`) can be used in `buttons:` and handlers, since they live in the same file.
 
+## Second user: the file chooser portal
+`modules/FileChooser/` draws the open/save dialogs of other apps in a `GlassDialog` (780 wide, places + file list from `FolderListModel` + name field + filter `Segmented`), fed by `helpers/portal-filechooser` over stdin/stdout JSON (the `audio-mpris` pattern). Namespace `quickshell-filechooser`, blur rule next to the polkit one. Switch: `fileChooser.enabled` (default on).
+- `Dropdown` and `ModalDialog` need an `ApplicationWindow`; inside a layer-shell `PanelWindow` use `Segmented`, `IconButton`, `FieldInput`, `PillButton`.
+- A nested `ColumnLayout`/`RowLayout` has `Layout.fillWidth: true` by default: pin a sidebar with `fillWidth: false` + `maximumWidth`.
+- `FieldInput` shows its `value` again when editing ends; never set its inner text by hand: bind `value` and take `onEdited`.
+- Test without an app: `python3 -I .claude/skills/quickshell-glass-dialogs/portal_test.py open|save|dir [multiple]` asks the real portal and prints the response; it must stay connected (a `gdbus call` exits at once and the portal cancels the dialog). Keys can be sent with `wtype -k Escape` / `-k Return`.
+
 ## The blur rule (easy to forget)
 Blur comes from Hyprland, not QML. Add a layer rule for the window's namespace in **`~/.config/hypr/config/windowrules.lua`** (user-owned), next to the others:
 ```lua

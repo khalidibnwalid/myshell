@@ -17,6 +17,7 @@ Singleton {
     readonly property alias dock: jsonAdapter.dock
     readonly property alias idle: jsonAdapter.idle
     readonly property alias polkit: jsonAdapter.polkit
+    readonly property alias fileChooser: jsonAdapter.fileChooser
     readonly property alias bar: jsonAdapter.bar
     readonly property alias notifications: jsonAdapter.notifications
     readonly property alias display: jsonAdapter.display
@@ -64,7 +65,7 @@ Singleton {
 
     // --- config.json is the hand-written base; what the Settings window changes
     // is stored as a difference in config.overrides.json (git-ignored, generated) ---
-    readonly property var objectSections: ["appearance", "layout", "capture", "dock", "autocomplete", "display", "bar", "notifications", "idle", "polkit"]
+    readonly property var objectSections: ["appearance", "layout", "capture", "dock", "autocomplete", "display", "bar", "notifications", "idle", "polkit", "fileChooser"]
     readonly property var plainSections: ["keyboard", "hyprland", "search", "clipboard", "apps"]
     readonly property var wholeValues: ["monitors", "recentColors"]
     property var baseData: ({})
@@ -304,6 +305,15 @@ Singleton {
 
             polkit: JsonObject {
                 property bool enabled: true
+            }
+
+            // the open/save dialogs of other apps drawn by the shell (modules/FileChooser, xdg-desktop-portal)
+            property JsonObject fileChooser
+
+            fileChooser: JsonObject {
+                property bool enabled: true
+                // tiles with big pictures instead of rows
+                property bool grid: false
             }
 
             property var keyboard: ({

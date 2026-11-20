@@ -6,6 +6,7 @@ import "modules/Autocomplete"
 import "modules/Bar"
 import "modules/Clipboard"
 import "modules/Dock"
+import "modules/FileChooser"
 import "modules/Idle"
 import "apps/Audio"
 import "apps/Notepad"
@@ -79,6 +80,9 @@ Scope {
         }
 
         onObjectRemoved: (index, object) => Services.Apps.released(object.modelData, object.item)
+    }
+
+    FileChooser {
     }
 
     // the polkit agent: off, the prompt is not loaded and another agent may register

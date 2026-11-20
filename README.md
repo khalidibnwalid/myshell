@@ -91,6 +91,10 @@ Choose a wallpaper in Settings → Appearance. The selected image is shared by t
 
 The shell is the polkit agent (`modules/Polkit/`, `Quickshell.Services.Polkit`). When a program asks for administrator rights (`pkexec`, Settings pages, disk and printer tools) a glass dialog (`components/GlassDialog.qml`, blurred by the `quickshell-polkit` layer rule) asks for your password; Escape cancels. Only one agent can be registered, so another one (`polkit-gnome`, `lxqt-policykit`, `hyprpolkitagent`) must not be started with the session. To use another agent instead, turn it off in Settings → Lock & idle or set `"polkit": { "enabled": false }` in `config.json` (default: on).
 
+### File dialogs (portal)
+
+The open and save dialogs of other apps (VS Code, Firefox, Claude, ...) are drawn by the shell too (`modules/FileChooser/`, in the same glass look). `helpers/portal-filechooser` (Go) is an `xdg-desktop-portal` file chooser backend: it takes the portal's `FileChooser` requests, hands them to the shell, and returns the chosen paths. When the shell starts it writes three small files (`~/.local/share/xdg-desktop-portal/portals/quickshell.portal`, `~/.config/xdg-desktop-portal/<desktop>-portals.conf`, and a D-Bus service file) and restarts `xdg-desktop-portal` once; the GTK portal stays as the fallback, also while the shell is not running. A `<desktop>-portals.conf` that is not ours is never overwritten (the helper tells you what to add). Turn it off in Settings → Default apps → File dialogs or with `"fileChooser": { "enabled": false }` in `config.json` (default: on); that removes the files again. Needs Go (built on first use) and `xdg-desktop-portal`. Native message boxes of an app (like VS Code's Git "Sync" question) are not portal dialogs and keep their toolkit's look.
+
 ### Settings window
 
 Open it from the Quick Settings footer, or bind a key to `qs ipc call settings toggle` (also `open`, `close`, and `page <name>`, e.g. `page appearance`). Changes you make there are kept in `config.overrides.json` (generated and git-ignored), so the hand-written `config.json` stays the base; Settings → About lists any missing command-line tools.
