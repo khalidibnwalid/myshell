@@ -127,7 +127,8 @@ ShellRoot {
             root.statusText = "Welcome";
             lastWriter.running = true;
             const cmd = root.session.exec.replace(/%[a-zA-Z]/g, "").trim().split(/\s+/);
-            Greetd.launch(cmd, ["XDG_SESSION_TYPE=wayland"], true);
+            // systemd-cat sends the session's output to the journal instead of the console
+            Greetd.launch(["systemd-cat", "-t", "session"].concat(cmd), ["XDG_SESSION_TYPE=wayland"], true);
         }
 
         function onError(error) {

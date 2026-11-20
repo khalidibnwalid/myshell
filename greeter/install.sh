@@ -55,7 +55,7 @@ cat > /etc/greetd/config.toml <<EOT
 vt = 1
 
 [default_session]
-command = "start-hyprland -- -c /etc/greetd/hyprland-greeter.lua"
+command = "systemd-cat -t greeter-hyprland start-hyprland -- -c /etc/greetd/hyprland-greeter.lua"
 user = "greeter"
 EOT
 chown -R greeter:greeter "$D" 2>/dev/null || true
