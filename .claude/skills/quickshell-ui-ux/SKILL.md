@@ -32,6 +32,14 @@ description: The user's UI/UX preferences for the Settings window, launcher and 
 - A typed number: clicking the number beside a slider turns it into an input.
 - Dropdown for anything with a short fixed list of words; search box for long lists (fonts, apps).
 
+## Dialogs, prompts and pickers
+- Choose the layout by case (authentication prompt, confirmation, picker, form, choice list: the table in `quickshell-glass-dialogs`); a password prompt and a file picker must not look alike in size, header or button layout.
+- Build them with `GlassDialog` (see `quickshell-glass-dialogs`): the shape of Quick Settings, blur on the panel only, pill controls, slim header (`compact`) for big ones, secondary controls in the footer row beside the buttons.
+- Show pictures for pictures: file lists get image thumbnails and a rows/tiles switch that is remembered, with a shortcut.
+- System takeovers (password prompt, file dialogs) are switchable in Settings with text about what the user gets ("Use the shell's own file dialogs"), default on when the user asked for the feature, and off puts the system's own back.
+- Native toolkit windows (GTK message boxes) cannot be themed from here: say so, and offer the real option rather than hacks.
+- When the user shows a screenshot of an off-looking element, find who draws it first (shell, GTK app, polkit agent) before changing anything.
+
 ## Keyboard
 - Every app must be usable without a mouse: Tab/Shift+Tab reach every control, an outline (`FocusRing`) shows the focus, Enter/Space press, a list takes Up/Down/Home/End/PageUp/PageDown + Enter, a segmented choice takes Left/Right. Mouse-only controls (`MouseArea` on a `Rectangle`) are a bug.
 - Buttons that only show on hover (row actions) need a key on the list instead (Audio: `Ctrl+D` favourite, `Ctrl+Enter` queue, `Shift+Enter` play next). Never plain letters: a letter typed in a window with a search box goes to the search box (`TypeToSearch`).

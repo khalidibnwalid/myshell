@@ -23,6 +23,12 @@ description: How code in this Quickshell config is structured and what to avoid.
 - Tuning that did **not** help: `MALLOC_ARENA_MAX` / `MALLOC_TRIM_THRESHOLD_` (no change), the software renderer (~15-20 MB only), removing views from a hidden window. Cover images were already small (`sourceSize` at 2x, covers scaled to 480 px): check the data before blaming images.
 - Show memory as PSS in UI (Processes page: PSS every 6 s from `smaps_rollup` via `grep -H`, since `awk` aborts on the first unreadable file; RSS fallback for other users' processes).
 
+## Helpers that speak a system protocol (D-Bus backends, portals)
+- Go + godbus under `helpers/<name>/` with `build.sh` (see above); the shell starts it with `Process { stdinEnabled: true; stdout: SplitParser }` and talks JSON lines (one object per line, `id` to match answers). Restart it a few times if it exits, then leave it off (the system's own backend keeps working).
+- The helper exposes `install` / `uninstall` subcommands for the small files it needs (`*.portal`, `*-portals.conf`, a D-Bus `.service`) and prints `changed` only when it wrote or removed something; the shell restarts the system service (`xdg-desktop-portal`) only then. It never overwrites a file it did not write (a marker comment line tells), and it explains what to add by hand instead.
+- Always give a fallback for when the shell is not running (a `--fallback` instance started by D-Bus activation that forwards to the stock backend, replaced by the shell's own instance with `AllowReplacement` / `ReplaceExisting`).
+- Gate it behind `<section>.enabled`, loaded by an always-present scope that reacts to the value (`onActiveChanged`), not by `Component.onDestruction`.
+
 ## Desktop entries
 - `Exec=` has its path **unquoted** unless it contains a space or a special character. `xdg-open` (generic DE) looks the first word up with its quotes still on; a quoted path is "not found" and it falls back to `$BROWSER` (picking an audio file in the launcher opened Firefox). `scripts/install-apps.py` (`exec_word`) and `scripts/install-app-icons.sh` (Notepad) do it. `install-apps.py` also removes entries of apps that no longer exist (an entry whose launcher file is missing), never ones another script made (Notepad has no `app.json`).
 - Test an entry with `xdg-open <file>` (not only `xdg-mime query default`) and `sh -x /usr/bin/xdg-open` to see where it falls through.
@@ -51,6 +57,9 @@ description: How code in this Quickshell config is structured and what to avoid.
 - Name IPC functions anything except `show` (it collides with `qs ipc show`).
 
 ## Git
-- Commit straight to `master`. Message: `feat(scope): title` or `fix: title`, then short bullet lines. No `Co-Authored-By` trailer. Group commits by feature; amend into the feature commit when asked.
+- Commit straight to `master`. Message: `feat(scope): title` or `fix: title`, then short bullet lines. No `Co-Authored-By` trailer (the user said so twice; strip one that slipped in). Group commits by feature; amend or squash into the feature commit when asked.
+- Before amending, squashing or rewriting, run `git status -sb`: only commits that show as `ahead N` and are not pushed may be rewritten. Remove a backup ref that `filter-branch` leaves (`git update-ref -d refs/original/refs/heads/master`).
+- If git has no identity (`Author identity unknown`), commit with `git -c user.name=... -c user.email=...` using the author of the repo's history, once; never write git config.
+- Stage what belongs to the change by path; the working tree may hold another session's edits.
 - `.claude/`, `TODO.md`, `config.overrides.json`, `usage_stats.json` are local files.
 - Keep `README.md` dependencies and `AboutPage.qml`'s `tools` map in step with any new command-line tool.

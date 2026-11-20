@@ -1,6 +1,6 @@
 ---
 name: quickshell-glass-dialogs
-description: The shell's glass dialog look (Quick Settings shape, background blur, pill tiles) and how to build a prompt or popup in it with GlassDialog, including the Hyprland blur rule, an optional-module switch and how to check it on screen. Use when adding a prompt, confirmation, overlay popup or any new panel, or restyling one.
+description: The shell's glass dialog look (Quick Settings shape, background blur, pill tiles), the design rules the user set for it, and how to build a prompt, popup or file dialog with GlassDialog, including the Hyprland blur rule, an optional-module switch and how to check it on screen. Use when adding a prompt, confirmation, overlay popup, file dialog or any new panel, or restyling one.
 ---
 
 # Glass dialogs
@@ -11,7 +11,7 @@ The look the user chose for the polkit prompt (and wants for new popups): the **
 - Panel: `radius: 36` (= inner radius 20 + padding 16), colour `Qt.alpha(Appearance.bgColor, Math.max(0.35, Appearance.panelAlpha))`, 1px `Appearance.hairlineColor` border, 16px padding, 10px between children, width 380.
 - Header tile: `radius: 20`, fill `Appearance.surfaceColor`; a 48px round accent badge with a symbol (`accentContrastColor` on `accentColor`), a 15px DemiBold title, a 12px muted message.
 - Fields and buttons are **pills**: 54px high, `radius: height / 2`, fill `surfaceColor` (`surfaceHighColor` while focused or hovered), no border until there is an error (then a 1.5px `accentColor` border). Submit = a 40px accent circle with `arrow_forward`, shown only once there is input.
-- Buttons are `PillButton`s in one row, equal width; the primary is `toggled` (accent). A failed input shakes the panel (`shake()`).
+- Buttons are `PillButton`s in one row, equal width (`compact`: 120px each, right-aligned, with the `footer` controls on the left); the primary is `toggled` (accent). A failed input shakes the panel (`shake()`).
 - Fade and scale in (0.96 to 1, `animNormal`, `easeOut`). No full-screen dim, no screen blur: only the panel is blurred. The user explicitly did not want an overlay blur; a blurred wallpaper or opaque card was rejected as "ugly" next to the bar and Quick Settings.
 - Use only theme tokens (`Appearance.*`), `StyledText`, `MaterialSymbol`; never hard-coded colours.
 
@@ -40,12 +40,56 @@ PanelWindow {                       // a full-screen overlay window for a prompt
 - `buttons` is rebuilt when a binding inside it changes (`enabled: field.canSubmit`), which is fine for a few buttons.
 - Ids of the instance's children (e.g. `field`) can be used in `buttons:` and handlers, since they live in the same file.
 
+## Layout by case (pick the case first, then copy the closest implementation)
+The look is the same everywhere; the **layout is not**. An authentication prompt is small and focused, a picker is wide and tool-like. Decide which case you have before drawing anything.
+
+| Case | Width / header | Body | Buttons | Keys and focus | Copy from |
+|---|---|---|---|---|---|
+| **Authentication / secret prompt** (password, PIN, token) | 380, regular header (48px badge, title, the reason as message) | one pill field with a submit arrow, one status line (error in accent, hints muted); nothing else | Cancel + the verb ("Authenticate"), equal width, primary disabled until there is input | field focused on open, Enter submits, Esc cancels, wrong input shakes and clears; text hidden unless the system asks to show it | `modules/Polkit/` |
+| **Confirmation** (delete, discard, replace) | 380, regular header with a fitting symbol | the consequence in one or two sentences, and whether it can be undone | Cancel + a **verb that names the action** ("Delete", never "OK"); a destructive confirm does not take Enter by default | Cancel has the focus for destructive actions; Esc cancels | `components/GlassDialog.qml` header + `buttons` only |
+| **Picker** (files, apps, colours, emoji) | 720-800, **compact** header (one line, source app at the right) | a toolbar row (up/back, path or search, view and hidden toggles), then a sidebar of places (170px, `fillWidth: false`) beside a scrolling list in a radius-20 surface tile (about 340px high) | Cancel + the verb ("Open", "Save", "Select") at 120px, right-aligned; filters and options in the `footer` on the left | list focused on open; arrows, Enter opens or accepts, Backspace goes up, Ctrl+G rows/tiles; selecting by click and by keys must agree; an empty folder says so | `modules/FileChooser/` |
+| **Form** (a few settings or fields) | 420-480, regular header | labelled rows: `FieldInput` pills, `ToggleSwitch`, `Segmented`; validation text under the field, not in a popup | Cancel + Save/Apply; primary disabled while invalid | first field focused, Tab order top to bottom, Enter in the last field submits | `modules/Settings/pages/` rows |
+| **Choice list** (pick an account, device, identity) | 420, regular header | one tile per choice (icon, name, muted detail), radius-20 `surfaceColor`, the current one accent-tinted | Cancel + Select; double click or Enter picks | arrows move, current item selected on open | the places list in `FileChooserWindow.qml` |
+| **Progress / information** | not a dialog: use a notification, an OSD or a status line | - | - | - | `modules/Notifications/`, `modules/OSD/`; a modal one only when nothing else may happen meanwhile (header + `Meter` + Cancel) |
+
+Sizing and spacing rules that hold for every case:
+- Three widths only: **380** (prompt, confirmation), **420-480** (form, choice list), **720-800** (picker). Do not invent a fourth.
+- Between the header and the buttons: at most **three stacked rows** for a prompt; a picker has a toolbar row, the body, and nothing else (put extras in the `footer`).
+- Long content scrolls **inside a surface tile**, never grows the dialog; keep it under about 80% of the screen height.
+- Sections are separated by tiles and the 10px gap, not by divider lines or extra borders.
+- Header: regular for small dialogs (the badge is the visual anchor), `compact` for wide ones; the message is the reason or the source, never a repeat of the title.
+- The primary button is always the right-most and names the action; the cancel button is always present and always `key: "cancel"` (Esc sends the same).
+- Overlay windows (anything that blocks) take exclusive keyboard focus and a transparent click-catcher; in-window dialogs use `ModalDialog`.
+- Every case has: an initial focus, an Esc path, a failure state (shake or accent text), and an empty or disabled state. Check all four before calling it done.
+
+## Design rules (the user's feedback, in the order it came)
+1. **Match the bar and Quick Settings.** Same shape language: radius 36 panel, radius 20 tiles, pills. An opaque card, a dimmed or blurred full screen, or a wallpaper backdrop was called "ugly" next to them. Start from `GlassDialog`; if it cannot express the design, extend it, do not draw a one-off panel.
+2. **Blur only the panel.** The user liked "the bg blur" (the panel's own background blur) and rejected the overlay blur. No dim layer.
+3. **Slim headers.** A tall header tile in a big dialog was "weird and big": use `compact: true` (34px badge, title and app name on one line) for anything wider than a prompt.
+4. **Secondary controls live in the footer row**, left of the buttons (`footer: [ ... ]`), not on rows of their own (filters, "remember this", a count). Fewer stacked rows is the goal.
+5. **Pictures where there are pictures.** A file list shows image thumbnails (`FileThumb`) and offers a grid; remember the choice in config, add a keyboard shortcut (Ctrl+G), keep both views working with the keyboard.
+6. **Say what the user gets, not the mechanism.** Settings text: "Use the shell's own password prompt", "Use the shell's own file dialogs" (not "register as a polkit agent"). One short sentence per state; the off text says what takes over.
+7. **Real data, never mock text.** A line like "(3 minutes left to unlock)" came from PAM (`pam_faillock`), and the user asked if it was a mock. Show system messages as given and, when asked, say where they come from.
+8. **Honest limits.** Native toolkit dialogs (GTK message boxes of VS Code, Firefox) cannot be restyled from here; say so and offer the real options (`window.dialogStyle: custom`, a portal backend for file pickers) instead of promising it.
+
 ## Second user: the file chooser portal
-`modules/FileChooser/` draws the open/save dialogs of other apps in a `GlassDialog` (780 wide, places + file list from `FolderListModel` + name field + filter `Segmented`), fed by `helpers/portal-filechooser` over stdin/stdout JSON (the `audio-mpris` pattern). Namespace `quickshell-filechooser`, blur rule next to the polkit one. Switch: `fileChooser.enabled` (default on).
+`modules/FileChooser/` draws the open/save dialogs of other apps (`FileChooser.qml` = scope, helper process, request queue; `FileChooserWindow.qml` = the dialog; `FileThumb.qml` = thumbnail or type symbol). It is a `GlassDialog` (780 wide, `compact`) with a path bar, places, a list or tile view of a `FolderListModel`, a name field when saving, and the filters in the `footer`. Fed by `helpers/portal-filechooser` over stdin/stdout JSON lines (the `audio-mpris` pattern). Namespace `quickshell-filechooser`, blur rule next to the polkit one. Switches: `fileChooser.enabled` (default on), `fileChooser.grid` (default off).
+- Modes: `open`, `save`, `savefiles` (a folder; the app's names are added), `directory`, `multiple`. Return absolute paths; the helper turns them into `file://` URIs. Escape cancels; Enter in folder mode with nothing picked accepts the current folder; Ctrl+G rows/tiles, Ctrl+H hidden files.
+- Thumbnails: `Image { sourceSize: Qt.size(2 * size, 2 * size); asynchronous: true; cache: false }` only for image extensions (png, jpg, jpeg, gif, webp, svg, bmp, ico); decode at the shown size, never the photo's size. Fall back to the type symbol until it is ready.
+- `FolderListModel` (`import Qt.labs.folderlistmodel`): roles `fileName`, `filePath`, `fileIsDir`, `fileSize`; `get(i, "filePath")`, `isFolder(i)`, `count`; `nameFilters` takes globs only (a mime-only filter shows everything); `showDirsFirst`, `showHidden`, `caseSensitive: false`.
+
+## QML gotchas met while building these
 - `Dropdown` and `ModalDialog` need an `ApplicationWindow`; inside a layer-shell `PanelWindow` use `Segmented`, `IconButton`, `FieldInput`, `PillButton`.
-- A nested `ColumnLayout`/`RowLayout` has `Layout.fillWidth: true` by default: pin a sidebar with `fillWidth: false` + `maximumWidth`.
-- `FieldInput` shows its `value` again when editing ends; never set its inner text by hand: bind `value` and take `onEdited`.
-- Test without an app: `python3 -I .claude/skills/quickshell-glass-dialogs/portal_test.py open|save|dir [multiple]` asks the real portal and prints the response; it must stay connected (a `gdbus call` exits at once and the portal cancels the dialog). Keys can be sent with `wtype -k Escape` / `-k Return`.
+- A nested `ColumnLayout`/`RowLayout` has `Layout.fillWidth: true` by default and can squeeze its sibling to nothing: pin a sidebar with `fillWidth: false` + `preferredWidth` + `maximumWidth`.
+- `FieldInput` shows its `value` again when editing ends: never set its inner text by hand. Bind `value` and take `onEdited`; to replace what the user typed, set `dirty = false` and change the bound property.
+- An inline `component` cannot see ids of the file that holds it: make a small file (`FileThumb.qml`) and pass properties.
+- Two views of one model (`ListView` + `GridView`): `visible` toggles which is shown; keep one `activeView`, reset both `currentIndex`es, and share the pick/enter logic in functions on the window.
+- Children of a `GlassDialog` get `Layout.*`; its `buttons` entries are plain objects, so pass `enabled` through a binding.
+- A key handler on the dialog (`Keys.onPressed`) receives keys that the focused list or field did not accept, which is how Ctrl+G works without stealing typing.
+- Do not set `Component.onDestruction` to start a Process (the scope is already gone): react to the config value in an always-loaded scope instead (`onActiveChanged`), as `FileChooser.qml` does.
+
+## Test client
+`python3 -I .claude/skills/quickshell-glass-dialogs/portal_test.py open|save|dir [multiple] [folder=/path]` asks the real portal and prints the response. It must stay connected: a `gdbus call` exits at once, the portal sees the caller vanish and cancels the dialog. Send keys with `wtype -k Escape` / `-k Return` / `-M ctrl -k g -m ctrl` (the dialog has exclusive keyboard focus). A real app (Claude desktop uses the portal) is the final test.
 
 ## The blur rule (easy to forget)
 Blur comes from Hyprland, not QML. Add a layer rule for the window's namespace in **`~/.config/hypr/config/windowrules.lua`** (user-owned), next to the others:
@@ -55,10 +99,11 @@ hl.layer_rule({ match = { namespace = "^quickshell-<name>$" }, blur = true, igno
 Not in `config/quickshell.lua`: Settings rewrites that file. A layer that has no rule shows the panel as a plain translucent rectangle. Do not add a dim behind the dialog: with `ignore_alpha = 0.01` anything over 1% alpha is blurred, so a dim would blur the whole screen.
 
 ## Optional modules
-Anything that takes over a system job (like the polkit agent) gets `<section>.enabled` in `config/Config.qml` (a `JsonObject`, default as the user wants it, name added to `objectSections`), an entry in `config.schema.json`, a `SettingRow` + `ToggleSwitch` on a Settings page, and in `shell.qml` it is loaded through `LazyLoader { active: Config.<section>.enabled; ... }` so that off really unloads it (the polkit agent then unregisters and another agent can run). Mention it in README. Polkit: default on.
+Anything that takes over a system job (the polkit agent, the file chooser portal) gets `<section>.enabled` in `config/Config.qml` (a `JsonObject`, default as the user wants it, name added to `objectSections`), an entry in `config.schema.json`, a `SettingRow` + `ToggleSwitch` on a Settings page, and in `shell.qml` it is loaded through `LazyLoader { active: Config.<section>.enabled; ... }` so that off really unloads it (the polkit agent then unregisters and another agent can run). Mention it in README. Default: what the user asks for (polkit and the file chooser are on). A module that writes system files (portal config) writes them on enable, removes them on disable, never overwrites a file that is not its own, and keeps a working fallback while the shell is not running.
 
 ## Checking it
-- Quickshell reloads on file saves, but a prompt only exists while something asks. Trigger the polkit one with `pkexec true` (cancel it; nothing runs), and take the screenshot while it is open:
-  `(timeout 12 pkexec true >/dev/null 2>&1 &); sleep 4; grim /path/shot.png`, then read the image. Do not `pkill -f "pkexec true"` from the same command: it kills the shell running it.
-- Read `qs log` for QML errors. If a screenshot shows the previous design, the reload had not happened yet: touch the file, wait, trigger again.
-- Say in chat what you saw on screen and what you could not test (typing a real password, the wrong-password shake).
+- Quickshell reloads on file saves, but a prompt only exists while something asks. Trigger the polkit one with `pkexec true` (cancel it; nothing runs), the file chooser with `portal_test.py`, and take the screenshot while it is open: `(timeout 12 pkexec true >/dev/null 2>&1 &); sleep 4; grim /path/shot.png`, then read the image. `hyprctl layers | grep quickshell-<name>` tells whether the window exists at all.
+- A screenshot that shows the previous design means the reload had not happened yet: touch the file, wait 6 s, trigger again. The user's own screenshots can show the old version for the same reason; compare before arguing.
+- Read `qs log` for QML errors, from the bottom: old `ERROR ... is not a type` lines stay in the log after a good reload.
+- **Never submit a password in a test.** Three wrong tries lock the account for 10 minutes (`pam_faillock`: `faillock --user $USER` lists them; `sudo faillock --user $USER --reset` clears, which is the user's call). It blocks sudo and polkit too. Test with Cancel/Escape and say the password path was not tested.
+- Say in chat what you saw on screen and what you could not test (typing a real password, the wrong-password shake, a real click).

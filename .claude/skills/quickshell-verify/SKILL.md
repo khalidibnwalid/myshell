@@ -27,6 +27,15 @@ Run the exact command on this machine first (`hyprctl descriptions -j`, `gio inf
 - `rm` inside `sh -c` may be blocked by the safety check; do not work around it, avoid the removal or leave it to the user.
 - Hyprland live changes made by tests (`hyprctl keyword`) revert with `hyprctl reload` or the page's reset.
 
+## Prompts, overlays and helpers (learned on polkit and the file chooser)
+- A window that only exists while something asks (polkit, file dialog) needs a trigger that stays alive: `pkexec true`, or `.claude/skills/quickshell-glass-dialogs/portal_test.py`. `gdbus call` returns at once and the portal cancels the request.
+- Confirm the layer exists before judging the picture: `hyprctl layers | grep <namespace>`; confirm a D-Bus name: `busctl --user list | grep <name>`.
+- Never submit passwords in tests (faillock locks the account for 10 minutes after 3 failures and also blocks `sudo`); use Cancel/Escape. If a lock text appears, check `faillock --user $USER` and tell the user the reset command instead of running it.
+- A helper started by the shell can outlive a reload and keep its bus name; kill it (`kill <pid>`) and the shell's retry starts a fresh one. A second manual instance cannot take the name unless the first allows replacement.
+- To see what a helper receives, add a temporary `console.log("DBG ...", line)` in the QML reader, read `qs log`, then remove it.
+- Never `pkill -f "<pattern>"` where the pattern is in the same command line: it kills the shell running it.
+- If a permission check blocks a test step (editing `config.json`, `git checkout` of a user file), do not route around it: test another way (a temporary override through the Settings toggle, a copy) or say it was not tested.
+
 ## Memory, processes and keys
 - Memory: compare **PSS** (`/proc/<pid>/smaps_rollup`, MB) before and after, in the same state (window open or closed, playing or idle), several runs: one run can be 100 MB off. `Pss_Anon` is the private heap. A bare `qs -p <empty shell.qml>` (no window ~69 MB, one `ApplicationWindow` ~79 MB) is the floor to compare with. Bisect a heavy window by deleting parts of a temporary copy of the file (keep the original in the scratchpad), not by guessing.
 - A second Quickshell program (`qs -p audio.qml`) has its own log: `qs -p audio.qml log`. Its processes: `pgrep -fx 'qs -p .*/audio.qml'`. Control it with `apps/Audio/scripts/ctl.sh` (`open`, `play`, `pause`, `status`, `quit`) and `playerctl -p quickshell_audio` / `busctl --user` for MPRIS.
@@ -34,4 +43,4 @@ Run the exact command on this machine first (`hyprctl descriptions -j`, `gio inf
 - Qt Quick tests cannot run here: `qmltestrunner` and `qml` exit silently offscreen (Qt 6.12 / noctalia-qs built for 6.11). Do not spend time on it; verify through the live window and the log, and say that a click-through was not tested.
 
 ## Report
-Say what was run and seen, what was only checked in the log or by data, and what is untested (e.g. a drag, a click, an action button). Then ask whether to commit or amend.
+Say what was run and seen, what was only checked in the log or by data, and what is untested (e.g. a drag, a click, an action button, a password). Then ask whether to commit or amend; when the user already said "commit after" or "amend after", do it once the change is checked, without asking again.
