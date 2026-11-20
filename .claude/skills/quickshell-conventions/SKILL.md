@@ -49,6 +49,8 @@ description: How code in this Quickshell config is structured and what to avoid.
 - The Inset style's rounded screen corners are two small non-reserving, click-through layer windows per screen (`modules/Bar/BarCorner.qml`). A `Variants` delegate must be a window or `Scope`; a `Repeater` cannot create windows.
 
 ## QML engine limits here (old JS engine)
+- A local component must not share a name with a type of an imported module (`FileView`, `Process`, `Variants`, ...): the error is a misleading "non-existent property". Prefix it.
+- Reserved as function names: `escape` ("Illegal method name", which fails the whole reload), `show` (IPC). Use `escapeKey`, `open`, ...
 - No `Array.prototype.flatMap`, no `String.matchAll` (use a loop with `regex.exec`), no `Qt.fontFamilies()` per delegate (cache it).
 - `property color color` clashes on a `Rectangle`; use another name (`fillColor`). Avoid a property called `state` on an Item/Singleton (use `byCategory`).
 - Two `Component.onCompleted` handlers in one object is an error: merge them.

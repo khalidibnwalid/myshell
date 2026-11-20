@@ -10,6 +10,12 @@ import Quickshell.Wayland
 
 // One file dialog asked for through xdg-desktop-portal (see FileChooser.qml): open files or a folder, or save
 // a file, in a GlassDialog. `request` is { id, kind: "open" | "save" | "savefiles", app, title, options }.
+//
+// Keyboard (everything works without a mouse): typing anywhere searches the folder, Down goes from the search box
+// to the list, Up on the first row goes back, arrows/Home/End/PageUp/PageDown move, Enter opens or accepts,
+// Backspace or Alt+Up goes to the parent folder, Ctrl+L edits the path, Ctrl+F searches, Ctrl+G switches
+// rows/tiles, Ctrl+H shows hidden files, Ctrl+A selects all (several files), Escape clears the search and then
+// cancels. Tab visits the toolbar, the places, the files, the name, the filters and the buttons.
 PanelWindow {
     id: window
 
@@ -31,7 +37,6 @@ PanelWindow {
     readonly property var screenNow: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? Quickshell.screens[0]
 
     readonly property bool grid: Config.fileChooser.grid
-    readonly property Item activeView: grid ? gridView : list
 
     property string folder: home
     property var selected: []
@@ -39,6 +44,40 @@ PanelWindow {
     property int filterIndex: 0
     property string saveName: ""
     property var placeNames: []
+    property var thumbExts: ["png", "jpg", "jpeg", "gif", "svg", "bmp", "ico"]
+    // what the search box holds, and the entries of the folder that match it
+    property string query: ""
+    property var entries: []
+
+    readonly property var places: {
+        const out = [
+            {
+                "name": "Home",
+                "path": home,
+                "icon": "home"
+            }
+        ];
+        const icons = {
+            "Desktop": "desktop_windows",
+            "Documents": "description",
+            "Downloads": "download",
+            "Music": "music_note",
+            "Pictures": "image",
+            "Videos": "movie"
+        };
+        for (const n of placeNames)
+            out.push({
+                "name": n,
+                "path": home + "/" + n,
+                "icon": icons[n]
+            });
+        out.push({
+            "name": "Computer",
+            "path": "/",
+            "icon": "computer"
+        });
+        return out;
+    }
 
     readonly property bool validName: saveName.trim() !== "" && saveName.indexOf("/") < 0
     readonly property bool canAccept: saving ? validName : (pickDir ? true : selected.length > 0)
@@ -68,6 +107,29 @@ PanelWindow {
         return p === "" ? "/" : p;
     }
 
+    // the folder's entries whose names contain every word of the search
+    function rebuild() {
+        const words = query.trim().toLowerCase().split(/\s+/).filter(w => w !== "");
+        const out = [];
+        for (let i = 0; i < folderModel.count; i++) {
+            const name = folderModel.get(i, "fileName");
+            const low = name.toLowerCase();
+            if (words.every(w => low.indexOf(w) >= 0))
+                out.push({
+                    "name": name,
+                    "path": folderModel.get(i, "filePath"),
+                    "dir": folderModel.isFolder(i),
+                    "size": folderModel.get(i, "fileSize")
+                });
+        }
+        entries = out;
+    }
+
+    function clearSearch() {
+        search.dirty = false;
+        query = "";
+    }
+
     function go(path) {
         let p = path.trim();
         if (p === "~" || p.startsWith("~/"))
@@ -77,57 +139,14 @@ PanelWindow {
         p = p.replace(/\/+$/, "");
         folder = p === "" ? "/" : p;
         selected = [];
-        list.currentIndex = -1;
-        gridView.currentIndex = -1;
+        clearSearch();
+        files.resetCurrent();
     }
 
     function setName(name) {
         // FieldInput shows `value` unless the user is typing; a new name replaces what was typed
         nameField.dirty = false;
         saveName = name;
-    }
-
-    function isImage(name) {
-        const ext = name.indexOf(".") >= 0 ? name.split(".").pop().toLowerCase() : "";
-        return ["png", "jpg", "jpeg", "gif", "webp", "svg", "bmp", "ico"].indexOf(ext) >= 0;
-    }
-
-    // a row or tile became the current one by keyboard
-    function picked(view) {
-        if (view.currentIndex >= 0 && view.activeFocus)
-            clickEntry(folderModel.get(view.currentIndex, "filePath"), folderModel.isFolder(view.currentIndex), 0);
-    }
-
-    function enter(view) {
-        if (view.currentIndex >= 0)
-            activate(folderModel.get(view.currentIndex, "filePath"), folderModel.isFolder(view.currentIndex));
-        else
-            accept();
-    }
-
-    function iconFor(name) {
-        const ext = name.indexOf(".") >= 0 ? name.split(".").pop().toLowerCase() : "";
-        if (["png", "jpg", "jpeg", "gif", "webp", "svg", "bmp", "avif", "heic", "tif", "tiff"].indexOf(ext) >= 0)
-            return "image";
-        if (["mp3", "flac", "ogg", "opus", "wav", "m4a", "aac"].indexOf(ext) >= 0)
-            return "music_note";
-        if (["mp4", "mkv", "webm", "mov", "avi"].indexOf(ext) >= 0)
-            return "movie";
-        if (["zip", "tar", "gz", "xz", "zst", "7z", "rar"].indexOf(ext) >= 0)
-            return "folder_zip";
-        return ["pdf", "doc", "docx", "odt", "txt", "md"].indexOf(ext) >= 0 ? "description" : "draft";
-    }
-
-    function sizeText(bytes) {
-        if (bytes < 1024)
-            return bytes + " B";
-        const units = ["KB", "MB", "GB", "TB"];
-        let v = bytes / 1024, i = 0;
-        while (v >= 1024 && i < units.length - 1) {
-            v /= 1024;
-            i++;
-        }
-        return (v < 10 ? v.toFixed(1) : Math.round(v)) + " " + units[i];
     }
 
     function clickEntry(path, isDir, mods) {
@@ -150,6 +169,36 @@ PanelWindow {
             go(path);
         else if (canAccept)
             accept();
+    }
+
+    // Enter in the search box: open the first match
+    function openFirst() {
+        const e = entries[0];
+        if (!e)
+            return;
+        clickEntry(e.path, e.dir, 0);
+        activate(e.path, e.dir);
+    }
+
+    function focusList(index) {
+        files.focusIndex(index);
+    }
+
+    function selectAll() {
+        if (!multiple)
+            return;
+        selected = entries.filter(e => pickDir ? e.dir : !e.dir).map(e => e.path);
+    }
+
+    // Escape clears a search first; only then it cancels the dialog
+    function escapeKey(event) {
+        if (query !== "") {
+            clearSearch();
+            files.focusView();
+            event.accepted = true;
+        } else {
+            event.accepted = false;
+        }
     }
 
     function accept() {
@@ -179,11 +228,12 @@ PanelWindow {
         if (saving)
             nameField.focusInput();
         else
-            activeView.forceActiveFocus();
+            files.focusView();
     }
 
     onRequestChanged: if (request)
         init()
+    onQueryChanged: rebuild()
     Component.onCompleted: if (request)
         init()
 
@@ -213,6 +263,25 @@ PanelWindow {
         }
     }
 
+    // webp and tiff need the qt6-imageformats plugins; without them those files show their type symbol
+    Process {
+        id: formatsProc
+
+        running: true
+        command: ["sh", "-c", "ls /usr/lib/qt6/plugins/imageformats /usr/lib64/qt6/plugins/imageformats 2>/dev/null"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const found = this.text;
+                const more = [];
+                if (found.indexOf("libqwebp") >= 0)
+                    more.push("webp");
+                if (found.indexOf("libqtiff") >= 0)
+                    more.push("tif", "tiff");
+                window.thumbExts = window.thumbExts.concat(more);
+            }
+        }
+    }
+
     FolderListModel {
         id: folderModel
 
@@ -227,6 +296,26 @@ PanelWindow {
             const p = window.activeFilter?.patterns ?? [];
             return p.length > 0 ? p : ["*"];
         }
+    }
+
+    // the model loads in the background: rebuild when it has (new) content
+    Connections {
+        target: folderModel
+
+        function onCountChanged() {
+            window.rebuild();
+        }
+
+        function onStatusChanged() {
+            if (folderModel.status === FolderListModel.Ready)
+                window.rebuild();
+        }
+    }
+
+    TypeToSearch {
+        id: ahead
+
+        onTyped: text => search.append(text)
     }
 
     GlassDialog {
@@ -250,18 +339,32 @@ PanelWindow {
                 "enabled": window.canAccept
             }
         ]
+        Accessible.role: Accessible.Dialog
+        Accessible.name: window.dialogTitle
         onButtonClicked: key => key === "ok" ? window.accept() : window.cancelled()
-        // Ctrl+G switches between rows and tiles, Ctrl+H shows hidden files
+
+        // keys that no control took: shortcuts, then typing (which goes to the search box)
         Keys.onPressed: event => {
-            if (!(event.modifiers & Qt.ControlModifier))
-                return;
-            if (event.key === Qt.Key_G) {
+            const ctrl = event.modifiers & Qt.ControlModifier;
+            const alt = event.modifiers & Qt.AltModifier;
+            if (ctrl && event.key === Qt.Key_G)
                 Config.fileChooser.grid = !Config.fileChooser.grid;
-                event.accepted = true;
-            } else if (event.key === Qt.Key_H) {
+            else if (ctrl && event.key === Qt.Key_H)
                 window.showHidden = !window.showHidden;
+            else if (ctrl && event.key === Qt.Key_L) {
+                pathField.focusInput();
+                pathField.selectAll();
+            } else if (ctrl && event.key === Qt.Key_F)
+                search.focusInput();
+            else if (ctrl && event.key === Qt.Key_A && window.multiple)
+                window.selectAll();
+            else if ((alt && event.key === Qt.Key_Up) || event.key === Qt.Key_Backspace)
+                window.go(window.parentOf(window.folder));
+            else
+                ahead.press(event);
+            // ahead.press accepts what it takes; the shortcuts above are always ours
+            if (ctrl || alt || event.key === Qt.Key_Backspace)
                 event.accepted = true;
-            }
         }
 
         RowLayout {
@@ -271,24 +374,45 @@ PanelWindow {
             IconButton {
                 icon: "arrow_upward"
                 enabled: window.folder !== "/"
+                Accessible.name: "Parent folder"
                 onClicked: window.go(window.parentOf(window.folder))
             }
 
             FieldInput {
+                id: pathField
+
                 Layout.fillWidth: true
                 icon: "folder"
+                placeholder: "Folder"
                 value: window.folder
+                Accessible.name: "Folder path"
                 onCommitted: text => window.go(text)
+            }
+
+            FieldInput {
+                id: search
+
+                Layout.preferredWidth: 200
+                icon: "search"
+                placeholder: "Type to search"
+                value: window.query
+                Accessible.name: "Search this folder"
+                onEdited: text => window.query = text
+                onAccepted: window.openFirst()
+                Keys.onDownPressed: window.focusList(0)
+                Keys.onEscapePressed: event => window.escapeKey(event)
             }
 
             IconButton {
                 icon: window.grid ? "view_list" : "grid_view"
+                Accessible.name: window.grid ? "Show as list (Ctrl+G)" : "Show as tiles (Ctrl+G)"
                 onClicked: Config.fileChooser.grid = !Config.fileChooser.grid
             }
 
             IconButton {
                 icon: window.showHidden ? "visibility" : "visibility_off"
                 toggled: window.showHidden
+                Accessible.name: "Show hidden files (Ctrl+H)"
                 onClicked: window.showHidden = !window.showHidden
             }
         }
@@ -297,265 +421,28 @@ PanelWindow {
             Layout.fillWidth: true
             spacing: 10
 
-            // places
-            ColumnLayout {
-                // a nested layout fills by default, which would squeeze the file list out
-                Layout.fillWidth: false
-                Layout.preferredWidth: 170
-                Layout.maximumWidth: 170
-                Layout.alignment: Qt.AlignTop
-                spacing: 2
-
-                Repeater {
-                    model: {
-                        const list = [
-                            {
-                                "name": "Home",
-                                "path": window.home,
-                                "icon": "home"
-                            }
-                        ];
-                        const icons = {
-                            "Desktop": "desktop_windows",
-                            "Documents": "description",
-                            "Downloads": "download",
-                            "Music": "music_note",
-                            "Pictures": "image",
-                            "Videos": "movie"
-                        };
-                        for (const n of window.placeNames)
-                            list.push({
-                                "name": n,
-                                "path": window.home + "/" + n,
-                                "icon": icons[n]
-                            });
-                        list.push({
-                            "name": "Computer",
-                            "path": "/",
-                            "icon": "computer"
-                        });
-                        return list;
-                    }
-
-                    Rectangle {
-                        id: place
-
-                        required property var modelData
-                        readonly property bool current: window.folder === modelData.path
-
-                        Layout.fillWidth: true
-                        implicitHeight: 38
-                        radius: 19
-                        color: current ? Qt.alpha(Appearance.accentColor, 0.22) : (placeArea.containsMouse ? Appearance.surfaceColor : "transparent")
-
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.leftMargin: 14
-                            anchors.rightMargin: 12
-                            spacing: 10
-
-                            MaterialSymbol {
-                                icon: place.modelData.icon
-                                font.pixelSize: 18
-                                color: place.current ? Appearance.accentColor : Appearance.mutedColor
-                            }
-
-                            StyledText {
-                                Layout.fillWidth: true
-                                text: place.modelData.name
-                                elide: Text.ElideRight
-                                font.pixelSize: 13
-                                font.weight: place.current ? Font.DemiBold : Font.Normal
-                            }
-                        }
-
-                        MouseArea {
-                            id: placeArea
-
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: window.go(place.modelData.path)
-                        }
-                    }
-                }
+            FilePlaces {
+                places: window.places
+                folder: window.folder
+                onChose: path => window.go(path)
             }
 
-            // files
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 340
-                radius: 20
-                color: Appearance.surfaceColor
-                clip: true
+            FileEntries {
+                id: files
 
-                ListView {
-                    id: list
-
-                    anchors.fill: parent
-                    anchors.margins: 6
-                    visible: !window.grid
-                    model: folderModel
-                    currentIndex: -1
-                    clip: true
-                    activeFocusOnTab: true
-                    boundsBehavior: Flickable.StopAtBounds
-                    keyNavigationEnabled: true
-                    onCurrentIndexChanged: window.picked(list)
-                    Keys.onReturnPressed: window.enter(list)
-                    Keys.onEnterPressed: Keys.returnPressed(event)
-                    Keys.onBackPressed: window.go(window.parentOf(window.folder))
-
-                    delegate: Rectangle {
-                        id: row
-
-                        required property int index
-                        required property string fileName
-                        required property string filePath
-                        required property bool fileIsDir
-                        required property real fileSize
-                        readonly property bool picked: window.selected.indexOf(filePath) >= 0
-
-                        width: ListView.view.width
-                        height: 46
-                        radius: 14
-                        color: picked ? Qt.alpha(Appearance.accentColor, 0.22) : (rowArea.containsMouse ? Appearance.surfaceHighColor : "transparent")
-
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.leftMargin: 14
-                            anchors.rightMargin: 14
-                            spacing: 12
-
-                            FileThumb {
-                                size: 32
-                                path: row.filePath
-                                dir: row.fileIsDir
-                                icon: window.iconFor(row.fileName)
-                                image: window.isImage(row.fileName)
-                            }
-
-                            StyledText {
-                                Layout.fillWidth: true
-                                text: row.fileName
-                                elide: Text.ElideMiddle
-                                font.pixelSize: 13
-                            }
-
-                            StyledText {
-                                visible: !row.fileIsDir
-                                text: window.sizeText(row.fileSize)
-                                color: Appearance.mutedColor
-                                font.pixelSize: 12
-                            }
-                        }
-
-                        MouseArea {
-                            id: rowArea
-
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            onClicked: mouse => {
-                                list.forceActiveFocus();
-                                list.currentIndex = row.index;
-                                window.clickEntry(row.filePath, row.fileIsDir, mouse.modifiers);
-                            }
-                            onDoubleClicked: window.activate(row.filePath, row.fileIsDir)
-                        }
-                    }
-
-                    StyledText {
-                        anchors.centerIn: parent
-                        visible: folderModel.count === 0
-                        text: "This folder is empty"
-                        color: Appearance.mutedColor
-                        font.pixelSize: 13
-                    }
-                }
-
-                // the same files as tiles with bigger pictures
-                GridView {
-                    id: gridView
-
-                    anchors.fill: parent
-                    anchors.margins: 6
-                    visible: window.grid
-                    model: folderModel
-                    currentIndex: -1
-                    clip: true
-                    activeFocusOnTab: true
-                    boundsBehavior: Flickable.StopAtBounds
-                    keyNavigationEnabled: true
-                    // whole columns that fill the width
-                    cellWidth: Math.floor(width / Math.max(1, Math.floor(width / 128)))
-                    cellHeight: 134
-                    onCurrentIndexChanged: window.picked(gridView)
-                    Keys.onReturnPressed: window.enter(gridView)
-                    Keys.onEnterPressed: Keys.returnPressed(event)
-                    Keys.onBackPressed: window.go(window.parentOf(window.folder))
-
-                    delegate: Item {
-                        id: tile
-
-                        required property int index
-                        required property string fileName
-                        required property string filePath
-                        required property bool fileIsDir
-                        readonly property bool picked: window.selected.indexOf(filePath) >= 0
-
-                        width: gridView.cellWidth
-                        height: gridView.cellHeight
-
-                        Rectangle {
-                            anchors.fill: parent
-                            anchors.margins: 3
-                            radius: 18
-                            color: tile.picked ? Qt.alpha(Appearance.accentColor, 0.22) : (tileArea.containsMouse ? Appearance.surfaceHighColor : "transparent")
-
-                            FileThumb {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                anchors.top: parent.top
-                                anchors.topMargin: 10
-                                size: 74
-                                path: tile.filePath
-                                dir: tile.fileIsDir
-                                icon: window.iconFor(tile.fileName)
-                                image: window.isImage(tile.fileName)
-                            }
-
-                            StyledText {
-                                anchors.left: parent.left
-                                anchors.right: parent.right
-                                anchors.bottom: parent.bottom
-                                anchors.margins: 8
-                                horizontalAlignment: Text.AlignHCenter
-                                text: tile.fileName
-                                elide: Text.ElideMiddle
-                                font.pixelSize: 12
-                            }
-
-                            MouseArea {
-                                id: tileArea
-
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                onClicked: mouse => {
-                                    gridView.forceActiveFocus();
-                                    gridView.currentIndex = tile.index;
-                                    window.clickEntry(tile.filePath, tile.fileIsDir, mouse.modifiers);
-                                }
-                                onDoubleClicked: window.activate(tile.filePath, tile.fileIsDir)
-                            }
-                        }
-                    }
-
-                    StyledText {
-                        anchors.centerIn: parent
-                        visible: folderModel.count === 0
-                        text: "This folder is empty"
-                        color: Appearance.mutedColor
-                        font.pixelSize: 13
-                    }
+                entries: window.entries
+                selected: window.selected
+                grid: window.grid
+                thumbExts: window.thumbExts
+                emptyText: window.query !== "" ? "Nothing matches \"" + window.query.trim() + "\"" : "This folder is empty"
+                onEntryClicked: (path, isDir, mods) => window.clickEntry(path, isDir, mods)
+                onEntryActivated: (path, isDir) => window.activate(path, isDir)
+                onAcceptRequested: window.accept()
+                onTopReached: search.focusInput()
+                searching: window.query !== ""
+                onClearSearchRequested: {
+                    window.clearSearch();
+                    files.focusView();
                 }
             }
         }
@@ -568,6 +455,7 @@ PanelWindow {
             icon: "edit"
             placeholder: "File name"
             value: window.saveName
+            Accessible.name: "File name"
             onEdited: text => window.saveName = text
             onAccepted: window.accept()
         }
@@ -584,5 +472,10 @@ PanelWindow {
                 onSelected: n => window.filterIndex = n
             }
         ]
+    }
+
+    // pressing on the dialog's background gives the keyboard back to it, so typing searches again
+    ClickAway {
+        target: dialog
     }
 }

@@ -8,6 +8,7 @@ description: How to check a change to this Quickshell config actually works: rel
 The shell hot-reloads when a file under the config folder changes (about 5 seconds). The process itself keeps running.
 
 ## Quick checks
+- **A reload that fails keeps the OLD config running**, so a screenshot of the old design means there is an error, not that the reload is late. After every edit read the end of the log with line numbers: `qs log | grep -n -E "ERROR|Reloading|Configuration Loaded|caused by" | tail -6`. The last entry must be `Configuration Loaded`; a `Failed to load configuration` plus `caused by <file>[line:col]: ...` names the culprit (a `Type X unavailable` chain ends at the real error). `tail` of the whole log hides it among warnings. `/usr/lib/qt6/bin/qmllint <file>` catches syntax errors (ignore `uncreatable-type` for windows).
 - Load: `sleep 6; qs log | grep -E "ERROR|Configuration Loaded" | tail`. The log is cumulative history, so old errors stay. Compare the count of `TypeError|ReferenceError` before and after opening the page, or look for "Configuration Loaded" after the last ERROR.
 - Open a page: `qs ipc call settings page <key>` (and `settings close`). Pages run their bindings only when open, so open each page you touched.
 - To exercise a page in a state it is not in (Detailed view, an inner page), temporarily flip its default property, open it, check the log, flip it back.
