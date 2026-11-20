@@ -187,3 +187,11 @@ Settings → Autocomplete (experimental, off by default) turns on word suggestio
 - Word lists (the 200,000 most frequent words per language, seen at least 15 times, from the FrequencyWords project) are downloaded with `curl` into `~/.local/share/quickshell/autocomplete` the first time a layout's language is used.
 - Password fields are never read, and blocked apps (terminals by default) are left alone entirely. Nothing that is typed leaves the computer.
 - `qs ipc call autocomplete toggle` (also `enable`, `disable`, `status`) switches it from a key bind.
+
+### Login screen (greetd)
+
+`greeter/` is a separate, self-contained login screen that copies the lock screen's look (blurred wallpaper, large clock, picture and password pill). It is not loaded by the shell and nothing in the shell refers to it. It runs under greetd inside a minimal Hyprland (`greeter/hyprland-greeter.lua`) and uses `Quickshell.Services.Greetd`. The greeter user cannot read `~/.config`, so `install.sh` copies what it needs from your config (`config.overrides.json` first, then `config.json`): the colours and font are written into the installed `Theme.qml` (the values in `greeter/Theme.qml` are only the fallbacks), and the wallpaper is copied to `/etc/greetd/quickshell-greeter/`. If no wallpaper is set, or it is missing or not an image, the greeter shows a plain background in your colours instead. Run the script again after changing the wallpaper or colours.
+
+- Install with `cd ~/.config/quickshell/greeter && sudo ./install.sh <username>`. This installs `greetd` and writes `/etc/greetd/`; then `sudo systemctl enable greetd`.
+- The pill at the bottom left picks the session. It lists the `.desktop` files in `/usr/share/wayland-sessions` (`Tab` in the password field also cycles them), and the last one used is remembered in `/var/cache/quickshell-greeter`. The buttons at the bottom right restart and power off.
+- Keep a spare TTY (`Ctrl + Alt + F3`) open while testing; check `journalctl -u greetd` if the screen does not appear.
