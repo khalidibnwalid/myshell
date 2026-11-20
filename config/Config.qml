@@ -16,6 +16,7 @@ Singleton {
     readonly property alias capture: jsonAdapter.capture
     readonly property alias dock: jsonAdapter.dock
     readonly property alias idle: jsonAdapter.idle
+    readonly property alias polkit: jsonAdapter.polkit
     readonly property alias bar: jsonAdapter.bar
     readonly property alias notifications: jsonAdapter.notifications
     readonly property alias display: jsonAdapter.display
@@ -63,7 +64,7 @@ Singleton {
 
     // --- config.json is the hand-written base; what the Settings window changes
     // is stored as a difference in config.overrides.json (git-ignored, generated) ---
-    readonly property var objectSections: ["appearance", "layout", "capture", "dock", "autocomplete", "display", "bar", "notifications", "idle"]
+    readonly property var objectSections: ["appearance", "layout", "capture", "dock", "autocomplete", "display", "bar", "notifications", "idle", "polkit"]
     readonly property var plainSections: ["keyboard", "hyprland", "search", "clipboard", "apps"]
     readonly property var wholeValues: ["monitors", "recentColors"]
     property var baseData: ({})
@@ -296,6 +297,13 @@ Singleton {
                 property bool enabled: true
                 property int lockAfterMinutes: 5
                 property int screenOffAfterMinutes: 10
+            }
+
+            // the shell as the polkit agent (modules/Polkit); off lets another agent take the job
+            property JsonObject polkit
+
+            polkit: JsonObject {
+                property bool enabled: true
             }
 
             property var keyboard: ({

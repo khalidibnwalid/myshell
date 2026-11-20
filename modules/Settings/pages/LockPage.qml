@@ -76,6 +76,21 @@ SettingsPage {
     }
 
     SettingGroup {
+        title: "Administrator prompts"
+
+        SettingRow {
+            icon: "admin_panel_settings"
+            title: "Use the shell's own password prompt"
+            description: Config.polkit.enabled ? "Apps that need administrator rights ask for your password in the shell's look" : "Off: the system's prompt is used, so another polkit agent must be running"
+
+            ToggleSwitch {
+                checked: Config.polkit.enabled
+                onToggled: on => Config.polkit.enabled = on
+            }
+        }
+    }
+
+    SettingGroup {
         title: "Lock screen"
 
         SettingRow {

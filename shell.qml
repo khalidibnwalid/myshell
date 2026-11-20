@@ -13,6 +13,7 @@ import "apps/Paint"
 import "apps/Processes"
 import "apps/Timer"
 import "modules/Notifications"
+import "modules/Polkit"
 import "modules/OSD"
 import "modules/QuickSettings"
 import "modules/ScreenTools"
@@ -20,6 +21,7 @@ import "modules/Search"
 import "modules/Settings"
 import "modules/Workspaces"
 import "services" as Services
+import "config"
 
 Scope {
     Component.onCompleted: {
@@ -77,6 +79,14 @@ Scope {
         }
 
         onObjectRemoved: (index, object) => Services.Apps.released(object.modelData, object.item)
+    }
+
+    // the polkit agent: off, the prompt is not loaded and another agent may register
+    LazyLoader {
+        active: Config.polkit.enabled
+
+        PolkitDialog {
+        }
     }
 
     ScreenTools {

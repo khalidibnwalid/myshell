@@ -87,6 +87,10 @@ The shell includes its own idle monitor and Wayland session lock. It authenticat
 
 Choose a wallpaper in Settings → Appearance. The selected image is shared by the desktop and lock screen.
 
+### Administrator prompts (polkit)
+
+The shell is the polkit agent (`modules/Polkit/`, `Quickshell.Services.Polkit`). When a program asks for administrator rights (`pkexec`, Settings pages, disk and printer tools) a glass dialog (`components/GlassDialog.qml`, blurred by the `quickshell-polkit` layer rule) asks for your password; Escape cancels. Only one agent can be registered, so another one (`polkit-gnome`, `lxqt-policykit`, `hyprpolkitagent`) must not be started with the session. To use another agent instead, turn it off in Settings → Lock & idle or set `"polkit": { "enabled": false }` in `config.json` (default: on).
+
 ### Settings window
 
 Open it from the Quick Settings footer, or bind a key to `qs ipc call settings toggle` (also `open`, `close`, and `page <name>`, e.g. `page appearance`). Changes you make there are kept in `config.overrides.json` (generated and git-ignored), so the hand-written `config.json` stays the base; Settings → About lists any missing command-line tools.

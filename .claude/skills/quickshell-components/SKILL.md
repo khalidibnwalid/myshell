@@ -12,6 +12,7 @@ Pages and rows
 - `SettingCard`: free-form card with the same surface; children stack in a column (use for custom content, grids, bars).
 - `MeterRow` (`modules/Settings/pages/`): card with an icon, title, right-hand `detail`, a `Meter` bar (`value` 0-1, `barColor`) and a `note` line.
 - `PageHeader`: back button + title for panel sub-pages (quick settings).
+- `GlassDialog { icon; title; message; buttons: [{text, key, primary, enabled}]; onButtonClicked: key => }`: the shell's dialog panel (Quick Settings shape); other children go between the header and the buttons; `shake()`, Escape sends `"cancel"`. Used by the polkit prompt; see `quickshell-glass-dialogs`. `ModalDialog` is the older `Popup` inside an `ApplicationWindow`.
 
 Controls
 - `ToggleSwitch { checked; onToggled: on => }`.

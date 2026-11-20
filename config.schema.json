@@ -197,6 +197,15 @@
         }
       }
     },
+    "polkit": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Use the shell as the polkit agent (password prompts for administrator actions); turn off to run another agent"
+        }
+      }
+    },
     "idle": {
       "type": "object",
       "properties": {
