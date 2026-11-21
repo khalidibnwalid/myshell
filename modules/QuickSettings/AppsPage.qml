@@ -27,7 +27,7 @@ Item {
             return "";
         if (icon.startsWith("file://") || icon.startsWith("/") || icon.startsWith("qrc:/"))
             return icon.startsWith("/") ? "file://" + icon : icon;
-        return Quickshell.iconPath(icon, true);
+        return Services.Icons.path(icon, true);
     }
 
     Component.onCompleted: Qt.callLater(() => searchField.forceActiveFocus())

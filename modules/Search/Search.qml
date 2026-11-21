@@ -71,7 +71,7 @@ Scope {
                     return img;
                 if (img.startsWith("/"))
                     return "file://" + img;
-                return Quickshell.iconPath(img, true);
+                return Services.Icons.path(img, true);
             }
 
             function updateResults(newResults) {

@@ -68,7 +68,7 @@ Singleton {
 
     function iconFor(item) {
         const entry = appFor(item);
-        return entry && entry.icon ? Quickshell.iconPath(entry.icon, true) : "";
+        return entry && entry.icon ? Icons.path(entry.icon, true) : "";
     }
 
     function helper(args) {

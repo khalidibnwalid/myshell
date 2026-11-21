@@ -1,4 +1,5 @@
 import "../config/"
+import "../services/"
 import QtQuick
 import Quickshell
 
@@ -21,7 +22,7 @@ Item {
             return "";
         if (img.startsWith("/"))
             return "file://" + img;
-        return Quickshell.iconPath(img, true);
+        return Icons.path(img, true);
     }
 
     onItemsChanged: order = items.map(i => i.id)

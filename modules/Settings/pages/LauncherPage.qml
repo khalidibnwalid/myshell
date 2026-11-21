@@ -260,7 +260,7 @@ SettingsPage {
 
                 required property var modelData
 
-                image: modelData.icon !== "" ? (modelData.icon.startsWith("/") ? "file://" + modelData.icon : Quickshell.iconPath(modelData.icon, true)) : ""
+                image: modelData.icon !== "" ? (modelData.icon.startsWith("/") ? "file://" + modelData.icon : Icons.path(modelData.icon, true)) : ""
                 icon: image === "" ? "apps" : ""
                 title: modelData.name
                 description: "Search provider  ·  " + modelData.busName

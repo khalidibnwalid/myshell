@@ -395,7 +395,7 @@ ApplicationWindow {
 
                 readonly property string appIcon: {
                     const icon = DesktopEntries.heuristicLookup(modelData.name)?.icon ?? "";
-                    return icon === "" ? "" : Quickshell.iconPath(icon, true);
+                    return icon === "" ? "" : Icons.path(icon, true);
                 }
 
                 width: list.width

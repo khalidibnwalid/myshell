@@ -79,7 +79,7 @@ Singleton {
             return "file://" + icon;
         if (icon.includes("://"))
             return icon;
-        return Quickshell.iconPath(icon, true);
+        return Icons.path(icon, true);
     }
 
     ListModel {

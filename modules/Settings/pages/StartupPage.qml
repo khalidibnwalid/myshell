@@ -24,7 +24,7 @@ SettingsPage {
     function iconOf(name) {
         if (!name)
             return "";
-        return name.startsWith("/") ? "file://" + name : Quickshell.iconPath(name, true);
+        return name.startsWith("/") ? "file://" + name : Icons.path(name, true);
     }
 
     title: "Startup apps"

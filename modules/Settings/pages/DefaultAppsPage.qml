@@ -13,7 +13,7 @@ SettingsPage {
         const name = e ? e.icon : "";
         if (!name)
             return "";
-        return name.startsWith("/") ? "file://" + name : Quickshell.iconPath(name, true);
+        return name.startsWith("/") ? "file://" + name : Icons.path(name, true);
     }
 
     function choices(id) {

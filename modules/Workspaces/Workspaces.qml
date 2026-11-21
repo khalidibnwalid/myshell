@@ -242,7 +242,7 @@ Scope {
                                         live: true
 
                                         IconImage {
-                                            source: Quickshell.iconPath(DesktopEntries.heuristicLookup(toplevelWrapper.toplevelData?.class)?.icon ?? "", true)
+                                            source: Services.Icons.path(DesktopEntries.heuristicLookup(toplevelWrapper.toplevelData?.class)?.icon ?? "", true)
                                             visible: source != ""
                                             implicitSize: 40
                                             anchors.centerIn: parent

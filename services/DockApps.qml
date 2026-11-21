@@ -71,7 +71,7 @@ Singleton {
     }
 
     function iconFor(entry, fallback) {
-        return Quickshell.iconPath(entry?.icon || fallback, true) || Quickshell.iconPath("application-x-executable", true);
+        return Icons.path(entry?.icon || fallback, true) || Icons.path("application-x-executable", true);
     }
 
     function isPinned(id) {

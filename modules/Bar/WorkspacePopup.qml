@@ -40,7 +40,7 @@ PanelWindow {
 
     function iconFor(toplevel) {
         const cls = toplevel.wayland?.appId || toplevel.lastIpcObject?.class || "";
-        return Quickshell.iconPath(DesktopEntries.heuristicLookup(cls)?.icon || cls, true);
+        return Icons.path(DesktopEntries.heuristicLookup(cls)?.icon || cls, true);
     }
 
     screen: barWindow ? barWindow.screen : null
