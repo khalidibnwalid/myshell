@@ -1,5 +1,6 @@
 import "../../../components"
 import "../../../config"
+import "../../../services"
 import QtQuick
 import QtQuick.Dialogs
 import QtQuick.Layouts
@@ -818,6 +819,78 @@ SettingsPage {
                 searchable: true
                 popupWidth: 300
                 onSelected: family => Config.appearance.fontFamily = family
+            }
+        }
+    }
+
+    SettingGroup {
+        title: "Desktop widgets"
+        actions: [
+            // the same badge as Autocomplete: the feature is new and only lightly tried
+            Rectangle {
+                readonly property color tone: "#f0b429"
+
+                Layout.alignment: Qt.AlignVCenter
+                implicitWidth: widgetsBadge.implicitWidth + 20
+                implicitHeight: 26
+                radius: 13
+                color: Qt.alpha(tone, 0.18)
+                border.width: 1
+                border.color: Qt.alpha(tone, 0.6)
+
+                RowLayout {
+                    id: widgetsBadge
+
+                    anchors.centerIn: parent
+                    spacing: 5
+
+                    MaterialSymbol {
+                        icon: "science"
+                        font.pixelSize: 14
+                        color: parent.parent.tone
+                    }
+
+                    StyledText {
+                        text: "EXPERIMENTAL"
+                        font.pixelSize: 11
+                        font.weight: Font.Bold
+                        font.letterSpacing: 0.8
+                        color: parent.parent.tone
+                    }
+                }
+            }
+        ]
+
+        SettingRow {
+            icon: "science"
+            title: "Experimental"
+            description: "New and only lightly tried: a look or an option may change, and the sound waves use some processor while music plays."
+        }
+
+        SettingRow {
+            icon: "widgets"
+            title: "Show widgets on the desktop"
+            description: Config.widgets.enabled ? "Clock, sound waves and calendar sit on the wallpaper, behind your windows" : "Off: nothing is drawn on the desktop"
+
+            ToggleSwitch {
+                checked: Config.widgets.enabled
+                onToggled: on => Config.widgets.enabled = on
+            }
+        }
+
+        SettingRow {
+            visible: Config.widgets.enabled
+            icon: "edit"
+            title: "Arrange widgets"
+            description: "Drag them where you want, resize with the wheel, change their look or add more"
+
+            PillButton {
+                text: "Edit"
+                icon: "open_with"
+                onClicked: {
+                    WindowManager.settingsVisible = false;
+                    DesktopWidgets.editing = true;
+                }
             }
         }
     }

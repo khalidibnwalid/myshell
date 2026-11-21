@@ -19,6 +19,7 @@ import "modules/OSD"
 import "modules/QuickSettings"
 import "modules/ScreenTools"
 import "modules/Search"
+import "modules/Widgets"
 import "modules/Settings"
 import "modules/Workspaces"
 import "services" as Services
@@ -45,6 +46,9 @@ Scope {
     }
 
     Bar {
+    }
+
+    WidgetsLayer {
     }
 
     NotificationCenter {

@@ -24,6 +24,8 @@ Singleton {
     readonly property alias autocomplete: jsonAdapter.autocomplete
     readonly property alias monitors: jsonAdapter.monitors
     readonly property alias recentColors: jsonAdapter.recentColors
+    readonly property alias widgets: jsonAdapter.widgets
+    readonly property alias widgetItems: jsonAdapter.widgetItems
 
     // colours chosen with the colour picker, newest first
     function addRecentColor(hex) {
@@ -39,6 +41,10 @@ Singleton {
         if (hidden)
             list.push(id);
         jsonAdapter.bar.trayHidden = list.join("|");
+    }
+
+    function setWidgetItems(value) {
+        jsonAdapter.widgetItems = value;
     }
 
     function setMonitors(value) {
@@ -65,9 +71,9 @@ Singleton {
 
     // --- config.json is the hand-written base; what the Settings window changes
     // is stored as a difference in config.overrides.json (git-ignored, generated) ---
-    readonly property var objectSections: ["appearance", "layout", "capture", "dock", "autocomplete", "display", "bar", "notifications", "idle", "polkit", "fileChooser"]
+    readonly property var objectSections: ["appearance", "layout", "capture", "dock", "autocomplete", "display", "bar", "notifications", "idle", "polkit", "fileChooser", "widgets"]
     readonly property var plainSections: ["keyboard", "hyprland", "search", "clipboard", "apps"]
-    readonly property var wholeValues: ["monitors", "recentColors"]
+    readonly property var wholeValues: ["monitors", "recentColors", "widgetItems"]
     property var baseData: ({})
     property var overrides: ({})
     property string overridesText: ""
@@ -273,6 +279,8 @@ Singleton {
             })
             // kept at the top level for the same reason as `monitors`
             property var recentColors: []
+            // the widgets on the desktop: [{ id, type, x, y (0-1 of the screen), scale, style }], see services/DesktopWidgets.qml
+            property var widgetItems: []
 
             property JsonObject bar
 
@@ -317,6 +325,13 @@ Singleton {
                 // name, size, time or type; newest/biggest/Z-A first when reversed
                 property string sortBy: "name"
                 property bool sortReversed: false
+            }
+
+            // widgets on the desktop (modules/Widgets): clock, audio waves, calendar
+            property JsonObject widgets
+
+            widgets: JsonObject {
+                property bool enabled: true
             }
 
             property var keyboard: ({

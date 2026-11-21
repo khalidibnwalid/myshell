@@ -293,6 +293,39 @@
         }
       }
     },
+    "widgets": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Show the widgets (clock, audio waves, calendar) on the desktop, behind the windows"
+        }
+      }
+    },
+    "widgetItems": {
+      "type": "array",
+      "description": "The widgets on the desktop; placed by dragging them in edit mode (qs ipc call widgets edit)",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "type": { "enum": ["clock", "waves", "calendar"] },
+          "x": { "type": "number", "minimum": 0, "maximum": 1, "description": "Left edge, as a part of the screen width" },
+          "y": { "type": "number", "minimum": 0, "maximum": 1, "description": "Top edge, as a part of the screen height" },
+          "scale": { "type": "number", "minimum": 0.5, "maximum": 3 },
+          "barWidth": { "enum": ["thin", "thick"], "description": "waves: how much of its place a bar fills (missing = normal)" },
+          "barCount": { "type": "integer", "enum": [16], "description": "waves: fewer, wider bars (missing = 32)" },
+          "pulse": { "enum": ["off"], "description": "waves: no swelling and ring pulse on the bass" },
+          "gap": { "enum": ["overlap", "tight", "wide", "wider"], "description": "clock: space between the hours and the minutes (missing = normal)" },
+          "digitGap": { "enum": ["tight", "wide", "wider"], "description": "clock: space between the digits of the hours and of the minutes (missing = normal)" },
+          "numerals": { "enum": ["arabic"], "description": "clock and calendar: Arabic-Indic digits (missing = 0-9)" },
+          "dateGap": { "enum": ["tight", "wide", "wider"], "description": "clock: space between the letters and words of the date (missing = normal)" },
+          "contrast": { "enum": ["soft", "strong"], "description": "waves: how much louder tones stand out from quiet ones (missing = normal)" },
+          "barShape": { "enum": ["square"], "description": "waves: square ends (missing = round)" },
+          "style": { "type": "string", "description": "clock: stacked, digital or analog; waves: bars, vertical or circular" }
+        }
+      }
+    },
     "recentColors": {
       "type": "array",
       "items": { "type": "string", "format": "color" },
