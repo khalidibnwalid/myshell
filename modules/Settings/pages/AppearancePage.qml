@@ -68,7 +68,7 @@ SettingsPage {
         if (Config.appearance.wallpaper === "" || matugenProc.running)
             return;
         matchError = "";
-        matugenProc.command = ["sh", "-c", "p=$1; shift; for t; do printf '%s ' \"$t\"; matugen image \"$p\" -t \"scheme-$t\" -j hex --dry-run -q 2>/dev/null | tr -d '\\n '; echo; done", "sh", Config.appearance.wallpaper].concat(paletteStyles.map(st => st.key));
+        matugenProc.command = ["sh", "-c", "p=$1; shift; for t; do printf '%s ' \"$t\"; matugen image \"$p\" -t \"scheme-$t\" -j hex --dry-run -q --prefer saturation 2>/dev/null | tr -d '\\n '; echo; done", "sh", Config.appearance.wallpaper].concat(paletteStyles.map(st => st.key));
         matugenProc.running = true;
     }
 
@@ -198,10 +198,12 @@ SettingsPage {
                     try {
                         const colors = JSON.parse(line.substring(space + 1)).colors;
                         const style = page.paletteStyles.find(st => st.key === key);
+                        // matugen 4 gives { color: "#rrggbb" } for each colour, older ones the plain string
+                        const hex = v => (v !== null && typeof v === "object") ? v.color : v;
                         const pick = mode => ({
-                            "bg": colors.surface[mode],
-                            "fg": colors.on_surface[mode],
-                            "accent": colors.primary[mode]
+                            "bg": hex(colors.surface[mode]),
+                            "fg": hex(colors.on_surface[mode]),
+                            "accent": hex(colors.primary[mode])
                         });
                         found.push({
                             "key": key,

@@ -88,6 +88,73 @@ SettingsPage {
     }
 
     SettingGroup {
+        title: "Sound waves"
+
+        SettingRow {
+            icon: "graphic_eq"
+            title: "Sound waves in the bar"
+            description: Config.bar.waves ? "A few small bars above the tray icons move with the sound, only while something plays" : "Off: the bar shows nothing about the sound"
+
+            ToggleSwitch {
+                checked: Config.bar.waves
+                onToggled: on => Config.bar.waves = on
+            }
+        }
+
+        SettingRow {
+            visible: Config.bar.waves
+            icon: "width"
+            title: "Width"
+            description: "How far the bars swell across the bar"
+
+            Segmented {
+                model: [
+                    {
+                        "label": "Slim",
+                        "value": 20
+                    },
+                    {
+                        "label": "Normal",
+                        "value": 30
+                    },
+                    {
+                        "label": "Wide",
+                        "value": 40
+                    }
+                ]
+                value: Config.bar.wavesWidth
+                onSelected: v => Config.bar.wavesWidth = v
+            }
+        }
+
+        SettingRow {
+            visible: Config.bar.waves
+            icon: "height"
+            title: "Length"
+            description: "How many bars there are along the bar"
+
+            Segmented {
+                model: [
+                    {
+                        "label": "Short",
+                        "value": 8
+                    },
+                    {
+                        "label": "Normal",
+                        "value": 12
+                    },
+                    {
+                        "label": "Long",
+                        "value": 18
+                    }
+                ]
+                value: Config.bar.wavesBars
+                onSelected: v => Config.bar.wavesBars = v
+            }
+        }
+    }
+
+    SettingGroup {
         title: "Tray"
 
         SettingRow {

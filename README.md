@@ -175,7 +175,7 @@ Settings → Keyboard edits the layouts, their variants and the switching shortc
 
 ### Bar styles
 
-Settings → Appearance → Bar picks the look of the bar: Classic (one strip), Capsule (one rounded shape floating a little off the edge), Islands (workspaces, clock and status each in their own shape) or Inset (a solid bar with the desktop as a rounded sheet beside it). The bar can be on any edge. Every style takes the same room at the screen edge (50 px), so windows never move when the style changes: Capsule and Islands leave a 4 px gap to the screen edge and their shape fills the other 46 px.
+Settings → Appearance → Bar picks the look of the bar: Classic (one strip), Capsule (one rounded shape floating a little off the edge), Islands (workspaces, clock and status each in their own shape) or Inset (a solid bar with the desktop as a rounded sheet beside it). The bar can be on any edge. Every style takes the same room at the screen edge (50 px), so windows never move when the style changes: Capsule and Islands leave a 4 px gap to the screen edge and their shape fills the other 46 px. Settings → Bar → Sound waves (off by default) adds a few small bars above the tray icons that move with the sound that plays and show only while something plays; it listens through the same `pw-record` and `helpers/audio-wave` as the desktop widget (see above), only while it is on.
 
 ### Hyprland
 

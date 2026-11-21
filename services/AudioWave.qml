@@ -39,6 +39,11 @@ Singleton {
     // What the pictures use besides the bars, all worked out here once for every widget:
     // beat: 1 on a bass hit, falling back to 0 within a third of a second;
     property real beat: 0
+    // flow: the same bands, but each one against its own recent average (about a second): a steady sound
+    // sits at the middle of the height, a voice that gets louder goes up and a quieter one comes down, so the
+    // bars follow the voice and are not full all the time. Rises and falls are both quick but eased.
+    property var flow: new Array(bands).fill(0)
+    property var flowMean: new Array(bands).fill(0)
     property real bassAverage: 0
     property var fallSpeed: new Array(bands).fill(0)
 
@@ -78,7 +83,7 @@ Singleton {
         for (let i = 0; i < bands; i++) {
             if (spread[i] >= levels[i]) {
                 // a rise overshoots a little, so a hit pops and then settles
-                next[i] = Math.min(1, spread[i] + (spread[i] - levels[i]) * 0.3);
+                next[i] = Math.min(1, spread[i] + (spread[i] - levels[i]) * 0.15);
                 fallSpeed[i] = 0;
             } else {
                 fallSpeed[i] += 0.0024;
@@ -103,6 +108,15 @@ Singleton {
         if (nb !== beat)
             beat = nb;
         levels = next;
+        // flow comes from the bands before the music-style fall of `next`, which is too slow for speech: a
+        // syllable is a few hundred milliseconds, so it rises in about 2 frames and falls in about 6
+        const own = new Array(bands);
+        for (let i = 0; i < bands; i++) {
+            flowMean[i] = flowMean[i] * 0.98 + spread[i] * 0.02;
+            const target = Math.min(1, spread[i] / Math.max(0.12, 2.2 * flowMean[i]));
+            own[i] = flow[i] + (target - flow[i]) * (target > flow[i] ? 0.6 : 0.35);
+        }
+        flow = own;
     }
 
     onActiveChanged: {
@@ -113,6 +127,8 @@ Singleton {
         } else {
             proc.running = false;
             levels = new Array(bands).fill(0);
+            flow = new Array(bands).fill(0);
+            flowMean = new Array(bands).fill(0);
             fallSpeed = new Array(bands).fill(0);
             beat = 0;
             silent = true;

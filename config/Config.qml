@@ -286,6 +286,11 @@ Singleton {
 
             bar: JsonObject {
                 property bool clock24h: false
+                // small live bars of the sound that plays, above the tray icons (modules/Bar/BarWaves.qml)
+                property bool waves: false
+                // how far the bars swell across the bar (px) and how many there are
+                property int wavesWidth: 30
+                property int wavesBars: 12
                 // tray icons shown in the bar before the rest fold behind the arrow
                 property int trayVisible: 2
                 // ids of tray apps that never show in the bar, separated by "|"

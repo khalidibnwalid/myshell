@@ -161,6 +161,22 @@
           "type": "boolean",
           "description": "Show a 24-hour clock in the bar, quick settings and lock screen"
         },
+        "waves": {
+          "type": "boolean",
+          "description": "Show a few small bars above the tray icons that move with the sound that plays (off by default)"
+        },
+        "wavesWidth": {
+          "type": "integer",
+          "minimum": 14,
+          "maximum": 44,
+          "description": "How far the sound-wave bars in the bar swell across it, in pixels"
+        },
+        "wavesBars": {
+          "type": "integer",
+          "minimum": 4,
+          "maximum": 24,
+          "description": "How many sound-wave bars there are along the bar"
+        },
         "trayVisible": {
           "type": "integer",
           "minimum": 1,

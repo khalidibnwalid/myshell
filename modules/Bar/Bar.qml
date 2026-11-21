@@ -168,6 +168,10 @@ Scope {
                 rowSpacing: 10
                 columnSpacing: 10
 
+                BarWaves {
+                    Layout.alignment: Qt.AlignCenter
+                }
+
                 BarTrays {
                     Layout.alignment: Qt.AlignCenter
                     barWindow: panelWindow
