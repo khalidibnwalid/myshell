@@ -314,6 +314,9 @@ Singleton {
                 property bool enabled: true
                 // tiles with big pictures instead of rows
                 property bool grid: false
+                // name, size, time or type; newest/biggest/Z-A first when reversed
+                property string sortBy: "name"
+                property bool sortReversed: false
             }
 
             property var keyboard: ({

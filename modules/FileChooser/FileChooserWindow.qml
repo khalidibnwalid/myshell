@@ -119,10 +119,21 @@ PanelWindow {
                     "name": name,
                     "path": folderModel.get(i, "filePath"),
                     "dir": folderModel.isFolder(i),
-                    "size": folderModel.get(i, "fileSize")
+                    "size": folderModel.get(i, "fileSize"),
+                    "modified": folderModel.get(i, "fileModified")
                 });
         }
         entries = out;
+    }
+
+    // a column title was clicked: that column, or the other way round when it is already the sort
+    function sortBy(key) {
+        if (Config.fileChooser.sortBy === key)
+            Config.fileChooser.sortReversed = !Config.fileChooser.sortReversed;
+        else {
+            Config.fileChooser.sortBy = key;
+            Config.fileChooser.sortReversed = false;
+        }
     }
 
     function clearSearch() {
@@ -292,6 +303,12 @@ PanelWindow {
         showHidden: window.showHidden
         showDotAndDotDot: false
         caseSensitive: false
+        sortField: ({
+                "size": FolderListModel.Size,
+                "time": FolderListModel.Time,
+                "type": FolderListModel.Type
+            })[Config.fileChooser.sortBy] ?? FolderListModel.Name
+        sortReversed: Config.fileChooser.sortReversed
         nameFilters: {
             const p = window.activeFilter?.patterns ?? [];
             return p.length > 0 ? p : ["*"];
@@ -324,6 +341,8 @@ PanelWindow {
         anchors.centerIn: parent
         dialogWidth: 780
         compact: true
+        movable: true
+        minAlpha: 0.85
         icon: window.saving ? "save" : (window.pickDir ? "folder_open" : "file_open")
         title: window.dialogTitle
         message: window.request?.app ? "For " + window.request.app : ""
@@ -403,6 +422,42 @@ PanelWindow {
                 Keys.onEscapePressed: event => window.escapeKey(event)
             }
 
+            // in the list the column titles sort; tiles have none, so they get these two
+            Dropdown {
+                visible: window.grid
+                icon: "sort"
+                popupWidth: 160
+                implicitWidth: 120
+                model: [
+                    {
+                        "label": "Name",
+                        "value": "name"
+                    },
+                    {
+                        "label": "Size",
+                        "value": "size"
+                    },
+                    {
+                        "label": "Modified",
+                        "value": "time"
+                    },
+                    {
+                        "label": "Type",
+                        "value": "type"
+                    }
+                ]
+                value: Config.fileChooser.sortBy
+                Accessible.name: "Sort by"
+                onSelected: v => Config.fileChooser.sortBy = v
+            }
+
+            IconButton {
+                visible: window.grid
+                icon: Config.fileChooser.sortReversed ? "arrow_downward" : "arrow_upward"
+                Accessible.name: Config.fileChooser.sortReversed ? "Sorted in reverse" : "Sorted forwards"
+                onClicked: Config.fileChooser.sortReversed = !Config.fileChooser.sortReversed
+            }
+
             IconButton {
                 icon: window.grid ? "view_list" : "grid_view"
                 Accessible.name: window.grid ? "Show as list (Ctrl+G)" : "Show as tiles (Ctrl+G)"
@@ -440,6 +495,9 @@ PanelWindow {
                 onAcceptRequested: window.accept()
                 onTopReached: search.focusInput()
                 searching: window.query !== ""
+                sortBy: Config.fileChooser.sortBy
+                sortReversed: Config.fileChooser.sortReversed
+                onSortRequested: key => window.sortBy(key)
                 onClearSearchRequested: {
                     window.clearSearch();
                     files.focusView();
@@ -462,8 +520,22 @@ PanelWindow {
 
         // the filters sit on the left of the button row
         footer: [
+            // two or fewer fit as buttons; more would overflow the dialog, so they drop down
             Segmented {
-                visible: window.filters.length > 1
+                visible: window.filters.length > 1 && window.filters.length <= 2
+                model: window.filters.map((f, n) => ({
+                            "label": f.name,
+                            "value": n
+                        }))
+                value: window.filterIndex
+                onSelected: n => window.filterIndex = n
+            },
+            Dropdown {
+                visible: window.filters.length > 2
+                icon: "filter_list"
+                popupAbove: true
+                popupWidth: 300
+                implicitWidth: 240
                 model: window.filters.map((f, n) => ({
                             "label": f.name,
                             "value": n

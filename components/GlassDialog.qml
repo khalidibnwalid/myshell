@@ -26,11 +26,17 @@ Rectangle {
     property int dialogWidth: 380
     // a slim one-line header and buttons that keep their own width (for big dialogs like the file chooser)
     property bool compact: false
+    // the least opaque the panel may be (0-1); big dialogs over busy windows raise it
+    property real minAlpha: 0.35
     // [{ text, key, primary, enabled }]; none = no button row
     property var buttons: []
     default property alias content: body.data
     // extra controls on the left of the button row (compact dialogs)
     property alias footer: footerRow.data
+    // the header can be dragged to move the panel (kept on screen); dragX/dragY is how far it moved from the centre
+    property bool movable: false
+    property real dragX: 0
+    property real dragY: 0
 
     signal buttonClicked(string key)
 
@@ -43,7 +49,7 @@ Rectangle {
     // outer radius = inner radius (20) + padding (16), like Quick Settings
     radius: 36
     // never more than 15% see-through, whatever the bar opacity is
-    color: Qt.alpha(Appearance.bgColor, Math.max(0.35, Appearance.panelAlpha))
+    color: Qt.alpha(Appearance.bgColor, Math.max(root.minAlpha, Appearance.panelAlpha))
     border.color: Appearance.hairlineColor
     border.width: 1
     opacity: 0
@@ -54,9 +60,15 @@ Rectangle {
     }
     Keys.onEscapePressed: root.buttonClicked("cancel")
 
-    transform: Translate {
-        id: nudge
-    }
+    transform: [
+        Translate {
+            id: nudge
+        },
+        Translate {
+            x: root.dragX
+            y: root.dragY
+        }
+    ]
 
     Behavior on opacity {
         NumberAnimation {
@@ -112,6 +124,29 @@ Rectangle {
             implicitHeight: header.implicitHeight + (root.compact ? 16 : 24)
             radius: root.compact ? 18 : 20
             color: Appearance.surfaceColor
+
+            DragHandler {
+                id: mover
+
+                property real startX
+                property real startY
+
+                enabled: root.movable
+                target: null
+                cursorShape: active ? Qt.ClosedHandCursor : Qt.ArrowCursor
+                onActiveChanged: {
+                    startX = root.dragX;
+                    startY = root.dragY;
+                }
+                onTranslationChanged: {
+                    if (!active || !root.parent)
+                        return;
+                    const mx = Math.max(0, (root.parent.width - root.width) / 2);
+                    const my = Math.max(0, (root.parent.height - root.height) / 2);
+                    root.dragX = Math.max(-mx, Math.min(mx, startX + translation.x));
+                    root.dragY = Math.max(-my, Math.min(my, startY + translation.y));
+                }
+            }
 
             RowLayout {
                 id: header

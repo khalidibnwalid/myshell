@@ -16,6 +16,8 @@ Rectangle {
     property string icon
     property bool searchable: false
     property int popupWidth: 260
+    // open the list above the pill (for a pill at the bottom of a dialog)
+    property bool popupAbove: false
     property string query: ""
     readonly property var filtered: {
         const q = query.trim().toLowerCase();
@@ -119,7 +121,7 @@ Rectangle {
         id: popup
 
         x: root.width - width
-        y: root.height + 6
+        y: root.popupAbove ? -height - 6 : root.height + 6
         width: Math.max(root.width, root.popupWidth)
         padding: 6
         margins: 8

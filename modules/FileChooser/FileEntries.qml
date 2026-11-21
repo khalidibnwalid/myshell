@@ -19,6 +19,9 @@ Rectangle {
     property string emptyText: "This folder is empty"
     // a search is active: Escape clears it before it cancels the dialog
     property bool searching: false
+    // how the entries are sorted (name, size, time) and the click on a column title that changes it
+    property string sortBy: "name"
+    property bool sortReversed: false
     readonly property Item activeView: grid ? gridView : list
 
     // Escape while a search is active: the dialog clears it
@@ -31,6 +34,7 @@ Rectangle {
     signal acceptRequested()
     // Up on the first row
     signal topReached()
+    signal sortRequested(string key)
 
     function focusView() {
         activeView.forceActiveFocus();
@@ -105,11 +109,63 @@ Rectangle {
     color: Appearance.surfaceColor
     clip: true
 
+    // column titles of the list: click one to sort by it, click it again to reverse
+    RowLayout {
+        id: columns
+
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.topMargin: 6
+        anchors.leftMargin: 20
+        anchors.rightMargin: 20
+        height: 28
+        visible: !root.grid
+        spacing: 12
+
+        // the picture column
+        Item {
+            implicitWidth: 32
+        }
+
+        FileColumnTitle {
+            Layout.fillWidth: true
+            label: "Name"
+            key: "name"
+            sortBy: root.sortBy
+            sortReversed: root.sortReversed
+            onClicked: root.sortRequested(key)
+        }
+
+        FileColumnTitle {
+            Layout.preferredWidth: 64
+            label: "Size"
+            key: "size"
+            sortBy: root.sortBy
+            sortReversed: root.sortReversed
+            onClicked: root.sortRequested(key)
+            alignRight: true
+        }
+
+        FileColumnTitle {
+            Layout.preferredWidth: 96
+            label: "Modified"
+            key: "time"
+            sortBy: root.sortBy
+            sortReversed: root.sortReversed
+            onClicked: root.sortRequested(key)
+            alignRight: true
+        }
+    }
+
     ListView {
         id: list
 
         anchors.fill: parent
-        anchors.margins: 6
+        anchors.topMargin: 36
+        anchors.leftMargin: 6
+        anchors.rightMargin: 6
+        anchors.bottomMargin: 6
         visible: !root.grid
         model: root.entries
         currentIndex: -1
@@ -161,8 +217,17 @@ Rectangle {
                 }
 
                 StyledText {
-                    visible: !row.modelData.dir
-                    text: root.sizeText(row.modelData.size)
+                    Layout.preferredWidth: 64
+                    horizontalAlignment: Text.AlignRight
+                    text: row.modelData.dir ? "" : root.sizeText(row.modelData.size)
+                    color: Appearance.mutedColor
+                    font.pixelSize: 12
+                }
+
+                StyledText {
+                    Layout.preferredWidth: 96
+                    horizontalAlignment: Text.AlignRight
+                    text: Qt.formatDateTime(row.modelData.modified, "d MMM yyyy")
                     color: Appearance.mutedColor
                     font.pixelSize: 12
                 }
