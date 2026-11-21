@@ -70,6 +70,7 @@ Pages for hardware or tools that are missing are hidden.
 - `hyprsunset` — running in the background, it enables the night light controls in Settings → Display.
 - `matugen` — enables "Match the wallpaper" in Settings → Appearance.
 - `gnome-control-center` — the "Add or remove accounts" button in Settings → Accounts opens its online accounts window. Existing accounts are listed without it.
+- A Secret Service such as `gnome-keyring` — Settings → Passwords & keys lists your keyrings and the passwords apps saved in them: lock, unlock, change a keyring's password, make one the default, add, copy and delete passwords. The page talks to it through a small Go helper (`helpers/keyring`, built on first use, needs `go`) that waits for the keyring's own password prompt. Copy uses `wl-copy --sensitive`, so `cliphist` leaves it out of the history, and the clipboard is cleared after 45 seconds if it still holds the password. The same page has tabs for SSH keys in `~/.ssh` (make an ed25519 key with `ssh-keygen`, copy the public half, move a pair to the trash with `gio trash`) and, when `gpg` is installed, GPG keys (copy a public key; delete keys you only have the public half of).
 
 ### Services and hardware
 

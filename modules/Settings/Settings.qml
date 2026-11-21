@@ -105,6 +105,14 @@ ApplicationWindow {
             "component": accountsPage
         },
         {
+            "key": "passwords",
+            "name": "Passwords & keys",
+            "icon": "key",
+            "group": "Personalisation",
+            "keywords": "keyring password passwords secret secrets gnome-keyring seahorse wallet lock unlock saved login credentials vault ssh key keys public key gpg pgp openpgp encryption signing fingerprint",
+            "component": passwordsPage
+        },
+        {
             "key": "appearance",
             "name": "Appearance",
             "icon": "palette",
@@ -558,6 +566,13 @@ ApplicationWindow {
         id: storagePage
 
         StoragePage {
+        }
+    }
+
+    Component {
+        id: passwordsPage
+
+        PasswordsPage {
         }
     }
 
