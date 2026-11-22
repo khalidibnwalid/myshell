@@ -17,6 +17,7 @@ import "modules/Notifications"
 import "modules/Polkit"
 import "modules/OSD"
 import "modules/QuickSettings"
+import "modules/ScreenDim"
 import "modules/ScreenTools"
 import "modules/Search"
 import "modules/Widgets"
@@ -55,6 +56,9 @@ Scope {
     }
 
     QuickSettings {
+    }
+
+    DimLayers {
     }
 
     Settings {

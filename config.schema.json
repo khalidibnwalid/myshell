@@ -295,6 +295,11 @@
         "enabled": { "type": "boolean", "description": "Write the Hyprland options changed in Settings. Off leaves Hyprland entirely to the hand-written config" },
         "accentBorder": { "type": "boolean", "description": "The active window border takes the shell's accent colour" },
         "blurLayers": { "type": "boolean", "description": "Hyprland blurs what is behind the bar and panels (layer rules for the shell's windows)" },
+        "workspaceSplit": { "type": "boolean", "description": "Give each screen its own set of workspaces (rules written to quickshell.lua)" },
+        "workspaceCount": { "type": "integer", "minimum": 1, "maximum": 10, "description": "Workspaces per screen" },
+        "barOwnWorkspaces": { "type": "boolean", "description": "With separate workspaces per screen, each bar lists only its own screen's workspaces, plus any past the pinned ones that the screen holds" },
+        "pairKeys": { "type": "boolean", "description": "Super+Shift+number switches every screen at once; moving a window silently goes to Super+Alt+number" },
+        "workspaceScreens": { "type": "array", "items": { "type": "string" }, "description": "Screens in the order they get their workspaces" },
         "values": { "type": "object", "description": "Hyprland options changed in Settings, by name (for example general:gaps_in)" }
       }
     },
@@ -346,6 +351,11 @@
       "type": "array",
       "items": { "type": "string", "format": "color" },
       "description": "Colours picked in Settings, newest first"
+    },
+    "screenDim": {
+      "type": "object",
+      "description": "Monitor name -> brightness in percent of the software dim laid over that screen (100 = none)",
+      "additionalProperties": { "type": "number", "minimum": 40, "maximum": 100 }
     },
     "monitors": {
       "type": "object",

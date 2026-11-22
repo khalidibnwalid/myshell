@@ -548,7 +548,106 @@ Singleton {
             lines.push("layerrule = match:namespace ^quickshell$, blur on, ignore_alpha 0.01, no_anim on");
             lines.push("layerrule = match:namespace ^quickshell-workspaces$, blur on, ignore_alpha 0.01, animation popin 80%");
         }
+        for (const l of workspaceLines(false))
+            lines.push(l);
         return lines.join("\n") + "\n";
+    }
+
+    // --- one set of workspaces per screen ------------------------------------------
+    // Screen k of the list gets workspaces k*N+1 .. (k+1)*N. The list is kept in the config, so
+    // a screen that is unplugged keeps its rule (its workspaces then show on another screen).
+    readonly property bool workspaceSplit: Config.hyprland?.workspaceSplit ?? false
+    readonly property int workspaceCount: Config.hyprland?.workspaceCount ?? 5
+    // the bar lists only the workspaces of its own screen (plus any past the pinned ones that it holds)
+    readonly property bool barOwnWorkspaces: Config.hyprland?.barOwnWorkspaces ?? true
+    readonly property bool pairKeys: Config.hyprland?.pairKeys ?? false
+    readonly property var workspaceScreens: Config.hyprland?.workspaceScreens ?? []
+
+    // adds the screens that are connected now and not yet in the list
+    function rememberScreens() {
+        const known = workspaceScreens.slice();
+        let added = false;
+        for (const m of Hyprland.monitors.values) {
+            if (known.indexOf(m.name) < 0) {
+                known.push(m.name);
+                added = true;
+            }
+        }
+        if (added)
+            Config.setIn("hyprland", "workspaceScreens", known);
+    }
+
+    // first workspace of a screen, or 0 when it has none
+    function firstWorkspace(name) {
+        const k = workspaceScreens.indexOf(name);
+        return k < 0 ? 0 : k * workspaceCount + 1;
+    }
+
+    // the workspace rules and the keys, as lines of the Lua or hyprlang file
+    function workspaceLines(lua) {
+        const lines = [];
+        const screens = workspaceScreens;
+        const n = workspaceCount;
+        if (!workspaceSplit || screens.length === 0)
+            return lines;
+        lines.push("");
+        for (let k = 0; k < screens.length; k++) {
+            for (let i = 1; i <= n; i++) {
+                const ws = k * n + i;
+                const def = i === 1;
+                lines.push(lua ? "hl.workspace_rule({ workspace = \"" + ws + "\", monitor = \"" + screens[k] + "\", default = " + def + " })" : "workspace = " + ws + ", monitor:" + screens[k] + ", default:" + def);
+            }
+        }
+        if (!pairKeys)
+            return lines;
+        lines.push("");
+        for (let i = 1; i <= 10; i++) {
+            const key = i % 10;
+            const idx = (i - 1) % n;
+            // every screen except the one you are on first, that one last so it keeps the focus
+            const items = screens.map((name, k) => name + ":" + (k * n + idx + 1)).join(" ");
+            const dispatch = lua ? "hyprctl dispatch \"hl.dsp.focus({ workspace = ${p##*:} })\"" : "hyprctl dispatch workspace ${p##*:}";
+            const cmd = "cur=$(hyprctl activeworkspace -j | sed -n 's/.*\"monitor\": \"\\([^\"]*\\)\".*/\\1/p'); " + "for p in " + items + "; do [ \"${p%%:*}\" = \"$cur\" ] || " + dispatch + "; done; " + "for p in " + items + "; do [ \"${p%%:*}\" = \"$cur\" ] && " + dispatch + "; done";
+            if (lua) {
+                lines.push("hl.unbind(\"SUPER + SHIFT + " + key + "\")");
+                lines.push("hl.bind(\"SUPER + ALT + " + key + "\", hl.dsp.window.move({ workspace = " + i + ", follow = false }), { description = \"Move window silently to workspace " + i + "\" })");
+                lines.push("hl.bind(\"SUPER + SHIFT + " + key + "\", hl.dsp.exec_cmd(" + JSON.stringify(cmd) + "), { description = \"Switch every screen to its workspace " + (idx + 1) + "\" })");
+            } else {
+                lines.push("unbind = SUPER SHIFT, " + key);
+                lines.push("bind = SUPER ALT, " + key + ", movetoworkspacesilent, " + i);
+                lines.push("bind = SUPER SHIFT, " + key + ", exec, " + cmd);
+            }
+        }
+        return lines;
+    }
+
+    // also when the config file is edited by hand, or read back at startup
+    onWorkspaceSplitChanged: writeTimer.restart()
+    onWorkspaceCountChanged: writeTimer.restart()
+    onPairKeysChanged: writeTimer.restart()
+
+    function setWorkspaceSplit(on) {
+        if (on)
+            rememberScreens();
+        Config.setIn("hyprland", "workspaceSplit", on);
+        needsReload = true;
+        writeTimer.restart();
+    }
+
+    function setWorkspaceCount(n) {
+        Config.setIn("hyprland", "workspaceCount", Math.max(1, Math.min(10, Math.round(n))));
+        needsReload = true;
+        writeTimer.restart();
+    }
+
+    function setBarOwnWorkspaces(on) {
+        Config.setIn("hyprland", "barOwnWorkspaces", on);
+    }
+
+    function setPairKeys(on) {
+        Config.setIn("hyprland", "pairKeys", on);
+        needsReload = true;
+        writeTimer.restart();
     }
 
     // the hl.config({ ... }) call for some values, as lines
@@ -581,6 +680,8 @@ Singleton {
             lines.push("hl.layer_rule({ name = \"quickshell-blur\", match = { namespace = \"^quickshell$\" }, blur = true, ignore_alpha = 0.01, no_anim = true })");
             lines.push("hl.layer_rule({ name = \"quickshell-workspaces-blur\", match = { namespace = \"^quickshell-workspaces$\" }, blur = true, ignore_alpha = 0.01, animation = \"popin 80%\" })");
         }
+        for (const l of workspaceLines(true))
+            lines.push(l);
         return lines.join("\n") + "\n";
     }
 

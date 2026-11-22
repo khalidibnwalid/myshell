@@ -106,12 +106,14 @@ SettingsPage {
                 title: "Scale"
                 description: "How large text and windows appear"
 
-                Segmented {
+                Dropdown {
                     model: Displays.scales(monitorGroup.mode, monitorGroup.modelData.scale).map(s => ({
                         "label": Math.round(s * 100) + "%",
                         "value": s
                     }))
                     value: monitorGroup.modelData.scale
+                    placeholder: Math.round(monitorGroup.modelData.scale * 100) + "%"
+                    popupWidth: 140
                     onSelected: s => {
                         if (s !== monitorGroup.modelData.scale)
                             Displays.change(monitorGroup.modelData, monitorGroup.mode, s);
@@ -129,6 +131,61 @@ SettingsPage {
                     text: "Reset"
                     onClicked: Displays.forget(monitorGroup.modelData.name)
                 }
+            }
+        }
+    }
+
+    SettingGroup {
+        visible: page.monitorList.length > 1 || HyprSettings.workspaceSplit
+        title: "Workspaces"
+
+        SettingRow {
+            icon: "grid_view"
+            title: "Separate workspaces per screen"
+            description: HyprSettings.workspaceSplit ? "Screen " + HyprSettings.workspaceScreens.map((n, k) => n + " has " + (k * HyprSettings.workspaceCount + 1) + "–" + ((k + 1) * HyprSettings.workspaceCount)).join(", ") + ". An unplugged screen's workspaces show on the other one." : "Each screen keeps its own numbers, so switching on one never pulls workspaces off another."
+
+            ToggleSwitch {
+                enabled: HyprSettings.enabled
+                checked: HyprSettings.workspaceSplit
+                onToggled: on => HyprSettings.setWorkspaceSplit(on)
+            }
+        }
+
+        SettingRow {
+            visible: HyprSettings.workspaceSplit
+            icon: "pin"
+            title: "Workspaces per screen"
+            description: "How many numbers each screen gets"
+
+            NumberStepper {
+                from: 1
+                to: 10
+                value: HyprSettings.workspaceCount
+                onChanged: v => HyprSettings.setWorkspaceCount(v)
+            }
+        }
+
+        SettingRow {
+            visible: HyprSettings.workspaceSplit
+            icon: "view_sidebar"
+            title: "Bar shows only its own screen's workspaces"
+            description: "Each bar lists its screen's set, marks the active one, and adds any workspace past the set (11, 12 …) on the screen that holds it. Off lists every workspace on every bar."
+
+            ToggleSwitch {
+                checked: HyprSettings.barOwnWorkspaces
+                onToggled: on => HyprSettings.setBarOwnWorkspaces(on)
+            }
+        }
+
+        SettingRow {
+            visible: HyprSettings.workspaceSplit
+            icon: "keyboard"
+            title: "Super+Shift+number switches every screen"
+            description: "Super+Shift+2 shows workspace 2 of each screen at once. Moving a window without following it goes to Super+Alt+number."
+
+            ToggleSwitch {
+                checked: HyprSettings.pairKeys
+                onToggled: on => HyprSettings.setPairKeys(on)
             }
         }
     }
@@ -155,6 +212,37 @@ SettingsPage {
                 value: backlight.percentage
                 // never all the way to black
                 onDragged: v => backlight.setBrightness(Math.max(0.02, v))
+            }
+        }
+
+        // a dim laid over one screen, for displays without a backlight of their own
+        Repeater {
+            model: page.monitorList
+
+            delegate: SettingRow {
+                id: dimRow
+
+                required property var modelData
+
+                icon: "brightness_6"
+                title: "Dim " + modelData.name
+                description: "Darkens just this screen. Works on any display, on top of its backlight."
+
+                StyledText {
+                    Layout.preferredWidth: 40
+                    horizontalAlignment: Text.AlignRight
+                    text: ScreenDim.levelOf(dimRow.modelData.name) + "%"
+                    font.weight: Font.Medium
+                }
+
+                PillSlider {
+                    implicitWidth: 280
+                    implicitHeight: 36
+                    icon: "brightness_6"
+                    // the slider runs over the allowed range
+                    value: (ScreenDim.levelOf(dimRow.modelData.name) - ScreenDim.minLevel) / (100 - ScreenDim.minLevel)
+                    onDragged: v => ScreenDim.setLevel(dimRow.modelData.name, ScreenDim.minLevel + v * (100 - ScreenDim.minLevel))
+                }
             }
         }
     }

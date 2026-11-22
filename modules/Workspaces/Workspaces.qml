@@ -174,8 +174,8 @@ Scope {
 
                                 width: src ? src.width : 0
                                 height: src ? src.height : 0
-                                x: src ? (src.toplevelData.at[0] * root.scale * monitor.scale) : 0
-                                y: src ? (src.toplevelData.at[1] * root.scale * monitor.scale) : 0
+                                x: src ? ((src.toplevelData.at[0] - src.screenOf.x) / src.screenW) * workspaceContainer.width : 0
+                                y: src ? ((src.toplevelData.at[1] - src.screenOf.y) / src.screenH) * workspaceContainer.height : 0
 
                                 color: Appearance.accentColor
                                 opacity: 0.4
@@ -209,11 +209,17 @@ Scope {
                                     property Toplevel waylandHandle: modelData?.wayland
                                     property var toplevelData: modelData.lastIpcObject
 
-                                    width: (toplevelData.size[0] / monitor.width) * workspaceContainer.width * monitor.scale
-                                    height: (toplevelData.size[1] / monitor.height) * workspaceContainer.height * monitor.scale
+                                    // the screen this workspace is on: window positions are relative to it, as a share of its size,
+                                    // so a window on the second screen lands in the right place of the same-sized cell
+                                    property var screenOf: workspaceContainer.workspace?.monitor ?? workspaceContainer.monitor
+                                    property real screenW: screenOf.width / screenOf.scale
+                                    property real screenH: screenOf.height / screenOf.scale
 
-                                    x: (toplevelData.at[0]) * root.scale * monitor.scale
-                                    y: (toplevelData.at[1]) * root.scale * monitor.scale
+                                    width: (toplevelData.size[0] / screenW) * workspaceContainer.width
+                                    height: (toplevelData.size[1] / screenH) * workspaceContainer.height
+
+                                    x: ((toplevelData.at[0] - screenOf.x) / screenW) * workspaceContainer.width
+                                    y: ((toplevelData.at[1] - screenOf.y) / screenH) * workspaceContainer.height
                                     z: dragArea.drag.active ? 100 : ((waylandHandle.fullscreen || waylandHandle.maximized) ? 2 : toplevelData.floating)
                                     scale: dragArea.drag.active ? 1.06 : 1.0
                                     opacity: dragArea.drag.active ? 0.85 : 1.0
@@ -263,8 +269,8 @@ Scope {
                                             onReleased: {
                                                 toplevelWrapper.Drag.drop();
                                                 // Restore bindings if they were broken by drag
-                                                toplevelWrapper.x = Qt.binding(() => (toplevelWrapper.toplevelData.at[0]) * root.scale * monitor.scale);
-                                                toplevelWrapper.y = Qt.binding(() => (toplevelWrapper.toplevelData.at[1]) * root.scale * monitor.scale);
+                                                toplevelWrapper.x = Qt.binding(() => ((toplevelWrapper.toplevelData.at[0] - toplevelWrapper.screenOf.x) / toplevelWrapper.screenW) * workspaceContainer.width);
+                                                toplevelWrapper.y = Qt.binding(() => ((toplevelWrapper.toplevelData.at[1] - toplevelWrapper.screenOf.y) / toplevelWrapper.screenH) * workspaceContainer.height);
                                             }
 
                                             onClicked: mouse => {

@@ -136,6 +136,7 @@ Scope {
                 BarWS {
                     Layout.alignment: Qt.AlignCenter
                     barWindow: panelWindow
+                    screenName: panelWindow.screen?.name ?? ""
                 }
             }
 

@@ -15,6 +15,8 @@ Scope {
     readonly property bool isActuallyOpen: open || closeTimer.running
     readonly property int panelWidth: 412
     readonly property int gap: 12
+    // the panel opens only on the monitor that has focus when it opens (not on every monitor)
+    property string targetScreen: ""
 
     // qs ipc call quicksettings toggle | open | close
     IpcHandler {
@@ -35,7 +37,9 @@ Scope {
 
     Connections {
         function onQuickSettingsVisibleChanged() {
-            if (!WindowManager.quickSettingsVisible)
+            if (WindowManager.quickSettingsVisible)
+                root.targetScreen = Hyprland.focusedMonitor?.name ?? Quickshell.screens[0]?.name ?? "";
+            else
                 closeTimer.restart();
         }
 
@@ -78,7 +82,7 @@ Scope {
             property real cardHeight: Math.min(height, Math.max(280, mainPage ? mainPage.implicitHeight : 0, stackView.currentItem ? stackView.currentItem.implicitHeight : 0))
 
             screen: modelData
-            visible: root.isActuallyOpen
+            visible: root.isActuallyOpen && modelData.name === root.targetScreen
             focusable: root.open
             implicitWidth: root.panelWidth
             implicitHeight: modelData.height - 20 - (Config.barHorizontal ? Config.barSize : 0)

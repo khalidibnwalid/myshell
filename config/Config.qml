@@ -23,6 +23,7 @@ Singleton {
     readonly property alias display: jsonAdapter.display
     readonly property alias autocomplete: jsonAdapter.autocomplete
     readonly property alias monitors: jsonAdapter.monitors
+    readonly property alias screenDim: jsonAdapter.screenDim
     readonly property alias recentColors: jsonAdapter.recentColors
     readonly property alias widgets: jsonAdapter.widgets
     readonly property alias widgetItems: jsonAdapter.widgetItems
@@ -45,6 +46,10 @@ Singleton {
 
     function setWidgetItems(value) {
         jsonAdapter.widgetItems = value;
+    }
+
+    function setScreenDim(value) {
+        jsonAdapter.screenDim = value;
     }
 
     function setMonitors(value) {
@@ -73,7 +78,7 @@ Singleton {
     // is stored as a difference in config.overrides.json (git-ignored, generated) ---
     readonly property var objectSections: ["appearance", "layout", "capture", "dock", "autocomplete", "display", "bar", "notifications", "idle", "polkit", "fileChooser", "widgets"]
     readonly property var plainSections: ["keyboard", "hyprland", "search", "clipboard", "apps"]
-    readonly property var wholeValues: ["monitors", "recentColors", "widgetItems"]
+    readonly property var wholeValues: ["monitors", "screenDim", "recentColors", "widgetItems"]
     property var baseData: ({})
     property var overrides: ({})
     property string overridesText: ""
@@ -277,6 +282,10 @@ Singleton {
             // crashes Quickshell when the file is read back.
             property var monitors: ({
             })
+            // monitor name -> brightness in percent (40-100) of the software dim, see services/ScreenDim.qml.
+            // Kept at the top level for the same reason as `monitors`
+            property var screenDim: ({
+            })
             // kept at the top level for the same reason as `monitors`
             property var recentColors: []
             // the widgets on the desktop: [{ id, type, x, y (0-1 of the screen), scale, style }], see services/DesktopWidgets.qml
@@ -349,6 +358,12 @@ Singleton {
                 "enabled": true,
                 "accentBorder": true,
                 "blurLayers": true,
+                // one set of workspaces per screen (see services/HyprSettings.qml)
+                "workspaceSplit": false,
+                "workspaceCount": 5,
+                "pairKeys": false,
+                "barOwnWorkspaces": true,
+                "workspaceScreens": [],
                 "values": {
                 }
             })

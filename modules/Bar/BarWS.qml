@@ -10,6 +10,41 @@ Item {
     id: root
 
     property var barWindow
+    // the screen this bar is on
+    property string screenName: ""
+
+    // With separate workspaces per screen, this bar shows only its screen's own set (a screen that
+    // is unplugged hands its set to the first screen that is left), and the pill marks the screen's
+    // own active workspace: filled when this screen has the focus, an outline when the other one has.
+    readonly property bool split: Services.HyprSettings.workspaceSplit && Services.HyprSettings.barOwnWorkspaces && Services.HyprSettings.workspaceScreens.indexOf(screenName) >= 0
+    readonly property var connected: Hyprland.monitors.values.map(m => m.name)
+    readonly property var owned: {
+        if (!split)
+            return [];
+        const screens = Services.HyprSettings.workspaceScreens;
+        const n = Services.HyprSettings.workspaceCount;
+        const out = [];
+        for (let k = 0; k < screens.length; k++) {
+            const mine = screens[k] === screenName;
+            // the set of a screen that is not connected goes to the first connected screen of the list
+            const orphan = connected.indexOf(screens[k]) < 0 && screenName === screens.find(x => connected.indexOf(x) >= 0);
+            if (mine || orphan)
+                for (let i = 1; i <= n; i++)
+                    out.push(k * n + i);
+        }
+        // workspaces past the pinned sets (11, 12, ...) show on the screen that has them now
+        const pinned = screens.length * n;
+        const extra = Hyprland.workspaces.values.filter(w => w.id > pinned && w.monitor?.name === screenName).map(w => w.id);
+        extra.sort((a, b) => a - b);
+        const result = out.concat(extra);
+        // a spare hollow dot for the next new workspace, on the screen that has the focus (a new
+        // workspace opens there)
+        if (screenFocused)
+            result.push(Hyprland.workspaces.values.reduce((max, w) => Math.max(max, w.id), pinned) + 1);
+        return result;
+    }
+    readonly property var monitor: Hyprland.monitors.values.find(m => m.name === screenName) ?? null
+    readonly property bool screenFocused: Hyprland.focusedMonitor ? Hyprland.focusedMonitor.name === screenName : true
 
     // total number of workspaces = highest id (+1 spare)
     property int _numberOfWS: Hyprland.workspaces.values.length > 0 ? Hyprland.workspaces.values[Hyprland.workspaces.values.length - 1].id : 0
@@ -39,15 +74,17 @@ Item {
         columnSpacing: 2
 
         Repeater {
-            model: root._numberOfWS + 1
+            model: root.split ? root.owned.length : root._numberOfWS + 1
 
             delegate: Item {
                 id: ws
 
                 required property int index
-                property int workspaceId: index + 1
+                property int workspaceId: root.split ? root.owned[index] : index + 1
                 property HyprlandWorkspace currentWs: Hyprland.workspaces.values.find(w => w.id === workspaceId) || null
-                property bool focused: currentWs?.focused ?? false
+                // the workspace showing on this bar's screen (the one that has the focus, when split is off)
+                property bool active: root.split ? (root.monitor?.activeWorkspace?.id === workspaceId) : (currentWs?.focused ?? false)
+                property bool focused: active
                 property bool occupied: (currentWs?.toplevels?.values?.length ?? 0) > 0
 
                 // length along the bar: the focused workspace is a longer pill
@@ -70,7 +107,11 @@ Item {
                     width: root.horizontal ? parent.width - 4 : 28
                     height: root.horizontal ? 26 : parent.height - 4
                     radius: 14
-                    color: Appearance.accentColor
+                    // the other screen has the focus: an outline instead of a filled pill
+                    readonly property bool dimmed: root.split && !root.screenFocused
+                    color: dimmed ? "transparent" : Appearance.accentColor
+                    border.width: dimmed ? 2 : 0
+                    border.color: Appearance.accentColor
                     opacity: ws.focused ? 1 : 0
 
                     Behavior on opacity {
@@ -82,7 +123,7 @@ Item {
                     StyledText {
                         anchors.centerIn: parent
                         text: ws.workspaceId
-                        color: Appearance.accentContrastColor
+                        color: parent.dimmed ? Appearance.accentColor : Appearance.accentContrastColor
                         font.pixelSize: 14
                         font.weight: Font.Bold
                     }
