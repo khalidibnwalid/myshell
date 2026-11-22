@@ -84,7 +84,7 @@ PipeWire, WirePlumber, and UPower should also be available to the user session. 
 
 ### Idle lock and wallpaper
 
-The shell includes its own idle monitor and Wayland session lock. It authenticates through the system PAM `login` service and defaults to locking after 5 minutes, with displays turning off after 10 minutes. Configure the timers in Settings → Lock & idle. The Quick Settings footer can pause auto-lock for an hour without changing the saved settings. `Super + L` locks immediately.
+The shell includes its own idle monitor and Wayland session lock. It authenticates through the system PAM `login` service and defaults to locking after 5 minutes, with displays turning off after 10 minutes. Configure the timers in Settings → Lock & idle. The Quick Settings footer can pause auto-lock for an hour without changing the saved settings. `Super + L` locks immediately. Locking pauses whatever is playing (every MPRIS player: browsers, mpv, the Audio app). The lock screen has an eye in the password field (shown while the pointer is over it) to show what was typed, and Restart and Shut down buttons at the bottom that need a second click within 4 seconds.
 
 Choose a wallpaper in Settings → Appearance. The selected image is shared by the desktop and lock screen.
 
