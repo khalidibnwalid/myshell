@@ -5,6 +5,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Hyprland
+import Quickshell.Services.Mpris
 import Quickshell.Services.Pam
 import Quickshell.Wayland
 
@@ -26,6 +27,15 @@ Scope {
         password = "";
         statusText = "";
         lockRequested = true;
+        pauseMedia();
+    }
+
+    // music and videos (browsers, mpv, the Audio app: every MPRIS player) stop when the screen locks
+    function pauseMedia() {
+        for (const player of Mpris.players.values) {
+            if (player.isPlaying && player.canPause)
+                player.pause();
+        }
     }
 
     function startAuthentication() {

@@ -41,6 +41,15 @@ ApplicationWindow {
         WindowManager.openNotepad();
     }
 
+    // brings the window to the workspace being looked at and focuses it: a file opened from a
+    // file manager on one workspace must not land on (or stay on) another one
+    function bringHere() {
+        // the workspace is taken now: activating the window could switch to the one it is on
+        hereTimer.workspace = Hyprland.focusedWorkspace?.id ?? -1;
+        hereTimer.tries = 0;
+        hereTimer.restart();
+    }
+
     // Ctrl+S: into the file the note came from, or ask where when it has none
     function saveNote(asNew) {
         if (!current)
@@ -86,6 +95,34 @@ ApplicationWindow {
         if (Notes.loaded && Notes.notes.length === 0)
             Notes.create();
         Qt.callLater(focusEditor);
+        bringHere();
+    }
+
+    // the window is known to Hyprland a moment after it maps, so look a few times
+    Timer {
+        id: hereTimer
+
+        property int tries: 0
+        property int workspace: -1
+
+        interval: 60
+        onTriggered: {
+            const ws = workspace;
+            const t = Hyprland.toplevels.values.find(w => {
+                const cls = w.wayland?.appId || w.lastIpcObject?.class || "";
+                return w.title === "Notepad" && (cls.endsWith("noctalia-qs") || cls.endsWith("quickshell"));
+            });
+            if (!t || ws < 0) {
+                Hyprland.refreshToplevels();
+                if (++tries < 15)
+                    restart();
+                return;
+            }
+            const address = "0x" + t.address;
+            if (t.workspace?.id !== ws)
+                HyprCommand.moveWindowToWorkspace(address, ws);
+            HyprCommand.focusWindow(address);
+        }
     }
 
     // the first note of a fresh install
@@ -101,8 +138,8 @@ ApplicationWindow {
 
     Connections {
         function onNotepadRaiseRequested() {
-            root.raise();
-            root.requestActivate();
+            // no requestActivate: Hyprland would switch to the window's workspace first
+            root.bringHere();
             Qt.callLater(root.focusEditor);
         }
 

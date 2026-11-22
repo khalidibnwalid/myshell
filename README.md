@@ -117,6 +117,7 @@ A small notes app in `apps/Notepad/`: a list of notes on the left (pinned first,
 - Open it with `qs ipc call notepad toggle` (also `open`, `close`, `create` for a new note, `openFile <path>`), or bind `bind = $mainMod, N, global, quickshell:notepad`. It is also in the launcher and the dock.
 - `Ctrl + N` makes a note, `Ctrl + F` searches, `Ctrl + B` folds the list away, `Ctrl + Shift + V` switches between Edit (write) and View (the note shown as Markdown: headings, lists, code, tables, links), `Ctrl + O` opens a text file as a note, `Ctrl + S` saves the note to the file it came from (or asks where), `Ctrl + Shift + S` always asks. Opening a file does not change it until you save.
 - It lists itself as an app for plain text and Markdown files, so it appears in Settings → Default apps → Text and code; pick it there to make it the default for text files.
+- Opening a file (or the app) while the window is on another workspace brings it to the workspace you are on.
 - It opens as a floating window like Settings; the rule for that is in the Hyprland window rules (`class = "dev.noctalia.noctalia-qs", title = "^(Notepad)$"`).
 
 ### Camera message

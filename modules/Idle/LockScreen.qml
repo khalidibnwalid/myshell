@@ -27,6 +27,10 @@ Item {
     // the account picture, if the user has one
     readonly property string facePath: Quickshell.env("HOME") + "/.face"
     property bool hasFace: false
+    // the eye in the field shows what was typed
+    property bool revealed: false
+    // "restart" or "shutdown" after a first click; a second click within a few seconds does it
+    property string armed: ""
     // the plain "Password:" prompt adds nothing next to the field
     readonly property string shownPrompt: /^\s*password:?\s*$/i.test(prompt) ? "" : prompt
 
@@ -46,8 +50,30 @@ Item {
             passwordInput.text = password;
     }
     onSecureChanged: {
+        revealed = false;
+        armed = "";
         if (secure)
             passwordInput.forceActiveFocus();
+    }
+
+    function power(action) {
+        if (armed !== action) {
+            armed = action;
+            disarm.restart();
+            return;
+        }
+        armed = "";
+        if (action === "restart")
+            WindowManager.restartComputer();
+        else
+            WindowManager.shutdownComputer();
+    }
+
+    Timer {
+        id: disarm
+
+        interval: 4000
+        onTriggered: root.armed = ""
     }
     onFailedChanged: {
         if (failed)
@@ -267,14 +293,14 @@ Item {
 
                     anchors.fill: parent
                     anchors.leftMargin: 46
-                    anchors.rightMargin: 56
+                    anchors.rightMargin: 96
                     verticalAlignment: TextInput.AlignVCenter
                     clip: true
                     color: Appearance.fgColor
                     font.family: Appearance.fontFamily
                     font.pixelSize: 15
-                    font.letterSpacing: root.showInput ? 0 : 3
-                    echoMode: root.showInput ? TextInput.Normal : TextInput.Password
+                    font.letterSpacing: root.showInput || root.revealed ? 0 : 3
+                    echoMode: root.showInput || root.revealed ? TextInput.Normal : TextInput.Password
                     enabled: root.inputEnabled
                     text: root.password
                     onTextEdited: root.edited(text)
@@ -301,6 +327,35 @@ Item {
                     text: "Password"
                     color: Appearance.mutedColor
                     font.pixelSize: 15
+                }
+
+                HoverHandler {
+                    id: fieldHover
+                }
+
+                // show or hide the password
+                IconButton {
+                    anchors.right: parent.right
+                    anchors.rightMargin: 51
+                    anchors.verticalCenter: parent.verticalCenter
+                    size: 36
+                    iconSize: 19
+                    icon: root.revealed ? "visibility_off" : "visibility"
+                    color: Appearance.mutedColor
+                    // only while the pointer is over the field (or the password is shown)
+                    visible: !root.showInput && opacity > 0
+                    opacity: fieldHover.hovered || root.revealed ? 1 : 0
+                    activeFocusOnTab: false
+
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: Appearance.animFast
+                        }
+                    }
+                    onClicked: {
+                        root.revealed = !root.revealed;
+                        passwordInput.forceActiveFocus();
+                    }
                 }
 
                 // submit button, once something is typed
@@ -357,6 +412,78 @@ Item {
                 color: root.failed ? Appearance.accentColor : Appearance.mutedColor
                 font.pixelSize: 13
                 elide: Text.ElideRight
+            }
+        }
+
+        // --- restart and shut down, each asks for a second click ---
+        RowLayout {
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 24
+            spacing: 12
+
+            Repeater {
+                model: [
+                    {
+                        "action": "restart",
+                        "icon": "restart_alt",
+                        "label": "Restart",
+                        "again": "Click again to restart"
+                    },
+                    {
+                        "action": "shutdown",
+                        "icon": "power_settings_new",
+                        "label": "Shut down",
+                        "again": "Click again to shut down"
+                    }
+                ]
+
+                delegate: Rectangle {
+                    id: powerButton
+
+                    required property var modelData
+                    readonly property bool isArmed: root.armed === modelData.action
+
+                    implicitHeight: 40
+                    implicitWidth: powerRow.implicitWidth + 32
+                    radius: 20
+                    color: isArmed ? Appearance.accentColor : Qt.alpha(Appearance.fgColor, powerArea.containsMouse ? 0.16 : 0.08)
+
+                    RowLayout {
+                        id: powerRow
+
+                        anchors.centerIn: parent
+                        spacing: 8
+
+                        MaterialSymbol {
+                            icon: powerButton.modelData.icon
+                            font.pixelSize: 18
+                            color: powerButton.isArmed ? Appearance.accentContrastColor : Appearance.fgColor
+                        }
+
+                        StyledText {
+                            text: powerButton.isArmed ? powerButton.modelData.again : powerButton.modelData.label
+                            color: powerButton.isArmed ? Appearance.accentContrastColor : Appearance.fgColor
+                            font.pixelSize: 13
+                            font.weight: Font.Medium
+                        }
+                    }
+
+                    MouseArea {
+                        id: powerArea
+
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.power(powerButton.modelData.action)
+                    }
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: Appearance.animFast
+                        }
+                    }
+                }
             }
         }
 
