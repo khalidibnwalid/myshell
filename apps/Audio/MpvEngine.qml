@@ -39,6 +39,8 @@ Scope {
         duration = 0;
         status = "loading";
         paused = wantPaused;
+        // a new load replaces whatever was waiting for mpv
+        queued = [];
         let path = url;
         if (path.startsWith("file://"))
             path = decodeURIComponent(path.substring(7));
@@ -100,7 +102,8 @@ Scope {
         } : {
             "command": cmd
         }) + "\n";
-        if (socket.connected) {
+        // only a living mpv can be written to: a socket that still says "connected" after mpv died is not
+        if (proc.running && socket.connected) {
             socket.write(line);
             socket.flush();
             return;
@@ -108,6 +111,11 @@ Scope {
         queued = queued.concat([line]);
         if (!proc.running)
             proc.running = true;
+        else if (!connect.running) {
+            // mpv is up but the socket is not: connect again
+            tries = 0;
+            connect.restart();
+        }
     }
 
     function onLine(line) {
@@ -181,6 +189,11 @@ Scope {
             }
             if (root.tries++ > 50) {
                 connect.stop();
+                // end the mpv that never answered, so the next play starts a new one
+                root.queued = [];
+                proc.running = false;
+                root.status = "stopped";
+                root.paused = true;
                 root.failed("mpv did not start");
                 return;
             }
@@ -215,14 +228,17 @@ Scope {
     Process {
         id: proc
 
-        // mpv dies with the shell: setpriv asks the kernel to end it with its parent
-        command: ["sh", "-c", 'if command -v setpriv >/dev/null 2>&1; then exec setpriv --pdeathsig KILL "$@"; fi; exec "$@"', "sh", "mpv", "--idle=yes", "--no-config", "--no-terminal", "--really-quiet", "--no-video", "--audio-display=no", "--force-window=no", "--no-osc", "--no-input-default-bindings", "--input-media-keys=no", "--load-scripts=no", "--ytdl=no", "--audio-client-name=Audio", "--input-ipc-server=" + root.socketPath]
+        // mpv dies with the shell: a watcher ends it when the shell's process is gone (setpriv --pdeathsig
+        // follows the thread that started mpv, which can end at any time and took mpv with it)
+        command: ["sh", "-c", 'p=$PPID; "$@" & m=$!; (while kill -0 $p 2>/dev/null && kill -0 $m 2>/dev/null; do sleep 2; done; kill $m 2>/dev/null) >/dev/null 2>&1 & wait $m', "sh", "mpv", "--idle=yes", "--no-config", "--no-terminal", "--really-quiet", "--no-video", "--audio-display=no", "--force-window=no", "--no-osc", "--no-input-default-bindings", "--input-media-keys=no", "--load-scripts=no", "--ytdl=no", "--audio-client-name=Audio", "--input-ipc-server=" + root.socketPath]
         onRunningChanged: {
             if (running) {
                 root.tries = 0;
                 connect.restart();
             } else {
                 connect.stop();
+                // drop the socket of the mpv that ended, so nothing is written to it
+                socket.connected = false;
                 if (root.status !== "idle" && root.status !== "ended") {
                     root.status = "stopped";
                     root.paused = true;

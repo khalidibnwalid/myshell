@@ -14,7 +14,7 @@ Item {
     property string screenName: ""
 
     // With separate workspaces per screen, this bar shows only its screen's own set (a screen that
-    // is unplugged hands its set to the first screen that is left), and the pill marks the screen's
+    // is unplugged hands its workspaces in use to the first screen that is left), and the pill marks the screen's
     // own active workspace: filled when this screen has the focus, an outline when the other one has.
     readonly property bool split: Services.HyprSettings.workspaceSplit && Services.HyprSettings.barOwnWorkspaces && Services.HyprSettings.workspaceScreens.indexOf(screenName) >= 0
     readonly property var connected: Hyprland.monitors.values.map(m => m.name)
@@ -28,9 +28,13 @@ Item {
             const mine = screens[k] === screenName;
             // the set of a screen that is not connected goes to the first connected screen of the list
             const orphan = connected.indexOf(screens[k]) < 0 && screenName === screens.find(x => connected.indexOf(x) >= 0);
+            // an unplugged screen's set shows only the workspaces that are in use, not five empty dots
             if (mine || orphan)
-                for (let i = 1; i <= n; i++)
-                    out.push(k * n + i);
+                for (let i = 1; i <= n; i++) {
+                    const id = k * n + i;
+                    if (mine || Hyprland.workspaces.values.some(w => w.id === id))
+                        out.push(id);
+                }
         }
         // workspaces past the pinned sets (11, 12, ...) show on the screen that has them now
         const pinned = screens.length * n;

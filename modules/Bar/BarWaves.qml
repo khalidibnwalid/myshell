@@ -18,9 +18,11 @@ Item {
     // how far the bars swell across the bar
     readonly property int across: Math.max(14, Math.min(44, Config.bar.wavesWidth ?? 30))
     readonly property var levels: AudioWave.flow
-    // the player to pause: the one that is playing, else the first
+    // the player to pause or play: the one that is playing, else the one that played last (so a stopped
+    // song comes back and not some other player), else the first that can be toggled
     readonly property var players: Mpris.players.values
-    readonly property var player: players.find(p => p.isPlaying) || players[0] || null
+    property var lastPlayer: null
+    readonly property var player: players.find(p => p.isPlaying) || (players.indexOf(lastPlayer) >= 0 ? lastPlayer : null) || players.find(p => p.canTogglePlaying) || players[0] || null
     property bool counted: false
 
     visible: wanted && (player !== null || !AudioWave.silent)
@@ -65,6 +67,25 @@ Item {
             take();
     }
     Component.onDestruction: drop()
+
+    // remembers which player played last
+    Instantiator {
+        model: Mpris.players
+
+        delegate: Connections {
+            required property var modelData
+
+            target: modelData
+            Component.onCompleted: {
+                if (modelData.isPlaying)
+                    root.lastPlayer = modelData;
+            }
+            function onIsPlayingChanged() {
+                if (modelData.isPlaying)
+                    root.lastPlayer = modelData;
+            }
+        }
+    }
 
     opacity: area.containsMouse ? 1 : 0.85
 
