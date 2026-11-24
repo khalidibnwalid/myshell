@@ -1,7 +1,9 @@
 import "../../../components"
+import "../../../components/WorkspaceShapes.js" as Shapes
 import "../../../config"
 import "../../../services"
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Services.SystemTray
@@ -83,6 +85,205 @@ SettingsPage {
             ToggleSwitch {
                 checked: Config.bar.clock24h
                 onToggled: on => Config.bar.clock24h = on
+            }
+        }
+    }
+
+    SettingGroup {
+        title: "Workspace shapes"
+
+        SettingRow {
+            icon: "shapes"
+            title: "Shape of each workspace"
+            description: Config.bar.workspaceShapes === "" ? "All workspaces are round dots" : "Each workspace in the bar has its own shape"
+
+            // the first few, as a preview
+            Row {
+                spacing: 4
+
+                Repeater {
+                    model: 5
+
+                    delegate: WorkspaceShape {
+                        required property int index
+
+                        anchors.verticalCenter: parent.verticalCenter
+                        size: 14
+                        shape: Shapes.shapeOf(Config.bar.workspaceShapes, index + 1)
+                    }
+                }
+            }
+
+            PillButton {
+                text: "Custom"
+                icon: "tune"
+                onClicked: shapeDialog.open()
+            }
+        }
+    }
+
+    ModalDialog {
+        id: shapeDialog
+
+        // which workspace is being given a shape
+        property int current: 1
+        readonly property string currentShape: Shapes.shapeOf(Config.bar.workspaceShapes, current)
+
+        title: "Workspace shapes"
+        dialogWidth: 600
+        buttons: [
+            {
+                "text": "Done",
+                "key": "done",
+                "primary": true
+            }
+        ]
+
+        // what the picked workspace looks like now, empty and with windows
+        Rectangle {
+            Layout.fillWidth: true
+            implicitHeight: 76
+            radius: 20
+            color: Appearance.surfaceColor
+
+            RowLayout {
+                anchors.fill: parent
+                anchors.leftMargin: 18
+                anchors.rightMargin: 14
+                spacing: 14
+
+                Row {
+                    spacing: 14
+
+                    Rectangle {
+                        width: 52
+                        height: 52
+                        radius: 26
+                        color: Appearance.accentColor
+
+                        WorkspaceShape {
+                            anchors.centerIn: parent
+                            size: 26
+                            shape: shapeDialog.currentShape
+                            fillColor: Appearance.accentContrastColor
+                        }
+                    }
+
+                    Column {
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 2
+
+                        StyledText {
+                            text: "Workspace " + shapeDialog.current
+                            font.pixelSize: 15
+                            font.weight: Font.DemiBold
+                        }
+
+                        StyledText {
+                            text: Shapes.find(shapeDialog.currentShape).name
+                            color: Appearance.mutedColor
+                            font.pixelSize: 12
+                        }
+                    }
+                }
+
+                Item {
+                    Layout.fillWidth: true
+                }
+
+                // as the bar draws it: with windows, and empty
+                WorkspaceShape {
+                    size: 16
+                    shape: shapeDialog.currentShape
+                }
+
+                WorkspaceShape {
+                    size: 16
+                    shape: shapeDialog.currentShape
+                    filled: false
+                }
+
+                PillButton {
+                    text: "Reset all"
+                    icon: "restart_alt"
+                    visible: Config.bar.workspaceShapes !== ""
+                    onClicked: Config.bar.workspaceShapes = ""
+                }
+            }
+        }
+
+        StyledText {
+            text: "Workspace"
+            color: Appearance.mutedColor
+            font.pixelSize: 12
+            font.weight: Font.DemiBold
+            leftPadding: 8
+        }
+
+        Rectangle {
+            Layout.fillWidth: true
+            implicitHeight: wsFlow.implicitHeight + 20
+            radius: 20
+            color: Appearance.surfaceColor
+
+            Flow {
+                id: wsFlow
+
+                anchors.fill: parent
+                anchors.margins: 10
+                spacing: 6
+
+                Repeater {
+                    model: Math.min(20, Math.max(10, HyprSettings.workspaceCount * Math.max(1, HyprSettings.workspaceScreens.length)))
+
+                    delegate: ShapeTile {
+                        required property int index
+
+                        tileSize: 48
+                        shape: Shapes.shapeOf(Config.bar.workspaceShapes, index + 1)
+                        label: String(index + 1)
+                        selected: shapeDialog.current === index + 1
+                        onClicked: shapeDialog.current = index + 1
+                    }
+                }
+            }
+        }
+
+        StyledText {
+            text: "Shape"
+            color: Appearance.mutedColor
+            font.pixelSize: 12
+            font.weight: Font.DemiBold
+            leftPadding: 8
+        }
+
+        Rectangle {
+            Layout.fillWidth: true
+            implicitHeight: shapeFlow.implicitHeight + 20
+            radius: 20
+            color: Appearance.surfaceColor
+
+            Flow {
+                id: shapeFlow
+
+                anchors.fill: parent
+                anchors.margins: 10
+                spacing: 6
+
+                Repeater {
+                    model: Shapes.list
+
+                    delegate: ShapeTile {
+                        required property var modelData
+
+                        tileSize: 48
+                        glyph: 22
+                        shape: modelData.id
+                        tip: modelData.name
+                        selected: shapeDialog.currentShape === modelData.id
+                        onClicked: Config.bar.workspaceShapes = Shapes.withShape(Config.bar.workspaceShapes, shapeDialog.current, modelData.id)
+                    }
+                }
             }
         }
     }

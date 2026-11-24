@@ -186,6 +186,10 @@
         "trayHidden": {
           "type": "string",
           "description": "Ids of tray apps that never show in the bar, separated by |"
+        },
+        "workspaceShapes": {
+          "type": "string",
+          "description": "Shape of each workspace marker in the bar, workspace 1 first, separated by |; an empty entry is the round dot (dot, square, squircle, diamond, triangle, triangleDown, pentagon, hexagon, octagon, star4, star5, star6, star8, burst, plus, heart, flower, clover, scallop, arrow, bolt, moon)"
         }
       }
     },

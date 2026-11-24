@@ -304,6 +304,9 @@ Singleton {
                 property int trayVisible: 2
                 // ids of tray apps that never show in the bar, separated by "|"
                 property string trayHidden: ""
+                // shape of each workspace marker, workspace 1 first, separated by "|"; empty = the round dot
+                // (ids in components/WorkspaceShapes.js)
+                property string workspaceShapes: ""
             }
 
             property JsonObject notifications

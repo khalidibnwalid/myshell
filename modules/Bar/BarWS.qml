@@ -1,4 +1,5 @@
 import "../../components/"
+import "../../components/WorkspaceShapes.js" as Shapes
 import "../../config/"
 import "../../services" as Services
 import "."
@@ -133,16 +134,13 @@ Item {
                     }
                 }
 
-                // dot: filled = has windows, hollow = empty
-                Rectangle {
+                // marker: filled = has windows, hollow = empty; its shape is set in Settings
+                WorkspaceShape {
                     anchors.centerIn: parent
-                    width: 9
-                    height: 9
-                    radius: 4.5
+                    shape: Shapes.shapeOf(Config.bar.workspaceShapes, ws.workspaceId)
+                    size: shape === "dot" ? 9 : 12
                     visible: !ws.focused
-                    color: ws.occupied ? Appearance.fgColor : "transparent"
-                    border.width: ws.occupied ? 0 : 1.5
-                    border.color: Appearance.mutedColor
+                    filled: ws.occupied
                     scale: wsArea.containsMouse ? 1.35 : 1
 
                     Behavior on scale {
