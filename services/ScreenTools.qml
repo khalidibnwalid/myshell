@@ -66,11 +66,11 @@ Singleton {
     // $4 = file holding the chosen mode (screenshot or text), $5 = tesseract languages
     readonly property string shotScript: "m=$(cat \"$4\" 2>/dev/null); "
         // Video: free the screen and hand the area back to the shell, which starts the recorder
-        + "if [ \"$m\" = video ]; then kill $hp 2>/dev/null; printf 'VIDEO %s' \"$g\"; exit; fi; "
+        + "if [ \"$m\" = video ]; then kill $hp 2>/dev/null; rr; printf 'VIDEO %s' \"$g\"; exit; fi; "
         + "t=\"$2/$(date +%Y-%m-%d_%H-%M-%S).png\"; f=\"$1/Screenshot_$(basename \"$t\")\"; "
         + "mkdir -p \"$2\" && grim -g \"$g\" \"$t\" || exit 1; "
         // the frozen screen can go as soon as the shot is taken
-        + "kill $hp 2>/dev/null; "
+        + "kill $hp 2>/dev/null; rr; "
         // Extract text: read the area, copy the words, keep no picture
         + "if [ \"$m\" = text ]; then "
         + "x=$(tesseract \"$t\" stdout -l \"$5\" 2>/dev/null | sed -e :a -e '/^[[:space:]]*$/{$d;N;ba' -e '}'); rm -f \"$t\"; "
@@ -99,7 +99,14 @@ Singleton {
     function screenshot(mode) {
         // hyprpicker holds a frozen copy of the screen while the area is selected, so menus,
         // tooltips and hover states that would vanish when focus moves stay in the shot
-        const script = "hyprpicker -r -z >/dev/null 2>&1 & hp=$!; trap 'kill $hp 2>/dev/null' EXIT; sleep 0.2; g=$(" + slurpCmd + ") || exit 0; " + shotScript;
+        // the window that had the focus is given it back afterwards (Lua dispatch, with the old name as a fallback): the selection runs on the screen that is
+        // clicked, and with follow_mouse 2 the keyboard would stay there until a click on the other screen
+        const script = "w=$(hyprctl activewindow -j 2>/dev/null | sed -n 's/.*\"address\": *\"\\([^\"]*\\)\".*/\\1/p' | head -n1); "
+            + "r() { [ -n \"$w\" ] || return; hyprctl dispatch \"hl.dsp.focus({window=\\\"address:$w\\\"})\" >/dev/null 2>&1; hyprctl dispatch focuswindow \"address:$w\" >/dev/null 2>&1; }; "
+            // the overlays go away a moment after their processes end, and the keyboard is only given back
+            // once they have: so the focus is returned a little later, in the background, twice
+            + "rr() { ( sleep 0.25; r; sleep 0.6; r ) >/dev/null 2>&1 & }; "
+            + "hyprpicker -r -z >/dev/null 2>&1 & hp=$!; trap 'kill $hp 2>/dev/null; rr' EXIT; sleep 0.2; g=$(" + slurpCmd + ") || exit 0; " + shotScript;
         if (shotProc.running)
             return;
         setMode(mode || "screenshot");

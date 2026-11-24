@@ -28,6 +28,7 @@ Scope {
     property bool wantPaused: true
     property real startMs: 0
     property int tries: 0
+    property bool retryOn: false
     property var queued: []
 
     // loads a file; it plays from `from` ms, paused when `startPaused`
@@ -187,7 +188,8 @@ Scope {
                 connect.stop();
                 return;
             }
-            if (root.tries++ > 50) {
+            // a first start after boot can be slow: wait up to 15 s
+            if (root.tries++ > 150) {
                 connect.stop();
                 // end the mpv that never answered, so the next play starts a new one
                 root.queued = [];
@@ -197,8 +199,15 @@ Scope {
                 root.failed("mpv did not start");
                 return;
             }
-            socket.connected = false;
-            socket.connected = true;
+            // released on one tick and asked again on the next: a socket that is told "false" and "true" at once
+            // keeps the refused first try and never connects again
+            if (root.retryOn) {
+                root.retryOn = false;
+                socket.connected = true;
+            } else {
+                root.retryOn = true;
+                socket.connected = false;
+            }
         }
     }
 
@@ -228,9 +237,9 @@ Scope {
     Process {
         id: proc
 
-        // mpv dies with the shell: a watcher ends it when the shell's process is gone (setpriv --pdeathsig
+        // mpv dies with the shell, and with this wrapper when it is stopped or killed: a watcher ends it when either is gone (setpriv --pdeathsig
         // follows the thread that started mpv, which can end at any time and took mpv with it)
-        command: ["sh", "-c", 'p=$PPID; "$@" & m=$!; (while kill -0 $p 2>/dev/null && kill -0 $m 2>/dev/null; do sleep 2; done; kill $m 2>/dev/null) >/dev/null 2>&1 & wait $m', "sh", "mpv", "--idle=yes", "--no-config", "--no-terminal", "--really-quiet", "--no-video", "--audio-display=no", "--force-window=no", "--no-osc", "--no-input-default-bindings", "--input-media-keys=no", "--load-scripts=no", "--ytdl=no", "--audio-client-name=Audio", "--input-ipc-server=" + root.socketPath]
+        command: ["sh", "-c", 'p=$PPID; s=$$; "$@" & m=$!; trap "kill $m" TERM INT HUP; (while kill -0 $p 2>/dev/null && kill -0 $s 2>/dev/null && kill -0 $m 2>/dev/null; do sleep 2; done; kill $m 2>/dev/null) >/dev/null 2>&1 & wait $m', "sh", "mpv", "--idle=yes", "--no-config", "--no-terminal", "--really-quiet", "--no-video", "--audio-display=no", "--force-window=no", "--no-osc", "--no-input-default-bindings", "--input-media-keys=no", "--load-scripts=no", "--ytdl=no", "--audio-client-name=Audio", "--input-ipc-server=" + root.socketPath]
         onRunningChanged: {
             if (running) {
                 root.tries = 0;
