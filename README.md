@@ -24,7 +24,7 @@ Required packages:
 - `bc` — provides calculator results in the launcher.
 - `wl-clipboard` and `cliphist` — record the clipboard history shown by the clipboard menu.
 - `slurp` and `grim` — select an area and take the screenshot.
-- `wl-screenrec` — records the selected area.
+- `wl-screenrec` or `wf-recorder` — records the selected area (`wl-screenrec` is used when both are installed; `wf-recorder` is in the official repos).
 - `hyprpicker` — picks a colour from the screen.
 - `libnotify` — provides `notify-send` for the capture notifications.
 - `wtype` — pastes the picked clipboard item into the focused window.
@@ -176,7 +176,9 @@ Settings → Keyboard edits the layouts, their variants and the switching shortc
 
 ### Bar styles
 
-Settings → Appearance → Bar picks the look of the bar: Classic (one strip), Capsule (one rounded shape floating a little off the edge), Islands (workspaces, clock and status each in their own shape) or Inset (a solid bar with the desktop as a rounded sheet beside it). The bar can be on any edge. Every style takes the same room at the screen edge (50 px), so windows never move when the style changes: Capsule and Islands leave a 4 px gap to the screen edge and their shape fills the other 46 px. Settings → Bar → Sound waves (off by default) adds a few small bars above the tray icons that move with the sound that plays and show only while something plays; it listens through the same `pw-record` and `helpers/audio-wave` as the desktop widget (see above), only while it is on.
+With separate workspaces per screen (Settings → Display), Super + ` (the key left of 1, matched by its key code so it also works in the Arabic layout) then a number 1–N jumps to that workspace of the second screen: with five per screen, Super + ` + 1 is workspace 6. Hold ` and press as many numbers as you like (letting go of ` ends it), or tap ` and press one number; Super can be held or not. Escape or any other key cancels. The binds are written to `~/.config/hypr/config/quickshell.lua` (or `.conf`) as a submap, and take effect after Hyprland reloads its config.
+
+Settings → Appearance → Bar picks the look of the bar: Classic (one strip), Capsule (one rounded shape floating a little off the edge), Islands (workspaces, clock and status each in their own shape) or Inset (a solid bar with the desktop as a rounded sheet beside it). The bar can be on any edge. Every style takes the same room at the screen edge (50 px), so windows never move when the style changes: Capsule and Islands leave a 4 px gap to the screen edge and their shape fills the other 46 px. Settings → Bar → Sound waves (off by default) adds a few small bars above the tray icons that move with the sound that plays and show only while something plays; it listens through the same `pw-record` and `helpers/audio-wave` as the desktop widget (see above), only while it is on. While a screen recording runs, a red capsule with the time shows under the waves in every bar; pointing at it turns the dot into a stop square, and a click (or Enter) stops and saves the recording.
 
 ### Hyprland
 

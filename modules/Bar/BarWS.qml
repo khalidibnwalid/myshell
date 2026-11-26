@@ -14,10 +14,12 @@ Item {
     // the screen this bar is on
     property string screenName: ""
 
+    // With only one screen connected there is nothing to separate: the bar lists the workspaces in a row,
+    // 1, 2, 3 ... up to the highest one (and a spare), as it does without the split.
     // With separate workspaces per screen, this bar shows only its screen's own set (a screen that
     // is unplugged hands its workspaces in use to the first screen that is left), and the pill marks the screen's
     // own active workspace: filled when this screen has the focus, an outline when the other one has.
-    readonly property bool split: Services.HyprSettings.workspaceSplit && Services.HyprSettings.barOwnWorkspaces && Services.HyprSettings.workspaceScreens.indexOf(screenName) >= 0
+    readonly property bool split: Services.HyprSettings.workspaceSplit && Services.HyprSettings.barOwnWorkspaces && Services.HyprSettings.workspaceScreens.indexOf(screenName) >= 0 && connected.length > 1
     readonly property var connected: Hyprland.monitors.values.map(m => m.name)
     readonly property var owned: {
         if (!split)

@@ -583,6 +583,53 @@ Singleton {
         return k < 0 ? 0 : k * workspaceCount + 1;
     }
 
+    // the keys that jump to the second screen's workspaces (see workspaceLines)
+    function secondScreenLines(lua, n) {
+        const map = "quickshell-second-screen";
+        const lines = [""];
+        if (lua) {
+            // Held: ` stays down and any number of numbers can follow; letting go of ` ends it. Tapped (` let go
+            // before any number): the next number goes and ends it, and so does 2.5 seconds without one.
+            lines.push("local qsHeld, qsUsed, qsGen = false, false, 0");
+            // a safety net that does not rely on the key-release event: while the mode is on, look every 0.2 s whether `
+            // (grave, or ذ in the Arabic layout) is still down; once it is up and a number was used, the mode ends
+            lines.push("local function qsDown() return hl.is_key_down(\"grave\") or hl.is_key_down(\"Arabic_thal\") end");
+            lines.push("local function qsWatch(g)");
+            lines.push("    hl.timer(function()");
+            lines.push("        if g ~= qsGen or hl.get_current_submap() ~= \"" + map + "\" then return end");
+            lines.push("        if qsHeld and not qsDown() then qsHeld = false; if qsUsed then hl.dispatch(hl.dsp.submap(\"reset\")); return end end");
+            lines.push("        qsWatch(g)");
+            lines.push("    end, { timeout = 200, type = \"oneshot\" })");
+            lines.push("end");
+            lines.push("hl.bind(\"SUPER + code:49\", function() qsHeld = true; qsUsed = false; qsGen = qsGen + 1; hl.dispatch(hl.dsp.submap(\"" + map + "\")); qsWatch(qsGen) end, { description = \"Then 1-" + n + ": go to that workspace of the second screen\" })");
+            lines.push("hl.define_submap(\"" + map + "\", function()");
+            for (let i = 1; i <= n; i++) {
+                const ws = n + i;
+                // by key code (1 is 10 ... 9 is 18, 0 is 19), so the layout (English or Arabic digits) does not matter
+                for (const keys of ["code:" + (9 + i), "SUPER + code:" + (9 + i)])
+                    lines.push("    hl.bind(\"" + keys + "\", function() hl.dispatch(hl.dsp.focus({ workspace = " + ws + " })); if qsHeld then qsUsed = true else hl.dispatch(hl.dsp.submap(\"reset\")) end end)");
+            }
+            for (const keys of ["code:49", "SUPER + code:49"])
+                lines.push("    hl.bind(\"" + keys + "\", function() qsHeld = false; if qsUsed then hl.dispatch(hl.dsp.submap(\"reset\")) else local g = qsGen; hl.timer(function() if g == qsGen and not qsHeld then hl.dispatch(hl.dsp.submap(\"reset\")) end end, { timeout = 2500, type = \"oneshot\" }) end end, { release = true })");
+            lines.push("    hl.bind(\"escape\", hl.dsp.submap(\"reset\"))");
+            lines.push("    hl.bind(\"catchall\", hl.dsp.submap(\"reset\"))");
+            lines.push("end)");
+        } else {
+            // hyprlang has no state: hold ` and press numbers, letting go of ` ends it
+            lines.push("bind = SUPER, code:49, submap, " + map);
+            lines.push("submap = " + map);
+            for (let i = 1; i <= n; i++)
+                for (const mods of ["", "SUPER"])
+                    lines.push("bind = " + mods + ", code:" + (9 + i) + ", workspace, " + (n + i));
+            lines.push("bindr = , code:49, submap, reset");
+            lines.push("bindr = SUPER, code:49, submap, reset");
+            lines.push("bind = , escape, submap, reset");
+            lines.push("bind = , catchall, submap, reset");
+            lines.push("submap = reset");
+        }
+        return lines;
+    }
+
     // the workspace rules and the keys, as lines of the Lua or hyprlang file
     function workspaceLines(lua) {
         const lines = [];
@@ -598,6 +645,13 @@ Singleton {
                 lines.push(lua ? "hl.workspace_rule({ workspace = \"" + ws + "\", monitor = \"" + screens[k] + "\", default = " + def + " })" : "workspace = " + ws + ", monitor:" + screens[k] + ", default:" + def);
             }
         }
+        // Super + ` then 1..N: workspace N of the second screen's set, from any screen (so with five per
+        // screen, Super + ` + 1 is workspace 6). The key is the one left of 1, matched by its key code (49)
+        // so it works in the Arabic layout too (ذ). A submap waits for the number, with or without Super
+        // still held; any other key, or Escape, leaves it.
+        if (screens.length > 1)
+            for (const l of secondScreenLines(lua, n))
+                lines.push(l);
         if (!pairKeys)
             return lines;
         lines.push("");

@@ -59,6 +59,12 @@ Rectangle {
         }
     }
 
+    Timer {
+        id: clearTimer
+
+        onTriggered: NotificationService.clearAll()
+    }
+
     RowLayout {
         id: footer
 
@@ -100,7 +106,23 @@ Rectangle {
         PillButton {
             implicitHeight: 40
             text: "Clear all"
-            onClicked: NotificationService.clearAll()
+            // every notification slides out to the left, one after the other, then the list is emptied
+            onClicked: {
+                if (clearTimer.running)
+                    return;
+                let shown = 0;
+                for (let i = 0; i < list.count; i++) {
+                    const item = list.itemAtIndex(i);
+                    if (item)
+                        item.swipeAway(shown++ * 45, true);
+                }
+                if (shown === 0) {
+                    NotificationService.clearAll();
+                    return;
+                }
+                clearTimer.interval = (shown - 1) * 45 + Appearance.animNormal + 30;
+                clearTimer.start();
+            }
         }
     }
 }

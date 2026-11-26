@@ -6,7 +6,7 @@ import Quickshell
 import Quickshell.Io
 
 // Small screen utilities: colour picker (hyprpicker), region screenshot (slurp + grim)
-// and region screen recording (slurp + wl-screenrec).
+// and region screen recording (slurp + wl-screenrec, or wf-recorder when that is not installed).
 Singleton {
     id: root
 
@@ -128,7 +128,7 @@ Singleton {
     function stopRecording() {
         if (!recording)
             return;
-        // SIGINT lets wl-screenrec finish the file properly
+        // SIGINT lets the recorder finish the file properly
         stopRequested = true;
         recProc.signal(2);
     }
@@ -142,7 +142,8 @@ Singleton {
         recordingFile = dir + "/" + Qt.formatDateTime(new Date(), "yyyy-MM-dd_HH-mm-ss") + ".mp4";
         elapsed = 0;
         stopRequested = false;
-        recProc.command = ["sh", "-c", "mkdir -p \"$1\" && exec wl-screenrec -g \"$2\" -f \"$3\" $4", "sh", dir, m[0], recordingFile, Config.capture.recordAudio ? "--audio" : ""];
+        // wl-screenrec when it is installed (hardware encoding), wf-recorder otherwise; $4 is set when sound is wanted
+        recProc.command = ["sh", "-c", "mkdir -p \"$1\" && if command -v wl-screenrec >/dev/null; then exec wl-screenrec -g \"$2\" -f \"$3\" ${4:+--audio}; else exec wf-recorder -g \"$2\" -f \"$3\" ${4:+-a}; fi", "sh", dir, m[0], recordingFile, Config.capture.recordAudio ? "1" : ""];
         recProc.running = true;
     }
 
@@ -195,7 +196,7 @@ Singleton {
             if (exitCode === 0 || root.stopRequested)
                 Quickshell.execDetached(["notify-send", "-a", "Screen recorder", "Recording saved", root.recordingFile]);
             else
-                Quickshell.execDetached(["notify-send", "-a", "Screen recorder", "Recording failed", "wl-screenrec exited with code " + exitCode]);
+                Quickshell.execDetached(["notify-send", "-a", "Screen recorder", "Recording failed", "The recorder exited with code " + exitCode]);
         }
     }
 }

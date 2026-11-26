@@ -140,7 +140,10 @@ function find(id) {
 // points of a shape in a box of `size` pixels, as [{x, y}] for a PathPolyline
 function points(id, size) {
     const half = size / 2;
-    return find(id).build().map(q => Qt.point(half + q[0] * half, half + q[1] * half));
+    const out = find(id).build().map(q => Qt.point(half + q[0] * half, half + q[1] * half));
+    // close the outline: a polyline does not join its last point to the first, which left a gap in hollow shapes
+    out.push(out[0]);
+    return out;
 }
 
 // the "|"-separated setting: shape id of workspace number n (1-based)

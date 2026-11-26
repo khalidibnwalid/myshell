@@ -142,7 +142,7 @@ SettingsPage {
         SettingRow {
             icon: "grid_view"
             title: "Separate workspaces per screen"
-            description: HyprSettings.workspaceSplit ? "Screen " + HyprSettings.workspaceScreens.map((n, k) => n + " has " + (k * HyprSettings.workspaceCount + 1) + "–" + ((k + 1) * HyprSettings.workspaceCount)).join(", ") + ". An unplugged screen's workspaces show on the other one." : "Each screen keeps its own numbers, so switching on one never pulls workspaces off another."
+            description: HyprSettings.workspaceSplit ? "Screen " + HyprSettings.workspaceScreens.map((n, k) => n + " has " + (k * HyprSettings.workspaceCount + 1) + "–" + ((k + 1) * HyprSettings.workspaceCount)).join(", ") + ". An unplugged screen's workspaces show on the other one." + (HyprSettings.workspaceScreens.length > 1 ? " Super + ` then 1–" + HyprSettings.workspaceCount + " jumps to that workspace of the second screen." : "") : "Each screen keeps its own numbers, so switching on one never pulls workspaces off another."
 
             ToggleSwitch {
                 enabled: HyprSettings.enabled

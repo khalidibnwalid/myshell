@@ -41,6 +41,81 @@ Rectangle {
         id: hover
     }
 
+    // Swipe left to dismiss: drag the notification sideways; past a third of its width it slides
+    // out and goes, otherwise it springs back.
+    property bool leaving: false
+    property int leaveDelay: 0
+    property bool leaveSilently: false
+
+    // slides out to the left and then asks to be closed; `delay` staggers a group ("Clear all"),
+    // `silently` leaves the closing to the caller
+    function swipeAway(delay, silently) {
+        leaveDelay = delay ?? 0;
+        leaveSilently = silently ?? false;
+        leaving = true;
+        leave.start();
+    }
+
+    DragHandler {
+        id: swipe
+
+        target: root
+        xAxis.minimum: -root.width
+        xAxis.maximum: 0
+        yAxis.enabled: false
+        enabled: !root.leaving
+        onActiveChanged: {
+            if (active)
+                return;
+            if (root.x < -root.width * 0.33)
+                root.swipeAway();
+            else
+                root.x = 0;
+        }
+    }
+
+    // the way back when the drag is let go too early
+    Behavior on x {
+        enabled: !swipe.active && !root.leaving
+
+        NumberAnimation {
+            duration: Appearance.animNormal
+            easing.type: Easing.BezierSpline
+            easing.bezierCurve: Appearance.easeOut
+        }
+    }
+
+    SequentialAnimation {
+        id: leave
+
+        PauseAnimation {
+            duration: root.leaveDelay
+        }
+
+        ParallelAnimation {
+            NumberAnimation {
+                target: root
+                property: "x"
+                to: -root.width - 24
+                duration: Appearance.animNormal
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Appearance.easeStandard
+            }
+
+            NumberAnimation {
+                target: root
+                property: "opacity"
+                to: 0
+                duration: Appearance.animNormal
+            }
+        }
+
+        onFinished: {
+            if (!root.leaveSilently)
+                root.closeRequested();
+        }
+    }
+
     MouseArea {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor

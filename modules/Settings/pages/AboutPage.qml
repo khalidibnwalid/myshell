@@ -19,7 +19,7 @@ SettingsPage {
         "wtype": "paste from the clipboard menu",
         "grim": "screenshots",
         "slurp": "area selection",
-        "wl-screenrec": "screen recording",
+        "wl-screenrec|wf-recorder": "screen recording",
         "hyprpicker": "colour picker",
         "notify-send": "capture notifications",
         "tesseract": "Extract text from a screen area",
@@ -66,7 +66,7 @@ SettingsPage {
     Process {
         id: checkProc
 
-        command: ["sh", "-c", "for t; do command -v \"$t\" >/dev/null 2>&1 || echo \"$t\"; done", "sh"].concat(Object.keys(page.tools))
+        command: ["sh", "-c", "for t; do ok=; for a in $(printf %s \"$t\" | tr '|' ' '); do command -v \"$a\" >/dev/null 2>&1 && ok=1; done; [ -n \"$ok\" ] || echo \"$t\"; done", "sh"].concat(Object.keys(page.tools))
 
         stdout: StdioCollector {
             onStreamFinished: {
@@ -177,7 +177,7 @@ SettingsPage {
                 required property string modelData
 
                 icon: "error"
-                title: modelData + " is not installed"
+                title: modelData.split("|").join(" or ") + (modelData.indexOf("|") >= 0 ? " is not installed (either one will do)" : " is not installed")
                 description: "Needed for " + page.tools[modelData]
             }
         }
