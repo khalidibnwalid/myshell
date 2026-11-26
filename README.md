@@ -205,6 +205,8 @@ Right-click an app in the dock for its own actions from its desktop entry (Firef
 
 The workspace overview (`Super + A`) shows each workspace's shape from Settings → Bar beside its number, and a window dropped beside another one no longer leaves both previews blank: a preview is made again once the windows have their new size.
 
+Drop files from a file manager on a workspace in the bar to open them there: the workspace is shown and each file opens with its default app.
+
 While something waits to print, a card between the notifications and Quick Settings lists the documents (the one printing, the ones waiting) with a button to cancel each, or all. Share the Wi-Fi you are on as a QR code a phone camera can join with: the QR button in Quick Settings → Wi-Fi (or Share network in the network's menu), or Share in Settings → Network. It needs `qrencode`; the password shows on request and can be copied. A network that signs in with an account (WPA Enterprise) cannot be shared this way.
 
 ### Startup and default apps

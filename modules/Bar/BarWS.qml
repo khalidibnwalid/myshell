@@ -5,6 +5,7 @@ import "../../services" as Services
 import "."
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import Quickshell.Hyprland
 
 Item {
@@ -143,13 +144,43 @@ Item {
                     size: shape === "dot" ? 9 : 12
                     visible: !ws.focused
                     filled: ws.occupied
-                    scale: wsArea.containsMouse ? 1.35 : 1
+                    scale: wsArea.containsMouse || fileDrop.containsDrag ? 1.35 : 1
 
                     Behavior on scale {
                         NumberAnimation {
                             duration: Appearance.animFast
                             easing.type: Easing.OutCubic
                         }
+                    }
+                }
+
+                // a ring while files are dragged over the workspace
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: 30
+                    height: 30
+                    radius: 15
+                    color: Qt.alpha(Appearance.accentColor, 0.18)
+                    border.width: 2
+                    border.color: Appearance.accentColor
+                    visible: fileDrop.containsDrag
+                }
+
+                // drop files (from a file manager or the desktop) on a workspace to open them there:
+                // the workspace is shown first, so the apps start on it
+                DropArea {
+                    id: fileDrop
+
+                    anchors.fill: parent
+                    keys: ["text/uri-list"]
+                    onDropped: drop => {
+                        const urls = drop.urls.map(u => u.toString()).filter(u => u !== "");
+                        if (urls.length === 0)
+                            return;
+                        Services.HyprCommand.goToWorkspace(ws.workspaceId);
+                        drop.acceptProposedAction();
+                        // a moment for the switch, then each file opens with its default app
+                        Quickshell.execDetached(["sh", "-c", "sleep 0.25; for u; do xdg-open \"$u\" >/dev/null 2>&1 & done", "sh"].concat(urls));
                     }
                 }
 
