@@ -64,6 +64,7 @@ Pages for hardware or tools that are missing are hidden.
 
 - `tesseract` and `tesseract-data-eng` — "Extract text" in the screenshot selector reads the words in the chosen area. Add `tesseract-data-ara` or another language package for more languages, then set them in Settings → Clipboard & capture (for example `eng+ara`).
 - `zbar` — provides `zbarimg`, which reads QR codes for the QR option of the screenshot selector.
+- `qrencode` — draws the QR code for sharing the Wi-Fi network.
 
 ### Screenshot editor
 
@@ -203,6 +204,8 @@ Drag a notification toward the screen edge the panel is on (right with the bar o
 Right-click an app in the dock for its own actions from its desktop entry (Firefox: New Window, New Private Window), next to Open, Pin and Close.
 
 The workspace overview (`Super + A`) shows each workspace's shape from Settings → Bar beside its number, and a window dropped beside another one no longer leaves both previews blank: a preview is made again once the windows have their new size.
+
+While something waits to print, a card between the notifications and Quick Settings lists the documents (the one printing, the ones waiting) with a button to cancel each, or all. Share the Wi-Fi you are on as a QR code a phone camera can join with: the QR button in Quick Settings → Wi-Fi (or Share network in the network's menu), or Share in Settings → Network. It needs `qrencode`; the password shows on request and can be copied. A network that signs in with an account (WPA Enterprise) cannot be shared this way.
 
 ### Startup and default apps
 

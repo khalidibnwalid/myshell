@@ -27,6 +27,8 @@ SettingsPage {
             parts.push(Number(w.speed) >= 1000 ? (Number(w.speed) / 1000) + " Gb/s" : w.speed + " Mb/s");
         return parts.filter(Boolean).join("  ·  ");
     }
+    // the current network's QR code is open
+    property bool sharing: false
     readonly property var otherNetworks: Network.networks.filter(n => !n.active)
 
     function band(frequency) {
@@ -168,6 +170,13 @@ SettingsPage {
             description: Network.connected ? ["Signal " + Network.active.strength + "%", page.band(Network.active.frequency), Network.active.security || "Open", page.address].filter(Boolean).join("  ·  ") : ""
 
             PillButton {
+                icon: "qr_code_2"
+                text: "Share"
+                toggled: page.sharing
+                onClicked: page.sharing = !page.sharing
+            }
+
+            PillButton {
                 text: "Forget"
                 onClicked: Network.forgetNetwork()
             }
@@ -175,6 +184,20 @@ SettingsPage {
             PillButton {
                 text: "Disconnect"
                 onClicked: Network.disconnectFromNetwork()
+            }
+        }
+
+        // the network as a QR code a phone can join with; made only while it is shown
+        SettingCard {
+            visible: page.sharing
+            last: true
+
+            Loader {
+                Layout.fillWidth: true
+                active: page.sharing && Network.connected
+
+                sourceComponent: WifiShare {
+                }
             }
         }
     }

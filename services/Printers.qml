@@ -11,7 +11,7 @@ Singleton {
     // [{ name, uri, state: "idle" | "printing" | "stopped", enabled, model, reasons, markers: [{ name, level, color }] }]
     property var printers: []
     property string defaultPrinter: ""
-    // [{ id, printer, user, size }]
+    // [{ id, printer, user, size, title, active }]: title and active (being printed now) come from lpq
     property var jobs: []
     // the CUPS service answers
     property bool serviceRunning: true
@@ -35,6 +35,16 @@ Singleton {
 
     function testPage(name) {
         Quickshell.execDetached(["lp", "-d", name, "/usr/share/cups/data/default-testpage.pdf"]);
+        refreshTimer.restart();
+    }
+
+    // only the queue: cheap enough to ask again while Quick Settings shows it
+    function refreshJobs() {
+        jobsProc.running = true;
+    }
+
+    function cancelJob(id) {
+        Quickshell.execDetached(["cancel", String(id)]);
         refreshTimer.restart();
     }
 
@@ -140,20 +150,34 @@ Singleton {
     Process {
         id: jobsProc
 
-        command: ["lpstat", "-o"]
+        // lpstat names the printer of each job, lpq the document and which one is printing
+        command: ["sh", "-c", "lpstat -o 2>/dev/null; echo ---; lpq -a 2>/dev/null"]
         environment: ({ "LC_ALL": "C" })
 
         stdout: StdioCollector {
             onStreamFinished: {
+                const parts = text.split(/^---$/m);
+                const extra = {};
+                for (const line of (parts[1] || "").split(/\r?\n/)) {
+                    // "active  khalid  12  report final.pdf  1024 bytes"
+                    const m = line.match(/^(\S+)\s+(\S+)\s+(\d+)\s+(.*?)\s+(\d+) bytes\s*$/);
+                    if (m)
+                        extra[m[3]] = {
+                            "title": m[4],
+                            "active": m[1] === "active"
+                        };
+                }
                 const list = [];
-                for (const line of text.split(/\r?\n/)) {
+                for (const line of parts[0].split(/\r?\n/)) {
                     const m = line.match(/^(\S+)-(\d+)\s+(\S+)\s+(\d+)/);
                     if (m)
                         list.push({
                             "id": Number(m[2]),
                             "printer": m[1],
                             "user": m[3],
-                            "size": Number(m[4])
+                            "size": Number(m[4]),
+                            "title": extra[m[2]]?.title ?? "",
+                            "active": extra[m[2]]?.active ?? false
                         });
                 }
                 root.jobs = list;

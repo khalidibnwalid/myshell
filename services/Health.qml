@@ -28,6 +28,7 @@ Singleton {
             "notify-send": "capture notifications",
             "tesseract": "Extract text from a screen area",
             "zbarimg": "reading QR codes in the screenshot selector",
+            "qrencode": "sharing the Wi-Fi as a QR code",
             "udevadm": "camera on and off message",
             "bc": "calculator in the launcher",
             "hyprsunset": "night light",

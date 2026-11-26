@@ -25,8 +25,10 @@ Item {
     Connections {
         target: WindowManager
         function onQuickSettingsVisibleChanged() {
-            if (WindowManager.quickSettingsVisible)
+            if (WindowManager.quickSettingsVisible) {
                 SystemInfo.refresh();
+                Printers.refreshJobs();
+            }
         }
     }
 

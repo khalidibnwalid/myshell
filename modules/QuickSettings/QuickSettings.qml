@@ -102,12 +102,16 @@ Scope {
                 bottom: window.fromTop ? 0 : 10
             }
 
-            // only the two cards take input, the rest of the window is click-through
+            // only the cards take input, the rest of the window is click-through
             mask: Region {
                 item: panelArea
 
                 Region {
                     item: notifArea
+                }
+
+                Region {
+                    item: printArea
                 }
             }
 
@@ -119,11 +123,25 @@ Scope {
                 height: window.cardHeight
             }
 
+            // the print queue, between the quick settings card and the notifications, while something prints
+            Item {
+                id: printArea
+
+                readonly property bool shown: printQueue.shown
+
+                y: window.fromTop ? panelArea.y + panelArea.height + root.gap : panelArea.y - root.gap - height
+                width: shown ? root.panelWidth : 0
+                height: shown ? printQueue.implicitHeight : 0
+            }
+
             Item {
                 id: notifArea
 
-                // stacked on the quick settings card: above it, or below it when the panel hangs from the top
-                y: window.fromTop ? panelArea.y + panelArea.height + root.gap : panelArea.y - root.gap - height
+                // stacked on the quick settings card (and the print queue, when it shows): above it, or
+                // below it when the panel hangs from the top
+                readonly property real edgeY: printArea.shown ? (window.fromTop ? printArea.y + printArea.height : printArea.y) : (window.fromTop ? panelArea.y + panelArea.height : panelArea.y)
+
+                y: window.fromTop ? edgeY + root.gap : edgeY - root.gap - height
                 width: window.hasNotifications ? root.panelWidth : 0
                 height: Math.min(notifications.implicitHeight, notifications.maxHeight)
             }
@@ -169,7 +187,7 @@ Scope {
                     y: notifArea.y
                     width: root.panelWidth
                     height: notifArea.height
-                    maxHeight: Math.max(120, window.fromTop ? window.height - panelArea.height - root.gap : panelArea.y - root.gap)
+                    maxHeight: Math.max(120, window.fromTop ? window.height - (notifArea.edgeY - panelArea.y) - root.gap : notifArea.edgeY - root.gap)
                     visible: opacity > 0
                     opacity: window.hasNotifications ? 1 : 0
 
@@ -178,6 +196,14 @@ Scope {
                             duration: Appearance.animFast
                         }
                     }
+                }
+
+                PrintQueueCard {
+                    id: printQueue
+
+                    x: printArea.x
+                    y: printArea.y
+                    width: root.panelWidth
                 }
 
                 Rectangle {

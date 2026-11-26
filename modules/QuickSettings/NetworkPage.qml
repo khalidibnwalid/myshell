@@ -29,6 +29,18 @@ Item {
             subtitle: !Network.enabled ? "Off" : (Network.connected ? Network.active.ssid : "Not connected")
             onBack: stackView.pop()
 
+            // the connected network as a QR code a phone can join with
+            IconButton {
+                visible: Network.connected
+                icon: "qr_code_2"
+                Accessible.name: "Share this network"
+                ToolTip.visible: hovered
+                ToolTip.text: "Share with a QR code"
+                onClicked: stackView.push(sharePage, {
+                    "stackView": stackView
+                })
+            }
+
             IconButton {
                 toggled: Network.scanning
                 icon: "sync"
@@ -126,6 +138,10 @@ Item {
                             Repeater {
                                 model: entry.modelData.active ? [
                                     {
+                                        "label": "Share network",
+                                        "icon": "qr_code_2"
+                                    },
+                                    {
                                         "label": "Disconnect",
                                         "icon": "wifi_off"
                                     },
@@ -177,7 +193,11 @@ Item {
                                         cursorShape: Qt.PointingHandCursor
                                         onClicked: {
                                             menu.close();
-                                            if (item.modelData.label === "Disconnect")
+                                            if (item.modelData.label === "Share network")
+                                                stackView.push(sharePage, {
+                                                    "stackView": stackView
+                                                });
+                                            else if (item.modelData.label === "Disconnect")
                                                 Network.disconnectFromNetwork();
                                             else
                                                 Network.forgetNetwork(entry.modelData.ssid);
@@ -200,6 +220,13 @@ Item {
             text: !Network.enabled ? "Wi-Fi is off" : (Network.scanning ? "Looking for networks…" : "No networks found")
             color: Appearance.mutedColor
             font.pixelSize: 13
+        }
+    }
+
+    Component {
+        id: sharePage
+
+        WifiSharePage {
         }
     }
 
