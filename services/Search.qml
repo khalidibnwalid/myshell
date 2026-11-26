@@ -54,6 +54,66 @@ Singleton {
         return /^[\d\s\+\-\*\/\(\)\.\^]+$/.test(query) && /[\+\-\*\/\^]/.test(query);
     }
 
+    // "#f80", "#ff8800", "#ff8800cc", "rgb(255, 136, 0)", "rgba(...)", "hsl(32, 100%, 50%)": [r, g, b, a] (0-255, a 0-1) or null
+    function parseColour(text) {
+        const t = text.trim().toLowerCase();
+        let m = t.match(/^#?([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/);
+        // only with the "#": plain digits are numbers for the calculator
+        if (m && t.startsWith("#")) {
+            let h = m[1];
+            if (h.length <= 4)
+                h = h.split("").map(c => c + c).join("");
+            return [parseInt(h.substr(0, 2), 16), parseInt(h.substr(2, 2), 16), parseInt(h.substr(4, 2), 16), h.length === 8 ? parseInt(h.substr(6, 2), 16) / 255 : 1];
+        }
+        m = t.match(/^rgba?\(\s*(\d{1,3})\s*[, ]\s*(\d{1,3})\s*[, ]\s*(\d{1,3})\s*(?:[,/]\s*([\d.]+%?))?\s*\)$/);
+        if (m) {
+            const c = [+m[1], +m[2], +m[3]];
+            if (c.some(v => v > 255))
+                return null;
+            const a = m[4] === undefined ? 1 : (m[4].endsWith("%") ? parseFloat(m[4]) / 100 : parseFloat(m[4]));
+            return c.concat([Math.min(1, a)]);
+        }
+        m = t.match(/^hsla?\(\s*([\d.]+)(?:deg)?\s*[, ]\s*([\d.]+)%\s*[, ]\s*([\d.]+)%\s*(?:[,/]\s*([\d.]+%?))?\s*\)$/);
+        if (m) {
+            const h = (+m[1] % 360) / 360, sat = Math.min(100, +m[2]) / 100, l = Math.min(100, +m[3]) / 100;
+            const q = l < 0.5 ? l * (1 + sat) : l + sat - l * sat, p = 2 * l - q;
+            const f = tt => {
+                tt = (tt + 1) % 1;
+                return tt < 1 / 6 ? p + (q - p) * 6 * tt : tt < 1 / 2 ? q : tt < 2 / 3 ? p + (q - p) * (2 / 3 - tt) * 6 : p;
+            };
+            const a = m[4] === undefined ? 1 : (m[4].endsWith("%") ? parseFloat(m[4]) / 100 : parseFloat(m[4]));
+            return [Math.round(f(h + 1 / 3) * 255), Math.round(f(h) * 255), Math.round(f(h - 1 / 3) * 255), Math.min(1, a)];
+        }
+        return null;
+    }
+
+    // one row per way of writing the colour; picking one copies it
+    function colourRows(c) {
+        const hex2 = v => v.toString(16).padStart(2, "0");
+        const r = c[0], g = c[1], b = c[2], a = c[3];
+        const max = Math.max(r, g, b) / 255, min = Math.min(r, g, b) / 255, l = (max + min) / 2;
+        let h = 0, sat = 0;
+        if (max !== min) {
+            const d = max - min;
+            sat = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            const rr = r / 255, gg = g / 255, bb = b / 255;
+            h = max === rr ? (gg - bb) / d + (gg < bb ? 6 : 0) : (max === gg ? (bb - rr) / d + 2 : (rr - gg) / d + 4);
+            h /= 6;
+        }
+        const alpha = a < 1;
+        const swatch = "#" + (alpha ? hex2(Math.round(a * 255)) : "") + hex2(r) + hex2(g) + hex2(b);
+        const forms = [["Hex", "#" + hex2(r) + hex2(g) + hex2(b) + (alpha ? hex2(Math.round(a * 255)) : "")], ["RGB", alpha ? "rgba(" + r + ", " + g + ", " + b + ", " + (+a.toFixed(2)) + ")" : "rgb(" + r + ", " + g + ", " + b + ")"], ["HSL", (alpha ? "hsla(" : "hsl(") + Math.round(h * 360) + ", " + Math.round(sat * 100) + "%, " + Math.round(l * 100) + "%" + (alpha ? ", " + (+a.toFixed(2)) : "") + ")"], ["Qt", "Qt.rgba(" + (+(r / 255).toFixed(3)) + ", " + (+(g / 255).toFixed(3)) + ", " + (+(b / 255).toFixed(3)) + ", " + (+a.toFixed(2)) + ")"]];
+        return forms.map(f => ({
+            "id": "colour:" + f[0],
+            "name": f[1],
+            "description": f[0] + "  ·  Enter copies it",
+            "icon": "palette",
+            "swatch": swatch,
+            "type": "colour",
+            "execute": () => Quickshell.execDetached(["sh", "-c", "printf %s \"$1\" | wl-copy && notify-send -a Launcher 'Colour copied' \"$1\"", "sh", f[1]])
+        }));
+    }
+
     function isPathSearch(query) {
         return query.startsWith("/") || query.startsWith("~") || query.startsWith("./") || query.includes("/");
     }
@@ -353,9 +413,9 @@ Singleton {
     property bool terminalMode: false
 
     // the row for "> command"; the command is an argument of the shell, never pasted into the script.
-    // It runs in your own shell ($SHELL, so fish syntax works there), which then stays open.
+    // It runs in your login shell (from the user database, so fish syntax works there), which then stays
+    // open. Not $SHELL: the shell's own environment may name another one (zsh started its setup wizard).
     function terminalRow(command) {
-        const shell = Quickshell.env("SHELL") || "sh";
         return {
             "id": "terminal",
             "name": command === "" ? "Open Alacritty" : command,
@@ -363,7 +423,7 @@ Singleton {
             "image": "Alacritty",
             "icon": "terminal",
             "type": "web",
-            "execute": () => Quickshell.execDetached(command === "" ? ["alacritty"] : ["alacritty", "-e", "sh", "-c", "\"$0\" -c \"$1\"; exec \"$0\"", shell, command])
+            "execute": () => Quickshell.execDetached(command === "" ? ["alacritty", "-e", "sh", "-c", "s=$(getent passwd \"$(id -un)\" | cut -d: -f7); [ -x \"$s\" ] || s=${SHELL:-sh}; exec \"$s\""] : ["alacritty", "-e", "sh", "-c", "s=$(getent passwd \"$(id -un)\" | cut -d: -f7); [ -x \"$s\" ] || s=${SHELL:-sh}; \"$s\" -c \"$1\"; exec \"$s\"", "sh", command])
         };
     }
 
@@ -372,7 +432,9 @@ Singleton {
         query = raw.toLowerCase();
         generation++;
         fileTimer.stop();
-        terminalMode = raw.startsWith(">");
+        const colour = parseColour(raw);
+        // rows of our own that the other sources' late answers must not replace
+        terminalMode = raw.startsWith(">") || colour !== null;
         // "> command": run it in Alacritty, which stays open on your shell afterwards
         if (raw.startsWith(">")) {
             const command = raw.substring(1).trim();
@@ -383,6 +445,18 @@ Singleton {
             settingsResults = [];
             fileResults = [];
             webResults = [terminalRow(command)];
+            publish();
+            return;
+        }
+
+        // a colour code: the colour in other notations, each copied by Enter
+        if (colour) {
+            SearchProviders.search("");
+            providerResults = [];
+            appResults = [];
+            settingsResults = [];
+            fileResults = [];
+            webResults = colourRows(colour);
             publish();
             return;
         }

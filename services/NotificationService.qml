@@ -36,12 +36,37 @@ Singleton {
         return server.trackedNotifications.values.find(n => n.id === id) || null;
     }
 
+    // A toast is first marked as leaving, so it can slide out, and removed a moment later
     function hidePopup(id) {
         for (let i = 0; i < popupModel.count; i++) {
             if (popupModel.get(i).nid === id) {
-                popupModel.remove(i);
+                if (!popupModel.get(i).leaving) {
+                    popupModel.setProperty(i, "leaving", true);
+                    purge.restart();
+                }
                 break;
             }
+        }
+    }
+
+    // the toasts still on screen and not on their way out
+    function shownPopups() {
+        let n = 0;
+        for (let i = 0; i < popupModel.count; i++)
+            if (!popupModel.get(i).leaving)
+                n++;
+        return n;
+    }
+
+    // removes the toasts that have finished sliding out
+    Timer {
+        id: purge
+
+        interval: 280
+        onTriggered: {
+            for (let i = popupModel.count - 1; i >= 0; i--)
+                if (popupModel.get(i).leaving)
+                    popupModel.remove(i);
         }
     }
 
@@ -114,12 +139,14 @@ Singleton {
                     "appName": notification.appName,
                     "appIcon": notification.appIcon,
                     "image": notification.image,
-                    "timeout": notification.expireTimeout
+                    "timeout": notification.expireTimeout,
+                    "leaving": false
                 });
             // at most three toasts at a time: the oldest leaves the screen (it stays in the panel),
             // so the stack never runs past the window and gets cut off
-            while (popupModel.count > 3)
-                popupModel.remove(0);
+            for (let i = 0; i < popupModel.count && root.shownPopups() > 3; i++)
+                if (!popupModel.get(i).leaving)
+                    root.hidePopup(popupModel.get(i).nid);
         }
     }
 }

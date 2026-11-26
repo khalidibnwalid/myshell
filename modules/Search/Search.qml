@@ -83,6 +83,31 @@ Scope {
                 Services.WindowManager.searchVisible = false;
             }
 
+            // the file or folder a result stands for, if it is one on disk (Ctrl + Enter shows it in its folder)
+            function pathOf(r) {
+                if (!r)
+                    return "";
+                if (r.type === "file" || r.type === "folder")
+                    return r.id;
+                const t = String(r.target || "");
+                if (r.type === "provider" && (t.startsWith("/") || t.startsWith("file://")))
+                    return t.startsWith("file://") ? decodeURIComponent(t.substring(7)) : t;
+                return "";
+            }
+
+            // opens the file manager on the folder with the file selected (FileManager1, which Nautilus,
+            // Dolphin and others offer), or just the folder when nothing answers
+            function reveal(i) {
+                const path = pathOf(ordered[i]);
+                if (path === "")
+                    return false;
+                const uri = "file://" + path.split("/").map(p => encodeURIComponent(p).replace(/'/g, "%27")).join("/");
+                const dir = path.replace(/\/[^/]*\/?$/, "") || "/";
+                Quickshell.execDetached(["sh", "-c", "gdbus call --session --dest org.freedesktop.FileManager1 --object-path /org/freedesktop/FileManager1 --method org.freedesktop.FileManager1.ShowItems \"['$1']\" '' >/dev/null 2>&1 || xdg-open \"$2\"", "sh", uri, dir]);
+                close();
+                return true;
+            }
+
             function activate(i) {
                 const r = ordered[i];
                 if (!r)
@@ -264,6 +289,9 @@ Scope {
                                 } else if (event.key === Qt.Key_Escape) {
                                     panelWindow.close();
                                     event.accepted = true;
+                                } else if ((event.key === Qt.Key_Enter || event.key === Qt.Key_Return) && (event.modifiers & Qt.ControlModifier)) {
+                                    panelWindow.reveal(panelWindow.currentIndex);
+                                    event.accepted = true;
                                 } else if (event.key === Qt.Key_Enter || event.key === Qt.Key_Return) {
                                     panelWindow.activate(panelWindow.currentIndex);
                                     event.accepted = true;
@@ -283,7 +311,8 @@ Scope {
                                 id: hint
 
                                 anchors.centerIn: parent
-                                text: "Super + Space"
+                                // the key that matters for the picked row, else how to open the launcher
+                                text: panelWindow.pathOf(panelWindow.ordered[panelWindow.currentIndex]) !== "" ? "Ctrl + Enter: show in folder" : "Super + Space"
                                 color: Appearance.mutedColor
                                 font.pixelSize: 13
                             }
@@ -450,7 +479,10 @@ Scope {
                                     Layout.preferredWidth: 36
                                     Layout.preferredHeight: 36
                                     radius: row.preview && previewImg.status === Image.Ready ? 10 : 18
-                                    color: Appearance.surfaceHighColor
+                                    // a colour result shows the colour itself
+                                    color: row.modelData?.swatch || Appearance.surfaceHighColor
+                                    border.width: row.modelData?.swatch ? 1 : 0
+                                    border.color: Qt.alpha(Appearance.fgColor, 0.2)
 
                                     // the file's own picture, rounded
                                     Item {
@@ -496,7 +528,7 @@ Scope {
 
                                     MaterialSymbol {
                                         anchors.centerIn: parent
-                                        visible: !rowImg.visible && !(row.preview && previewImg.status === Image.Ready)
+                                        visible: !rowImg.visible && !(row.preview && previewImg.status === Image.Ready) && !row.modelData?.swatch
                                         icon: row.modelData?.type === "folder" ? "folder" : (row.modelData?.icon || "apps")
                                         font.pixelSize: 18
                                         color: Appearance.fgColor
