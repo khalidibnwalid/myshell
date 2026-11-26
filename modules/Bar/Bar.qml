@@ -177,6 +177,10 @@ Scope {
                     Layout.alignment: Qt.AlignCenter
                 }
 
+                BarTimer {
+                    Layout.alignment: Qt.AlignCenter
+                }
+
                 BarTrays {
                     Layout.alignment: Qt.AlignCenter
                     barWindow: panelWindow

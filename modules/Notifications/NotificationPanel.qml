@@ -106,7 +106,7 @@ Rectangle {
         PillButton {
             implicitHeight: 40
             text: "Clear all"
-            // every notification slides out to the left, one after the other, then the list is emptied
+            // every notification slides out toward the screen edge, one after the other, then the list is emptied
             onClicked: {
                 if (clearTimer.running)
                     return;

@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import "../../components/"
+import "../../components/WorkspaceShapes.js" as Shapes
 import "../../config/"
 import "../../services" as Services
 import QtQuick
@@ -215,12 +216,12 @@ Scope {
                                     property real screenW: screenOf.width / screenOf.scale
                                     property real screenH: screenOf.height / screenOf.scale
 
-                                    width: (toplevelData.size[0] / screenW) * workspaceContainer.width
-                                    height: (toplevelData.size[1] / screenH) * workspaceContainer.height
+                                    width: ((toplevelData?.size?.[0] ?? 0) / screenW) * workspaceContainer.width
+                                    height: ((toplevelData?.size?.[1] ?? 0) / screenH) * workspaceContainer.height
 
-                                    x: ((toplevelData.at[0] - screenOf.x) / screenW) * workspaceContainer.width
-                                    y: ((toplevelData.at[1] - screenOf.y) / screenH) * workspaceContainer.height
-                                    z: dragArea.drag.active ? 100 : ((waylandHandle.fullscreen || waylandHandle.maximized) ? 2 : toplevelData.floating)
+                                    x: (((toplevelData?.at?.[0] ?? screenOf.x) - screenOf.x) / screenW) * workspaceContainer.width
+                                    y: (((toplevelData?.at?.[1] ?? screenOf.y) - screenOf.y) / screenH) * workspaceContainer.height
+                                    z: dragArea.drag.active ? 100 : ((waylandHandle?.fullscreen || waylandHandle?.maximized) ? 2 : (toplevelData?.floating ? 1 : 0))
                                     scale: dragArea.drag.active ? 1.06 : 1.0
                                     opacity: dragArea.drag.active ? 0.85 : 1.0
 
@@ -241,11 +242,49 @@ Scope {
                                     radius: Math.min(root.cellRadius, 10)
                                     color: "transparent"
 
-                                    ScreencopyView {
+                                    // A live copy stops when the window's buffer changes size (a window dropped beside
+                                    // another re-tiles both, and both went blank), and restarting the same view does not
+                                    // bring it back: the view is made anew once the size has settled. A window on a hidden
+                                    // workspace draws its new size a little later, so it is tried again until there is a picture.
+                                    property string sizeKey: toplevelWrapper.toplevelData?.size?.join("x") ?? ""
+                                    onSizeKeyChanged: {
+                                        recapture.tries = 0;
+                                        recapture.restart();
+                                    }
+
+                                    Timer {
+                                        id: recapture
+
+                                        property int tries: 0
+
+                                        interval: 500
+                                        repeat: true
+                                        onTriggered: {
+                                            if (tries > 0 && copyLoader.item?.hasContent) {
+                                                stop();
+                                                return;
+                                            }
+                                            copyLoader.active = false;
+                                            copyLoader.active = true;
+                                            if (++tries >= 8)
+                                                stop();
+                                        }
+                                    }
+
+                                    Loader {
+                                        id: copyLoader
+
+                                        anchors.fill: parent
+
+                                        sourceComponent: ScreencopyView {
+                                            captureSource: toplevelWrapper.waylandHandle
+                                            live: true
+                                        }
+                                    }
+
+                                    Item {
                                         id: toplevel
                                         anchors.fill: parent
-                                        captureSource: toplevelWrapper.waylandHandle
-                                        live: true
 
                                         IconImage {
                                             source: Services.Icons.path(DesktopEntries.heuristicLookup(toplevelWrapper.toplevelData?.class)?.icon ?? "", true)
@@ -285,22 +324,43 @@ Scope {
                                 }
                             }
 
-                            // workspace number badge
+                            // workspace number badge, with the workspace's own shape from the bar when it has one
                             Rectangle {
+                                id: badge
+
+                                readonly property string shape: Shapes.shapeOf(Config.bar?.workspaceShapes ?? "", workspaceContainer.workspaceId)
+                                readonly property bool hasShape: shape !== "dot" && shape !== ""
+                                readonly property color ink: workspaceContainer.workspace?.focused ? Appearance.accentContrastColor : Appearance.fgColor
+
                                 x: 8
                                 y: parent.height - height - 8
                                 z: 4
-                                width: 24
+                                width: hasShape ? badgeRow.implicitWidth + 14 : 24
                                 height: 24
                                 radius: 12
-                                color: workspace?.focused ? Appearance.accentColor : Qt.alpha(Appearance.bgColor, 0.72)
+                                color: workspaceContainer.workspace?.focused ? Appearance.accentColor : Qt.alpha(Appearance.bgColor, 0.72)
 
-                                StyledText {
+                                Row {
+                                    id: badgeRow
+
                                     anchors.centerIn: parent
-                                    text: workspaceContainer.workspaceId
-                                    color: workspace?.focused ? Appearance.accentContrastColor : Appearance.fgColor
-                                    font.pixelSize: 12
-                                    font.weight: Font.Bold
+                                    spacing: 5
+
+                                    WorkspaceShape {
+                                        visible: badge.hasShape
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        shape: badge.shape
+                                        size: 11
+                                        fillColor: badge.ink
+                                    }
+
+                                    StyledText {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        text: workspaceContainer.workspaceId
+                                        color: badge.ink
+                                        font.pixelSize: 12
+                                        font.weight: Font.Bold
+                                    }
                                 }
                             }
                         }

@@ -698,6 +698,19 @@ Scope {
                         onClicked: Services.DockApps.launch(menu.appId)
                     }
 
+                    // the app's own actions from its desktop entry (Firefox: New private window, ...)
+                    Repeater {
+                        model: card.app?.entry?.actions ?? []
+
+                        MenuRow {
+                            required property var modelData
+
+                            icon: /private|incognito/i.test(modelData.name) ? "visibility_off" : (/window/i.test(modelData.name) ? "open_in_new" : (/tab|page/i.test(modelData.name) ? "tab" : "bolt"))
+                            text: modelData.name
+                            onClicked: modelData.execute()
+                        }
+                    }
+
                     MenuRow {
                         // only apps with a desktop entry can be started again from the dock
                         visible: !!card.app?.entry

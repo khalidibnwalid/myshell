@@ -75,6 +75,10 @@ Singleton {
     function iconSource(icon) {
         if (!icon)
             return "";
+        // a file sent as the image (notify-send -i /path/shot.png) comes as image://icon//path: the icon
+        // provider hands back an icon-sized copy that looks blurred when shown larger, so read the file itself
+        if (icon.startsWith("image://icon//"))
+            return "file://" + icon.substring("image://icon/".length);
         if (icon.startsWith("/"))
             return "file://" + icon;
         if (icon.includes("://"))
@@ -112,6 +116,10 @@ Singleton {
                     "image": notification.image,
                     "timeout": notification.expireTimeout
                 });
+            // at most three toasts at a time: the oldest leaves the screen (it stays in the panel),
+            // so the stack never runs past the window and gets cut off
+            while (popupModel.count > 3)
+                popupModel.remove(0);
         }
     }
 }

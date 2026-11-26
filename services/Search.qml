@@ -339,6 +339,9 @@ Singleton {
     // results offered by apps (search providers) arrive a moment after the query
     Connections {
         function onChanged() {
+            // a late answer for an earlier query must not replace the "> command" row
+            if (searchService.terminalMode)
+                return;
             searchService.providerResults = SearchProviders.results;
             searchService.publish();
         }
@@ -347,12 +350,43 @@ Singleton {
     }
 
     property var providerResults: []
+    property bool terminalMode: false
+
+    // the row for "> command"; the command is an argument of the shell, never pasted into the script.
+    // It runs in your own shell ($SHELL, so fish syntax works there), which then stays open.
+    function terminalRow(command) {
+        const shell = Quickshell.env("SHELL") || "sh";
+        return {
+            "id": "terminal",
+            "name": command === "" ? "Open Alacritty" : command,
+            "description": command === "" ? "Type a command after > to run it" : "Run in Alacritty",
+            "image": "Alacritty",
+            "icon": "terminal",
+            "type": "web",
+            "execute": () => Quickshell.execDetached(command === "" ? ["alacritty"] : ["alacritty", "-e", "sh", "-c", "\"$0\" -c \"$1\"; exec \"$0\"", shell, command])
+        };
+    }
 
     function performSearch(query) {
         const raw = query.trim();
         query = raw.toLowerCase();
         generation++;
         fileTimer.stop();
+        terminalMode = raw.startsWith(">");
+        // "> command": run it in Alacritty, which stays open on your shell afterwards
+        if (raw.startsWith(">")) {
+            const command = raw.substring(1).trim();
+            // before the other sources are asked: their answers arrive later and would replace this row
+            SearchProviders.search("");
+            providerResults = [];
+            appResults = [];
+            settingsResults = [];
+            fileResults = [];
+            webResults = [terminalRow(command)];
+            publish();
+            return;
+        }
+
         SearchProviders.search(query === "" ? "" : raw);
         providerResults = [];
         if (query === "") {

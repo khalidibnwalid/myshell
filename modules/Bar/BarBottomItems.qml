@@ -65,6 +65,41 @@ GridLayout {
             rowSpacing: 8
             columnSpacing: root.horizontal ? 12 : 8
 
+        // shown only while an app listens to the microphone; a click mutes or unmutes it
+        MaterialSymbol {
+            id: micIcon
+
+            visible: audio.micInUse
+            Layout.alignment: Qt.AlignCenter
+            icon: audio.micMuted ? "mic_off" : "mic"
+            fill: audio.micMuted ? 0 : 1
+            font.pixelSize: 22
+            color: audio.micMuted ? Appearance.mutedColor : "#ff8a5c"
+            activeFocusOnTab: true
+            Accessible.role: Accessible.Button
+            Accessible.name: (audio.micMuted ? "Unmute the microphone" : "Mute the microphone") + ", used by " + audio.micUsers
+            Keys.onPressed: event => {
+                if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space) {
+                    audio.toggleMicMute();
+                    event.accepted = true;
+                }
+            }
+
+            MouseArea {
+                id: micArea
+
+                anchors.fill: parent
+                anchors.margins: -4
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: audio.toggleMicMute()
+            }
+
+            FocusRing {
+                radius: height / 2
+            }
+        }
+
         MaterialSymbol {
             Layout.alignment: Qt.AlignCenter
             icon: Network.statusIcon

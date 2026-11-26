@@ -14,7 +14,8 @@ Scope {
         margins.right: 10
         margins.left: 10
         implicitWidth: 364
-        implicitHeight: Math.min(640, Math.max(1, list.contentHeight))
+        // as tall as the toasts need, up to the screen (at most three are shown, see NotificationService)
+        implicitHeight: Math.min((screen?.height ?? 1080) - 20, Math.max(1, list.contentHeight))
         color: "transparent"
         visible: NotificationService.popups.count > 0 || hideDelay.running
 
