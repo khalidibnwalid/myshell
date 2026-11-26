@@ -325,6 +325,8 @@ Singleton {
                 property bool enabled: true
                 property int lockAfterMinutes: 5
                 property int screenOffAfterMinutes: 10
+                // notifications on the lock screen: "off", "apps" (app and title, no text) or "full"
+                property string lockNotifications: "apps"
             }
 
             // the shell as the polkit agent (modules/Polkit); off lets another agent take the job

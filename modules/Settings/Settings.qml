@@ -193,6 +193,14 @@ ApplicationWindow {
             "component": systemPage
         },
         {
+            "key": "health",
+            "name": "Health",
+            "icon": "health_and_safety",
+            "group": "System",
+            "keywords": "health check problems errors broken fix doctor diagnose missing tools helpers build log hyprland source configerrors desktop entries icons portal polkit notifications daemon",
+            "component": healthPage
+        },
+        {
             "key": "about",
             "name": "About",
             "icon": "info",
@@ -650,6 +658,13 @@ ApplicationWindow {
         id: systemPage
 
         SystemPage {
+        }
+    }
+
+    Component {
+        id: healthPage
+
+        HealthPage {
         }
     }
 

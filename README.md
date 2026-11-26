@@ -88,7 +88,7 @@ PipeWire, WirePlumber, and UPower should also be available to the user session. 
 
 ### Idle lock and wallpaper
 
-The shell includes its own idle monitor and Wayland session lock. It authenticates through the system PAM `login` service and defaults to locking after 5 minutes, with displays turning off after 10 minutes. Configure the timers in Settings → Lock & idle. The Quick Settings footer can pause auto-lock for an hour without changing the saved settings. `Super + L` locks immediately. Locking pauses whatever is playing (every MPRIS player: browsers, mpv, the Audio app). The lock screen has an eye in the password field (shown while the pointer is over it) to show what was typed, and Restart and Shut down buttons at the bottom that need a second click within 4 seconds.
+The shell includes its own idle monitor and Wayland session lock. It authenticates through the system PAM `login` service and defaults to locking after 5 minutes, with displays turning off after 10 minutes. Configure the timers in Settings → Lock & idle. The Quick Settings footer can pause auto-lock for an hour without changing the saved settings. `Super + L` locks immediately. Locking pauses whatever is playing (every MPRIS player: browsers, mpv, the Audio app). The lock screen has an eye in the password field (shown while the pointer is over it) to show what was typed, and Restart and Shut down buttons at the bottom that need a second click within 4 seconds. Notifications that came in show on the left of the lock screen, newest first; Settings → Lock & idle chooses whether they show the app and title only (the default), their text too, or none. After too many wrong passwords `pam_faillock` locks the account for a while (10 minutes unless `/etc/security/faillock.conf` says otherwise) and refuses even the right password: the lock screen reads that state and shows how long is left instead of "didn't match", and does not send passwords until it is over.
 
 Choose a wallpaper in Settings → Appearance. The selected image is shared by the desktop and lock screen.
 
@@ -105,6 +105,10 @@ The open and save dialogs of other apps (VS Code, Firefox, Claude, ...) are draw
 ### Settings window
 
 Open it from the Quick Settings footer, or bind a key to `qs ipc call settings toggle` (also `open`, `close`, and `page <name>`, e.g. `page appearance`). Changes you make there are kept in `config.overrides.json` (generated and git-ignored), so the hand-written `config.json` stays the base; Settings → About lists any missing command-line tools.
+
+### Health
+
+Settings → Health checks what can go wrong with the shell and shows only the problems, grouped by kind, or "All good". It lists command-line tools that are missing, small helpers that are not built or cannot be built (with Build now, which builds them into `~/.cache/quickshell`), errors in the shell's log since it last loaded and a warning when Quickshell was built for another Qt version, Hyprland config errors and a missing `source`/`dofile` line for the files Settings writes, desktop entries or icons of the shell's apps that are missing (Reinstall runs `scripts/install-app-icons.sh`), and services that get in the way: another notification daemon, a second polkit agent, or the file chooser portal not running. A fix button appears only where the fix is safe; for the rest it tells you what to change, and Copy puts the line or the errors on the clipboard. The checks run when you open the page and when you press Refresh, never in the background.
 
 ### Apps and switching them off
 

@@ -256,6 +256,11 @@
           "minimum": 0,
           "maximum": 240,
           "description": "Turn off displays after inactivity; 0 disables this"
+        },
+        "lockNotifications": {
+          "type": "string",
+          "enum": ["off", "apps", "full"],
+          "description": "Notifications on the lock screen: off, the app and title only, or with their text"
         }
       }
     },

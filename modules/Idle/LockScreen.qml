@@ -415,6 +415,134 @@ Item {
             }
         }
 
+        // --- notifications that came in, newest first: the app and the title, and their text only
+        // when Settings → Lock & idle says so; nothing can be opened or dismissed from here ---
+        ColumnLayout {
+            id: lockNotes
+
+            readonly property string mode: Config.idle.lockNotifications ?? "apps"
+            readonly property var shown: mode === "off" ? [] : NotificationService.list.slice(0, 4)
+
+            visible: shown.length > 0
+            anchors.left: parent.left
+            anchors.leftMargin: 40
+            anchors.verticalCenter: parent.verticalCenter
+            width: Math.min(340, parent.width * 0.26)
+            spacing: 8
+
+            StyledText {
+                Layout.leftMargin: 4
+                text: NotificationService.count === 1 ? "1 notification" : NotificationService.count + " notifications"
+                color: Qt.alpha(Appearance.fgColor, 0.7)
+                font.pixelSize: 12
+                font.weight: Font.DemiBold
+            }
+
+            Repeater {
+                model: lockNotes.shown
+
+                Rectangle {
+                    id: note
+
+                    required property var modelData
+                    readonly property string icon: NotificationService.iconSource(modelData?.image || modelData?.appIcon || "")
+
+                    Layout.fillWidth: true
+                    implicitHeight: noteRow.implicitHeight + 22
+                    radius: 18
+                    color: Qt.alpha(Appearance.bgColor, 0.55)
+                    border.width: 1
+                    border.color: Qt.alpha(Appearance.fgColor, 0.1)
+
+                    RowLayout {
+                        id: noteRow
+
+                        anchors.fill: parent
+                        anchors.margins: 11
+                        anchors.leftMargin: 14
+                        anchors.rightMargin: 14
+                        spacing: 12
+
+                        Item {
+                            Layout.alignment: Qt.AlignTop
+                            implicitWidth: 28
+                            implicitHeight: 28
+
+                            IconImage {
+                                id: noteIcon
+
+                                anchors.fill: parent
+                                source: note.icon
+                                visible: note.icon !== "" && status === Image.Ready
+                            }
+
+                            MaterialSymbol {
+                                anchors.centerIn: parent
+                                visible: !noteIcon.visible
+                                icon: "notifications"
+                                fill: 1
+                                font.pixelSize: 22
+                                color: Appearance.accentColor
+                            }
+                        }
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 2
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: 6
+
+                                StyledText {
+                                    Layout.fillWidth: true
+                                    text: note.modelData?.appName || "Notification"
+                                    color: Appearance.mutedColor
+                                    font.pixelSize: 11
+                                    elide: Text.ElideRight
+                                }
+
+                                StyledText {
+                                    text: note.modelData ? NotificationService.age(note.modelData.id, Time.date) : ""
+                                    color: Appearance.mutedColor
+                                    font.pixelSize: 11
+                                }
+                            }
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                visible: text !== ""
+                                text: note.modelData?.summary ?? ""
+                                font.pixelSize: 13
+                                font.weight: Font.DemiBold
+                                elide: Text.ElideRight
+                            }
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                visible: lockNotes.mode === "full" && text !== ""
+                                text: note.modelData?.body ?? ""
+                                textFormat: Text.PlainText
+                                color: Qt.alpha(Appearance.fgColor, 0.8)
+                                font.pixelSize: 12
+                                wrapMode: Text.Wrap
+                                maximumLineCount: 2
+                                elide: Text.ElideRight
+                            }
+                        }
+                    }
+                }
+            }
+
+            StyledText {
+                Layout.leftMargin: 4
+                visible: NotificationService.count > lockNotes.shown.length
+                text: "and " + (NotificationService.count - lockNotes.shown.length) + " more"
+                color: Appearance.mutedColor
+                font.pixelSize: 11
+            }
+        }
+
         // --- restart and shut down, each asks for a second click ---
         RowLayout {
             anchors.horizontalCenter: parent.horizontalCenter

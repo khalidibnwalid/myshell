@@ -48,6 +48,27 @@ SettingsPage {
         }
 
         SettingRow {
+            title: "Notifications on the lock screen"
+            description: Config.idle.lockNotifications === "full" ? "Anyone at the screen can read them" : (Config.idle.lockNotifications === "off" ? "The lock screen shows none" : "Which app and the title; the text stays hidden")
+
+            Dropdown {
+                model: [{
+                        "label": "Off",
+                        "value": "off"
+                    }, {
+                        "label": "Title only",
+                        "value": "apps"
+                    }, {
+                        "label": "With text",
+                        "value": "full"
+                    }]
+                value: Config.idle.lockNotifications
+                popupWidth: 160
+                onSelected: v => Config.idle.lockNotifications = v
+            }
+        }
+
+        SettingRow {
             visible: Config.idle.enabled
             title: "Turn displays off after"
             description: Config.idle.screenOffAfterMinutes > 0 && Config.idle.screenOffAfterMinutes <= Config.idle.lockAfterMinutes ? "Has no effect until it is longer than the lock time" : "Counted from the last input; the session is already locked by then"

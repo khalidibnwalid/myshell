@@ -9,49 +9,6 @@ import Quickshell.Io
 SettingsPage {
     id: page
 
-    // command -> what stops working without it
-    readonly property var tools: ({
-        "nmcli": "Wi-Fi",
-        "brightnessctl": "screen brightness",
-        "swaybg": "wallpaper",
-        "cliphist": "clipboard history",
-        "wl-copy": "clipboard and screenshots",
-        "wtype": "paste from the clipboard menu",
-        "grim": "screenshots",
-        "slurp": "area selection",
-        "wl-screenrec|wf-recorder": "screen recording",
-        "hyprpicker": "colour picker",
-        "notify-send": "capture notifications",
-        "tesseract": "Extract text from a screen area",
-        "zbarimg": "reading QR codes in the screenshot selector",
-        "udevadm": "camera on and off message",
-        "bc": "calculator in the launcher",
-        "hyprsunset": "night light",
-        "matugen": "colours from the wallpaper",
-        "sensors": "temperatures",
-        "lspci": "graphics information",
-        "gio": "default apps and file previews in the launcher",
-        "xdg-mime": "changing default apps",
-        "busctl": "results from apps in the launcher",
-        "python3": "recent files, VS Code and browser history in the launcher, and the apps' desktop entries",
-        "ffmpegthumbnailer": "album covers and video frames in the launcher",
-        "ffprobe": "tags and covers in the Audio player",
-        "ffmpeg": "covers in the Audio player",
-        "mpv": "playing sound in the Audio player",
-        "go": "building the small helpers: the MPRIS side of the Audio player, the pixel engine of Paint and the keyrings on the Passwords & keys page",
-        "gnome-keyring-daemon": "keyrings and saved passwords on the Passwords & keys page",
-        "ssh-keygen": "SSH keys on the Passwords & keys page",
-        "gpg": "GPG keys on the Passwords & keys page",
-        "wl-copy": "copying and pasting images in Paint",
-        "udisksctl": "mounting and ejecting drives",
-        "lpstat": "printers",
-        "hostnamectl": "changing the computer name",
-        "timedatectl": "time zone and clock settings",
-        "localectl": "language and formats",
-        "gnome-control-center": "adding online accounts"
-    })
-    property var missing: []
-    property bool checked: false
     property string runtime: ""
     readonly property string configFile: Quickshell.shellDir + "/config.json"
     readonly property string ipcCommand: "qs ipc call settings toggle"
@@ -59,21 +16,8 @@ SettingsPage {
 
     title: "About"
     Component.onCompleted: {
-        checkProc.running = true;
+        Health.checkTools();
         versionProc.running = true;
-    }
-
-    Process {
-        id: checkProc
-
-        command: ["sh", "-c", "for t; do ok=; for a in $(printf %s \"$t\" | tr '|' ' '); do command -v \"$a\" >/dev/null 2>&1 && ok=1; done; [ -n \"$ok\" ] || echo \"$t\"; done", "sh"].concat(Object.keys(page.tools))
-
-        stdout: StdioCollector {
-            onStreamFinished: {
-                page.missing = text.split("\n").filter(Boolean);
-                page.checked = true;
-            }
-        }
     }
 
     Process {
@@ -159,26 +103,26 @@ SettingsPage {
                 size: 28
                 iconSize: 16
                 icon: "refresh"
-                onClicked: checkProc.running = true
+                onClicked: Health.checkTools()
             }
         ]
 
         SettingRow {
-            visible: page.checked && page.missing.length === 0
+            visible: Health.toolsChecked && Health.missingTools.length === 0
             icon: "check_circle"
             title: "Everything is installed"
-            description: Object.keys(page.tools).length + " command-line tools the shell relies on were found"
+            description: Object.keys(Health.tools).length + " command-line tools the shell relies on were found"
         }
 
         Repeater {
-            model: page.missing
+            model: Health.missingTools
 
             delegate: SettingRow {
                 required property string modelData
 
                 icon: "error"
                 title: modelData.split("|").join(" or ") + (modelData.indexOf("|") >= 0 ? " is not installed (either one will do)" : " is not installed")
-                description: "Needed for " + page.tools[modelData]
+                description: "Needed for " + Health.tools[modelData]
             }
         }
     }
