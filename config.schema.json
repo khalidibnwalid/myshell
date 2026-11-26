@@ -266,6 +266,10 @@
           "type": "boolean",
           "description": "Also save each screenshot as a file; it is always copied to the clipboard"
         },
+        "openEditor": {
+          "type": "boolean",
+          "description": "Open the screenshot editor right after a screenshot, instead of the notification (which has an Edit button)"
+        },
         "screenshotDir": {
           "type": "string",
           "description": "Folder for saved screenshots"

@@ -65,6 +65,10 @@ Pages for hardware or tools that are missing are hidden.
 - `tesseract` and `tesseract-data-eng` — "Extract text" in the screenshot selector reads the words in the chosen area. Add `tesseract-data-ara` or another language package for more languages, then set them in Settings → Clipboard & capture (for example `eng+ara`).
 - `zbar` — provides `zbarimg`, which reads QR codes for the QR option of the screenshot selector.
 
+### Screenshot editor
+
+After an area screenshot you can draw on it before you share it: press Edit on the "Screenshot copied" or "Screenshot saved" notification (or turn on Settings → Clipboard & capture → "Open the editor after a screenshot" to go straight there). The editor has arrows, rectangles, a pen, a highlighter, text, pixelate and blur for hiding passwords or names, and crop, with seven colours and three sizes. `Ctrl+Z` and `Ctrl+Y` undo and redo, `Ctrl+C` copies the result, `Ctrl+S` saves it to your screenshot folder as `Screenshot_<date>.png`, and `Esc` closes. The letters A, R, P, H, T, X, B and C pick the tools, and 1, 2 and 3 the size. The image keeps its full resolution, whatever the screen's scale. Open any image in it with `qs ipc call capture edit /path/to/image.png` (`closeEditor` closes it). It floats by a window rule (`title = "^(Screenshot editor)$"` in the Hyprland window rules).
+
 ### Optional settings tools
 
 - `hyprsunset` — running in the background, it enables the night light controls in Settings → Display.

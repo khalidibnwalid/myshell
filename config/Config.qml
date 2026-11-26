@@ -236,6 +236,8 @@ Singleton {
             capture: JsonObject {
                 // also save each screenshot as a file (it is always copied)
                 property bool autoSave: false
+                // open the screenshot editor right after a screenshot, instead of the notification
+                property bool openEditor: false
                 property string screenshotDir: "~/Pictures/Screenshots"
                 property string recordingDir: "~/Videos"
                 property bool recordAudio: false

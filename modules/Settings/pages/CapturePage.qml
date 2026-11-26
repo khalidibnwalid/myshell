@@ -75,6 +75,17 @@ SettingsPage {
         }
 
         SettingRow {
+            icon: "draw"
+            title: "Open the editor after a screenshot"
+            description: Config.capture.openEditor ? "Each screenshot opens in the editor, where you can draw on it, hide parts and crop it before you copy or save it." : "A notification comes instead; its Edit button opens the editor."
+
+            ToggleSwitch {
+                checked: Config.capture.openEditor
+                onToggled: on => Config.capture.openEditor = on
+            }
+        }
+
+        SettingRow {
             icon: "document_scanner"
             title: "Text languages"
             description: "Languages read by Extract text, joined with + (for example eng+ara). Installed: eng. More come from tesseract-data packages."

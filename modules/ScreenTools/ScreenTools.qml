@@ -5,6 +5,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Hyprland
+import Quickshell.Io
 import Quickshell.Wayland
 
 // Shortcuts for the screen utilities, and the frame shown around the area being recorded.
@@ -66,6 +67,31 @@ Scope {
     GlobalShortcut {
         name: "record"
         onPressed: Services.ScreenTools.toggleRecording()
+    }
+
+    // qs ipc call capture edit /path/to/image.png | closeEditor | screenshot
+    IpcHandler {
+        function edit(path: string): void {
+            Services.ScreenTools.editImage(path);
+        }
+
+        function closeEditor(): void {
+            Services.ScreenTools.closeEditor();
+        }
+
+        function screenshot(): void {
+            Services.ScreenTools.screenshot();
+        }
+
+        target: "capture"
+    }
+
+    // the screenshot editor exists only while it has an image
+    LazyLoader {
+        active: Services.ScreenTools.editorPath !== ""
+
+        ShotEditor {
+        }
     }
 
     // Options shown above the area selection: take a screenshot, or extract the text in it.

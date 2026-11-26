@@ -157,7 +157,7 @@ ApplicationWindow {
             "name": "Clipboard & capture",
             "icon": "content_paste",
             "group": "Tools",
-            "keywords": "clipboard history paste screenshot recording folder audio",
+            "keywords": "clipboard history paste screenshot recording folder audio editor annotate draw arrow blur crop",
             "component": capturePage
         },
         {
