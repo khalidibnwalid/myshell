@@ -99,13 +99,16 @@ PanelWindow {
         Behavior on opacity {
             NumberAnimation {
                 duration: Appearance.animFast
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Appearance.easeFade
             }
         }
 
         Behavior on scale {
             NumberAnimation {
                 duration: Appearance.animFast
-                easing.type: Easing.OutCubic
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Appearance.easeStandard
             }
         }
 
@@ -150,7 +153,8 @@ PanelWindow {
                         Behavior on scale {
                             NumberAnimation {
                                 duration: Appearance.animFast
-                                easing.type: Easing.OutCubic
+                                easing.type: Easing.BezierSpline
+                                easing.bezierCurve: Appearance.easeStandard
                             }
                         }
                     }
@@ -170,6 +174,8 @@ PanelWindow {
                     Behavior on color {
                         ColorAnimation {
                             duration: Appearance.animFast
+                            easing.type: Easing.BezierSpline
+                            easing.bezierCurve: Appearance.easeFade
                         }
                     }
                 }

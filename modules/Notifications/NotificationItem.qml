@@ -106,6 +106,8 @@ Rectangle {
                 property: "opacity"
                 to: 0
                 duration: Appearance.animNormal
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Appearance.easeFade
             }
         }
 
@@ -283,6 +285,8 @@ Rectangle {
                 Behavior on color {
                     ColorAnimation {
                         duration: Appearance.animFast
+                        easing.type: Easing.BezierSpline
+                        easing.bezierCurve: Appearance.easeFade
                     }
                 }
             }
@@ -368,12 +372,16 @@ Rectangle {
                     Behavior on color {
                         ColorAnimation {
                             duration: Appearance.animFast
+                            easing.type: Easing.BezierSpline
+                            easing.bezierCurve: Appearance.easeFade
                         }
                     }
 
                     Behavior on scale {
                         NumberAnimation {
                             duration: Appearance.animFast
+                            easing.type: Easing.BezierSpline
+                            easing.bezierCurve: Appearance.easeStandard
                         }
                     }
 
@@ -428,6 +436,8 @@ Rectangle {
     Behavior on color {
         ColorAnimation {
             duration: Appearance.animFast
+            easing.type: Easing.BezierSpline
+            easing.bezierCurve: Appearance.easeFade
         }
     }
 }

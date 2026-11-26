@@ -54,10 +54,14 @@ Item {
                 NumberAnimation {
                     properties: "opacity,border.width"
                     duration: 200
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Appearance.easeFade
                 }
 
                 ColorAnimation {
                     duration: 200
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Appearance.easeFade
                 }
 
             }
@@ -71,10 +75,14 @@ Item {
                 NumberAnimation {
                     properties: "opacity,border.width"
                     duration: 200
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Appearance.easeFade
                 }
 
                 ColorAnimation {
                     duration: 200
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Appearance.easeFade
                 }
 
             }
@@ -96,6 +104,8 @@ Item {
         Behavior on opacity {
             NumberAnimation {
                 duration: 200
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Appearance.easeFade
             }
 
         }
@@ -103,6 +113,8 @@ Item {
         Behavior on border.width {
             NumberAnimation {
                 duration: 200
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Appearance.easeStandard
             }
 
         }

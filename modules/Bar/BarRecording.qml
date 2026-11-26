@@ -31,12 +31,16 @@ Rectangle {
     Behavior on color {
         ColorAnimation {
             duration: Appearance.animFast
+            easing.type: Easing.BezierSpline
+            easing.bezierCurve: Appearance.easeFade
         }
     }
 
     Behavior on scale {
         NumberAnimation {
             duration: Appearance.animFast
+            easing.type: Easing.BezierSpline
+            easing.bezierCurve: Appearance.easeStandard
         }
     }
 
@@ -92,12 +96,16 @@ Rectangle {
             Behavior on radius {
                 NumberAnimation {
                     duration: Appearance.animFast
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Appearance.easeStandard
                 }
             }
 
             Behavior on width {
                 NumberAnimation {
                     duration: Appearance.animFast
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Appearance.easeStandard
                 }
             }
         }

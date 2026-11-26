@@ -41,7 +41,9 @@ Item {
 
         Behavior on opacity {
             NumberAnimation {
-                duration: 200
+                duration: 270
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Appearance.easeFade
             }
 
         }
@@ -58,7 +60,9 @@ Item {
 
         Behavior on opacity {
             NumberAnimation {
-                duration: 200
+                duration: 270
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Appearance.easeFade
             }
 
         }

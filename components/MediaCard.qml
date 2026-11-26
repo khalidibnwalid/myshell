@@ -75,6 +75,8 @@ Rectangle {
                 Behavior on opacity {
                     NumberAnimation {
                         duration: Appearance.animNormal
+                        easing.type: Easing.BezierSpline
+                        easing.bezierCurve: Appearance.easeFade
                     }
                 }
             }
@@ -305,6 +307,8 @@ Rectangle {
                         Behavior on scale {
                             NumberAnimation {
                                 duration: Appearance.animFast
+                                easing.type: Easing.BezierSpline
+                                easing.bezierCurve: Appearance.easeStandard
                             }
                         }
                     }

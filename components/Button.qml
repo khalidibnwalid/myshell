@@ -69,12 +69,13 @@ Rectangle {
         Transition {
             ParallelAnimation {
                 ColorAnimation {
-                    duration: 200
-                    easing.type: Easing.OutCubic
+                    duration: 270
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Appearance.easeFade
                 }
 
                 NumberAnimation {
-                    duration: 250
+                    duration: 340
                     easing.type: Easing.OutBack
                 }
 
@@ -109,8 +110,9 @@ Rectangle {
 
             Behavior on width {
                 NumberAnimation {
-                    duration: 250
-                    easing.type: Easing.OutCubic
+                    duration: 340
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Appearance.easeStandard
                 }
 
             }
@@ -135,7 +137,9 @@ Rectangle {
 
         Behavior on opacity {
             NumberAnimation {
-                duration: 200
+                duration: 270
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Appearance.easeFade
             }
 
         }

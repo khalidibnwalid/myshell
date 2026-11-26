@@ -23,6 +23,8 @@ Item {
         Behavior on color {
             ColorAnimation {
                 duration: Appearance.animFast
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Appearance.easeFade
             }
         }
     }
@@ -48,12 +50,16 @@ Item {
         Behavior on width {
             NumberAnimation {
                 duration: Appearance.animFast
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Appearance.easeStandard
             }
         }
 
         Behavior on height {
             NumberAnimation {
                 duration: Appearance.animFast
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Appearance.easeStandard
             }
         }
     }

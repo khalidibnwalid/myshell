@@ -60,10 +60,14 @@ Rectangle {
             ParallelAnimation {
                 ColorAnimation {
                     duration: 100
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Appearance.easeFade
                 }
 
                 NumberAnimation {
                     duration: 100
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Appearance.easeStandard
                 }
 
             }

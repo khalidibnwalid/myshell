@@ -86,7 +86,8 @@ ColumnLayout {
                         Behavior on rotation {
                             NumberAnimation {
                                 duration: Appearance.animFast
-                                easing.type: Easing.OutCubic
+                                easing.type: Easing.BezierSpline
+                                easing.bezierCurve: Appearance.easeStandard
                             }
                         }
                     }
@@ -113,6 +114,8 @@ ColumnLayout {
                 Behavior on color {
                     ColorAnimation {
                         duration: Appearance.animFast
+                        easing.type: Easing.BezierSpline
+                        easing.bezierCurve: Appearance.easeFade
                     }
                 }
             }

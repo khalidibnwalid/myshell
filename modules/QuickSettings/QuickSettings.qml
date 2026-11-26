@@ -11,8 +11,10 @@ Scope {
     id: root
 
     readonly property bool open: WindowManager.quickSettingsVisible
-    // keep the window mapped while the closing animation runs
-    readonly property bool isActuallyOpen: open || closeTimer.running
+    // Keep the window mapped while the closing animation runs. It is set on opening and cleared only
+    // when the close timer ends: a binding on closeTimer.running dropped to false for an instant
+    // before the timer restarted, which unmapped the window and made the closing flicker.
+    property bool isActuallyOpen: false
     readonly property int panelWidth: 412
     readonly property int gap: 12
     // the panel opens only on the monitor that has focus when it opens (not on every monitor)
@@ -37,10 +39,13 @@ Scope {
 
     Connections {
         function onQuickSettingsVisibleChanged() {
-            if (WindowManager.quickSettingsVisible)
+            if (WindowManager.quickSettingsVisible) {
                 root.targetScreen = Hyprland.focusedMonitor?.name ?? Quickshell.screens[0]?.name ?? "";
-            else
+                closeTimer.stop();
+                root.isActuallyOpen = true;
+            } else {
                 closeTimer.restart();
+            }
         }
 
         target: WindowManager
@@ -50,6 +55,7 @@ Scope {
         id: closeTimer
 
         interval: Appearance.animFast + 30
+        onTriggered: root.isActuallyOpen = root.open
     }
 
     // click anywhere else to dismiss; the bar stays usable so its buttons can toggle
@@ -151,32 +157,109 @@ Scope {
                 id: stage
 
                 anchors.fill: parent
-                opacity: root.open ? 1 : 0
+                // 1 = away (toward the bar), 0 = in place; drives the slide and the slight growth
+                property real slide: 1
 
-                // it slides in from the bar's side: sideways for a side bar, up or down for the others
-                transform: Translate {
-                    x: Config.barHorizontal || window.shown ? 0 : (root.open ? (window.barRight ? 42 : -42) : 0)
-                    y: !Config.barHorizontal || window.shown ? 0 : (root.open ? (window.fromTop ? -42 : 42) : 0)
+                opacity: 0
 
-                    Behavior on x {
-                        NumberAnimation {
-                            duration: root.open ? 190 : 0
-                            easing.type: Easing.OutCubic
+                // It comes out of the bar's corner: it slides in from the bar's side (sideways for a side bar,
+                // up or down for the others), grows a little into place and fades in. The entrance starts
+                // once the window is really on screen (window.shown) and a frame later, so none of it is lost.
+                transform: [
+                    Scale {
+                        origin.x: window.barRight ? stage.width : 0
+                        origin.y: window.fromTop ? 0 : stage.height
+                        xScale: 1 - 0.05 * stage.slide
+                        yScale: 1 - 0.05 * stage.slide
+                    },
+                    Translate {
+                        x: Config.barHorizontal ? 0 : stage.slide * (window.barRight ? 48 : -48)
+                        y: !Config.barHorizontal ? 0 : stage.slide * (window.fromTop ? -48 : 48)
+                    }
+                ]
+
+                Connections {
+                    function onShownChanged() {
+                        if (window.shown) {
+                            exitAnim.stop();
+                            enterAnim.restart();
                         }
                     }
 
-                    Behavior on y {
+                    target: window
+                }
+
+                Connections {
+                    function onOpenChanged() {
+                        if (!root.open) {
+                            enterAnim.stop();
+                            exitAnim.restart();
+                        }
+                    }
+
+                    target: root
+                }
+
+                SequentialAnimation {
+                    id: enterAnim
+
+                    PropertyAction {
+                        target: stage
+                        property: "opacity"
+                        value: 0
+                    }
+
+                    PropertyAction {
+                        target: stage
+                        property: "slide"
+                        value: 1
+                    }
+
+                    PauseAnimation {
+                        duration: 30
+                    }
+
+                    ParallelAnimation {
                         NumberAnimation {
-                            duration: root.open ? 190 : 0
-                            easing.type: Easing.OutCubic
+                            target: stage
+                            property: "opacity"
+                            to: 1
+                            duration: Appearance.animNormal
+                            easing.type: Easing.BezierSpline
+                            easing.bezierCurve: Appearance.easeFade
+                        }
+
+                        NumberAnimation {
+                            target: stage
+                            property: "slide"
+                            to: 0
+                            duration: Appearance.animSlow
+                            easing.type: Easing.BezierSpline
+                            easing.bezierCurve: Appearance.easeOut
                         }
                     }
                 }
 
-                Behavior on opacity {
+                // out: quicker, back toward the bar; the window stays until closeTimer ends
+                ParallelAnimation {
+                    id: exitAnim
+
+                    // stays solid a little, then goes quickly: Hyprland's blur behind the panel cannot
+                    // fade with it, so the less time the panel is faint, the less the blur shows alone
                     NumberAnimation {
-                        duration: root.open ? 0 : 110
-                        easing.type: Easing.OutCubic
+                        target: stage
+                        property: "opacity"
+                        to: 0
+                        duration: 150
+                        easing.type: Easing.InQuad
+                    }
+
+                    NumberAnimation {
+                        target: stage
+                        property: "slide"
+                        to: 1
+                        duration: 150
+                        easing.type: Easing.InCubic
                     }
                 }
 
@@ -194,6 +277,8 @@ Scope {
                     Behavior on opacity {
                         NumberAnimation {
                             duration: Appearance.animFast
+                            easing.type: Easing.BezierSpline
+                            easing.bezierCurve: Appearance.easeFade
                         }
                     }
                 }
@@ -242,15 +327,18 @@ Scope {
                                 property: "opacity"
                                 from: 0
                                 to: 1
-                                duration: 150
+                                duration: 200
+                                easing.type: Easing.BezierSpline
+                                easing.bezierCurve: Appearance.easeFade
                             }
 
                             NumberAnimation {
                                 property: "x"
                                 from: 14
                                 to: 0
-                                duration: 180
-                                easing.type: Easing.OutCubic
+                                duration: 240
+                                easing.type: Easing.BezierSpline
+                                easing.bezierCurve: Appearance.easeStandard
                             }
                         }
 
@@ -258,7 +346,9 @@ Scope {
                             NumberAnimation {
                                 property: "opacity"
                                 to: 0
-                                duration: 70
+                                duration: 90
+                                easing.type: Easing.BezierSpline
+                                easing.bezierCurve: Appearance.easeFade
                             }
                         }
 
@@ -267,15 +357,18 @@ Scope {
                                 property: "opacity"
                                 from: 0
                                 to: 1
-                                duration: 150
+                                duration: 200
+                                easing.type: Easing.BezierSpline
+                                easing.bezierCurve: Appearance.easeFade
                             }
 
                             NumberAnimation {
                                 property: "x"
                                 from: -14
                                 to: 0
-                                duration: 180
-                                easing.type: Easing.OutCubic
+                                duration: 240
+                                easing.type: Easing.BezierSpline
+                                easing.bezierCurve: Appearance.easeStandard
                             }
                         }
 
@@ -283,7 +376,9 @@ Scope {
                             NumberAnimation {
                                 property: "opacity"
                                 to: 0
-                                duration: 70
+                                duration: 90
+                                easing.type: Easing.BezierSpline
+                                easing.bezierCurve: Appearance.easeFade
                             }
                         }
                     }
@@ -293,8 +388,9 @@ Scope {
 
             Behavior on cardHeight {
                 NumberAnimation {
-                    duration: 180
-                    easing.type: Easing.OutCubic
+                    duration: 240
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Appearance.easeStandard
                 }
             }
 

@@ -73,6 +73,8 @@ Rectangle {
     Behavior on opacity {
         NumberAnimation {
             duration: Appearance.animNormal
+            easing.type: Easing.BezierSpline
+            easing.bezierCurve: Appearance.easeFade
         }
     }
 

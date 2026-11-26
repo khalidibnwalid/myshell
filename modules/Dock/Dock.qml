@@ -268,13 +268,16 @@ Scope {
                 Behavior on opacity {
                     NumberAnimation {
                         duration: Appearance.animFast
+                        easing.type: Easing.BezierSpline
+                        easing.bezierCurve: Appearance.easeFade
                     }
                 }
 
                 Behavior on width {
                     NumberAnimation {
                         duration: Appearance.animNormal
-                        easing.type: Easing.OutCubic
+                        easing.type: Easing.BezierSpline
+                        easing.bezierCurve: Appearance.easeStandard
                     }
                 }
 
@@ -296,7 +299,8 @@ Scope {
                         Behavior on x {
                             NumberAnimation {
                                 duration: Appearance.animNormal
-                                easing.type: Easing.OutCubic
+                                easing.type: Easing.BezierSpline
+                                easing.bezierCurve: Appearance.easeStandard
                             }
                         }
                     }
@@ -336,7 +340,8 @@ Scope {
 
                                 NumberAnimation {
                                     duration: Appearance.animNormal
-                                    easing.type: Easing.OutCubic
+                                    easing.type: Easing.BezierSpline
+                                    easing.bezierCurve: Appearance.easeStandard
                                 }
                             }
 
@@ -373,12 +378,16 @@ Scope {
                                 Behavior on color {
                                     ColorAnimation {
                                         duration: Appearance.animFast
+                                        easing.type: Easing.BezierSpline
+                                        easing.bezierCurve: Appearance.easeFade
                                     }
                                 }
 
                                 Behavior on opacity {
                                     NumberAnimation {
                                         duration: Appearance.animFast
+                                        easing.type: Easing.BezierSpline
+                                        easing.bezierCurve: Appearance.easeFade
                                     }
                                 }
                             }
@@ -396,14 +405,17 @@ Scope {
 
                                 Behavior on scale {
                                     NumberAnimation {
-                                        duration: 110
-                                        easing.type: Easing.OutCubic
+                                        duration: 150
+                                        easing.type: Easing.BezierSpline
+                                        easing.bezierCurve: Appearance.easeStandard
                                     }
                                 }
 
                                 Behavior on anchors.verticalCenterOffset {
                                     NumberAnimation {
                                         duration: Appearance.animFast
+                                        easing.type: Easing.BezierSpline
+                                        easing.bezierCurve: Appearance.easeStandard
                                     }
                                 }
                             }
@@ -422,13 +434,16 @@ Scope {
                                 Behavior on width {
                                     NumberAnimation {
                                         duration: Appearance.animNormal
-                                        easing.type: Easing.OutCubic
+                                        easing.type: Easing.BezierSpline
+                                        easing.bezierCurve: Appearance.easeStandard
                                     }
                                 }
 
                                 Behavior on opacity {
                                     NumberAnimation {
                                         duration: Appearance.animFast
+                                        easing.type: Easing.BezierSpline
+                                        easing.bezierCurve: Appearance.easeFade
                                     }
                                 }
                             }

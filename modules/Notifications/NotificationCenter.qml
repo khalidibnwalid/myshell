@@ -105,7 +105,8 @@ Scope {
                         property: "x"
                         to: 0
                         duration: 420
-                        easing.type: Easing.OutCubic
+                        easing.type: Easing.BezierSpline
+                        easing.bezierCurve: Appearance.easeStandard
                     }
                 }
 
@@ -151,6 +152,8 @@ Scope {
                     property: "opacity"
                     to: 1
                     duration: Appearance.animFast
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Appearance.easeFade
                 }
             }
         }

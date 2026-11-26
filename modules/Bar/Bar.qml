@@ -123,12 +123,16 @@ Scope {
                     Behavior on color {
                         ColorAnimation {
                             duration: Appearance.animFast
+                            easing.type: Easing.BezierSpline
+                            easing.bezierCurve: Appearance.easeFade
                         }
                     }
 
                     Behavior on scale {
                         NumberAnimation {
                             duration: Appearance.animFast
+                            easing.type: Easing.BezierSpline
+                            easing.bezierCurve: Appearance.easeStandard
                         }
                     }
                 }

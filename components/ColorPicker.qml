@@ -111,6 +111,8 @@ Popup {
             from: 0
             to: 1
             duration: Appearance.animFast
+            easing.type: Easing.BezierSpline
+            easing.bezierCurve: Appearance.easeFade
         }
     }
 
@@ -119,6 +121,8 @@ Popup {
             property: "opacity"
             to: 0
             duration: Appearance.animFast
+            easing.type: Easing.BezierSpline
+            easing.bezierCurve: Appearance.easeFade
         }
     }
 
@@ -476,6 +480,8 @@ Popup {
                     Behavior on scale {
                         NumberAnimation {
                             duration: Appearance.animFast
+                            easing.type: Easing.BezierSpline
+                            easing.bezierCurve: Appearance.easeStandard
                         }
                     }
                 }
@@ -523,6 +529,8 @@ Popup {
                     Behavior on scale {
                         NumberAnimation {
                             duration: Appearance.animFast
+                            easing.type: Easing.BezierSpline
+                            easing.bezierCurve: Appearance.easeStandard
                         }
                     }
                 }

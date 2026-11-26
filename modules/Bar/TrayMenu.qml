@@ -65,7 +65,9 @@ PanelWindow {
             enabled: root.visible
 
             NumberAnimation {
-                duration: 90
+                duration: 120
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Appearance.easeFade
             }
         }
 

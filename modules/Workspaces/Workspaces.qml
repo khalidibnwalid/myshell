@@ -67,15 +67,8 @@ Scope {
                     border.width: 1
                 }
 
-                // entrance
-                NumberAnimation {
-                    targets: [background, contentGrid]
-                    property: "opacity"
-                    from: 0
-                    to: 1
-                    duration: Appearance.animFast
-                    running: true
-                }
+                // No fade of its own: Hyprland pops the window in (the "popin" layer rule) together with
+                // the blur behind it. A fade here on top left the blur showing alone for the first frames.
 
                 // Ghost placeholder for new workspaces
                 Rectangle {

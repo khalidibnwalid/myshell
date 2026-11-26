@@ -48,9 +48,11 @@ JsonObject {
     }
     readonly property string fontFamily: Config.appearance.fontFamily
     // Motion: one decelerating curve for things entering, one standard curve for the rest
-    readonly property int animFast: 130
-    readonly property int animNormal: 220
-    readonly property int animSlow: 340
+    readonly property int animFast: 180
+    readonly property int animNormal: 280
+    readonly property int animSlow: 420
     readonly property var easeOut: [0.05, 0.7, 0.1, 1, 1, 1]
     readonly property var easeStandard: [0.2, 0, 0, 1, 1, 1]
+    // fades and colour changes: starts at once and slows into the end, so a short fade still shows
+    readonly property var easeFade: [0.33, 0.6, 0.4, 1, 1, 1]
 }

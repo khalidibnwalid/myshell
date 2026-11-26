@@ -132,9 +132,15 @@ Scope {
             implicitWidth: 664
             implicitHeight: 580
             focusable: true
-            visible: open || closeTimer.running
+            // mapped from opening until the fade-out is done (a binding on closeTimer.running dropped
+            // to false for an instant before the timer restarted, which made the closing flicker)
+            property bool held: false
+
+            visible: open || held
             onOpenChanged: {
                 if (open) {
+                    closeTimer.stop();
+                    held = true;
                     searchField.text = "";
                     panelWindow.updateResults([]);
                     searchField.forceActiveFocus();
@@ -150,13 +156,16 @@ Scope {
             Timer {
                 id: closeTimer
 
-                interval: 90
+                // a little longer than the fade-out below, so it is not cut off
+                interval: 130
+                onTriggered: panelWindow.held = false
             }
 
             Behavior on cardHeight {
                 NumberAnimation {
-                    duration: 110
-                    easing.type: Easing.OutCubic
+                    duration: 150
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Appearance.easeStandard
                 }
             }
 
@@ -190,15 +199,18 @@ Scope {
 
                     Behavior on y {
                         NumberAnimation {
-                            duration: 150
-                            easing.type: Easing.OutCubic
+                            duration: 200
+                            easing.type: Easing.BezierSpline
+                            easing.bezierCurve: Appearance.easeStandard
                         }
                     }
                 }
 
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: 80
+                        duration: 110
+                        easing.type: Easing.BezierSpline
+                        easing.bezierCurve: Appearance.easeFade
                     }
                 }
             }
@@ -348,18 +360,24 @@ Scope {
                             Behavior on color {
                                 ColorAnimation {
                                     duration: Appearance.animFast
+                                    easing.type: Easing.BezierSpline
+                                    easing.bezierCurve: Appearance.easeFade
                                 }
                             }
 
                             Behavior on border.color {
                                 ColorAnimation {
                                     duration: Appearance.animFast
+                                    easing.type: Easing.BezierSpline
+                                    easing.bezierCurve: Appearance.easeFade
                                 }
                             }
 
                             Behavior on border.width {
                                 NumberAnimation {
                                     duration: Appearance.animFast
+                                    easing.type: Easing.BezierSpline
+                                    easing.bezierCurve: Appearance.easeStandard
                                 }
                             }
 
@@ -466,6 +484,8 @@ Scope {
                             Behavior on color {
                                 ColorAnimation {
                                     duration: Appearance.animFast
+                                    easing.type: Easing.BezierSpline
+                                    easing.bezierCurve: Appearance.easeFade
                                 }
                             }
 

@@ -16,7 +16,7 @@ Item {
     signal dragged(real value)
 
     Behavior on iconRightMargin {
-        NumberAnimation { duration: Appearance.animFast }
+        NumberAnimation { duration: Appearance.animFast; easing.type: Easing.BezierSpline; easing.bezierCurve: Appearance.easeStandard }
     }
 
     implicitHeight: 48
@@ -41,6 +41,8 @@ Item {
             Behavior on color {
                 ColorAnimation {
                     duration: Appearance.animNormal
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Appearance.easeFade
                 }
             }
 

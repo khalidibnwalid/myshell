@@ -125,6 +125,8 @@ Item {
                     Behavior on opacity {
                         NumberAnimation {
                             duration: Appearance.animFast
+                            easing.type: Easing.BezierSpline
+                            easing.bezierCurve: Appearance.easeFade
                         }
                     }
 
@@ -149,7 +151,8 @@ Item {
                     Behavior on scale {
                         NumberAnimation {
                             duration: Appearance.animFast
-                            easing.type: Easing.OutCubic
+                            easing.type: Easing.BezierSpline
+                            easing.bezierCurve: Appearance.easeStandard
                         }
                     }
                 }

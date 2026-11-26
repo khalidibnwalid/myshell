@@ -62,7 +62,8 @@ Singleton {
     Timer {
         id: purge
 
-        interval: 280
+        // a little after the slide-out (Appearance.animNormal) has finished
+        interval: Appearance.animNormal + 60
         onTriggered: {
             for (let i = popupModel.count - 1; i >= 0; i--)
                 if (popupModel.get(i).leaving)

@@ -39,6 +39,8 @@ GridLayout {
             Behavior on color {
                 ColorAnimation {
                     duration: Appearance.animFast
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Appearance.easeFade
                 }
             }
         }
@@ -104,6 +106,8 @@ GridLayout {
                 Behavior on opacity {
                     NumberAnimation {
                         duration: Appearance.animFast
+                        easing.type: Easing.BezierSpline
+                        easing.bezierCurve: Appearance.easeFade
                     }
                 }
             }
@@ -117,6 +121,8 @@ GridLayout {
                 Behavior on scale {
                     NumberAnimation {
                         duration: Appearance.animFast
+                        easing.type: Easing.BezierSpline
+                        easing.bezierCurve: Appearance.easeStandard
                     }
                 }
             }

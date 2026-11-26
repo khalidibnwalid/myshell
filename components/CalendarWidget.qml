@@ -119,6 +119,8 @@ Rectangle {
                         Behavior on rotation {
                             NumberAnimation {
                                 duration: Appearance.animFast
+                                easing.type: Easing.BezierSpline
+                                easing.bezierCurve: Appearance.easeStandard
                             }
                         }
                     }
@@ -227,6 +229,8 @@ Rectangle {
                         Behavior on color {
                             ColorAnimation {
                                 duration: Appearance.animFast
+                                easing.type: Easing.BezierSpline
+                                easing.bezierCurve: Appearance.easeFade
                             }
                         }
                     }

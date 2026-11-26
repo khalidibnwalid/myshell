@@ -58,13 +58,16 @@ Item {
 
                 NumberAnimation {
                     duration: Appearance.animFast
-                    easing.type: Easing.OutCubic
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Appearance.easeStandard
                 }
             }
 
             Behavior on scale {
                 NumberAnimation {
                     duration: Appearance.animFast
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Appearance.easeStandard
                 }
             }
 
